@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#041e3c">
+<meta name="description" content="Toca duas faixas de áudio separadas, uma em cada canal, para dois flybacks.">
+<title>Saída estéreo para dois flybacks</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icones/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Flyback">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --field:#041e3c; --panel:#0a2e52; --chrome:#072744;
+  --rule:rgba(140,190,235,.22); --rule-soft:rgba(140,190,235,.10);
+  --ink:#dceaf7; --dim:#7fa5c8;
+  --ch1:#d6e33c; --ch2:#43d3e6;
+  --bar:66px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:#051a33; color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  font-size:15px; line-height:1.55;
+  padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom,0px) + 12px);
+}
+.wrap{max-width:900px; margin:0 auto; padding:18px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px}
+h1{font-size:20px; font-weight:600; margin:0; letter-spacing:-.01em; line-height:1.25}
+.tabs{display:inline-flex; flex:none; border:1px solid var(--rule); border-radius:3px; overflow:hidden}
+.tabs a{padding:6px 13px; font-size:13px; color:var(--dim); text-decoration:none}
+.tabs a+a{border-left:1px solid var(--rule)}
+.tabs a[aria-current=page]{background:var(--panel); color:var(--ink)}
+.lede{color:var(--dim); margin:0 0 20px; max-width:62ch}
+
+/* tela */
+.screen{position:relative; border:1px solid var(--rule); background:var(--field); border-radius:3px; overflow:hidden; margin-bottom:22px}
+canvas{display:block; width:100%; height:260px}
+@media(max-width:640px){canvas{height:170px}}
+.chip{position:absolute; left:8px; font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:500}
+.chip.a{top:calc(28% - 9px); color:var(--ch1)}
+.chip.b{top:calc(72% - 9px); color:var(--ch2)}
+.empty{position:absolute; inset:0; display:grid; place-items:center; color:var(--dim); font-size:14px; text-align:center; padding:0 24px}
+
+/* transporte */
+.transport{position:fixed; left:0; right:0; bottom:0; z-index:5; background:rgba(5,26,51,.94); border-top:1px solid var(--rule);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  padding:9px max(16px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left))}
+.transport .in{max-width:900px; margin:0 auto; display:flex; align-items:center; gap:10px}
+.pos{flex:1; min-width:0; display:flex; align-items:center; gap:12px}
+@media(max-width:520px){.pos{flex-direction:column; align-items:stretch; gap:0} .pos .clock{text-align:right; font-size:12px; line-height:1.2}}
+button,.btn{font:inherit; color:var(--ink); background:var(--chrome); border:1px solid var(--rule); border-radius:3px; cursor:pointer}
+.btn{display:inline-flex; align-items:center; text-decoration:none}
+button:hover:not(:disabled),.btn:hover{background:var(--panel)}
+button:disabled{opacity:.35; cursor:default}
+button:focus-visible,input:focus-visible,a:focus-visible,.drop:focus-visible{outline:2px solid var(--ch2); outline-offset:2px}
+.play{width:46px; height:46px; display:grid; place-items:center; flex:none; font-size:15px}
+.stop{width:40px; height:46px; display:grid; place-items:center; flex:none; font-size:13px}
+input[type=range]{-webkit-appearance:none; appearance:none; background:transparent; width:100%; height:20px; cursor:pointer; margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--rule)}
+input[type=range]::-moz-range-track{height:2px; background:var(--rule)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--ink); margin-top:-5.5px}
+input[type=range]::-moz-range-thumb{width:13px; height:13px; border:0; border-radius:50%; background:var(--ink)}
+.clock{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--dim); white-space:nowrap; font-variant-numeric:tabular-nums}
+
+/* canais */
+.chans{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+@media(max-width:640px){.chans{grid-template-columns:1fr}}
+.ch{border:1px solid var(--rule); border-top-width:3px; border-radius:3px; padding:16px}
+.ch.a{border-top-color:var(--ch1)}
+.ch.b{border-top-color:var(--ch2)}
+.ch h2{font-size:14px; font-weight:600; margin:0 0 2px}
+.ch .side{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--dim); margin:0 0 14px}
+.drop{border:1px dashed var(--rule); border-radius:3px; padding:14px; text-align:center; color:var(--dim); font-size:13px; cursor:pointer; transition:border-color .12s,color .12s}
+.drop:hover,.drop.over{border-color:var(--ch2); color:var(--ink)}
+.drop.has{border-style:solid; color:var(--ink); text-align:left; word-break:break-all}
+.ctl{margin-top:16px}
+.ctl .row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px}
+.ctl label{font-size:13px; color:var(--dim)}
+.ctl .val{font-family:"IBM Plex Mono",monospace; font-size:12px; font-variant-numeric:tabular-nums}
+.meter{height:3px; background:var(--rule-soft); margin-top:16px; overflow:hidden}
+.meter i{display:block; height:100%; width:0; transition:width .06s linear}
+.ch.a .meter i{background:var(--ch1)}
+.ch.b .meter i{background:var(--ch2)}
+.mute{margin-top:14px; padding:6px 12px; font-size:13px}
+.mute[aria-pressed=true]{background:var(--panel); color:var(--ink); border-color:var(--ink)}
+.tools{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px}
+.tools button,.tools .btn{padding:7px 14px; font-size:13px}
+.msg{color:var(--dim); font-size:12.5px; font-family:"IBM Plex Mono",monospace; margin:10px 0 0; min-height:1.2em}
+.tip{margin-top:28px; padding-top:18px; border-top:1px solid var(--rule-soft); color:var(--dim); font-size:13.5px; max-width:66ch}
+.tip p{margin:0 0 8px}
+input[type=file]{display:none}
+.hide{display:none!important}
+@media(pointer:coarse){
+  input[type=range]{height:34px}
+  input[type=range]::-webkit-slider-thumb{width:22px; height:22px; margin-top:-10px}
+  input[type=range]::-moz-range-thumb{width:22px; height:22px}
+  .mute,.tools button,.tools .btn,.tabs a{min-height:40px}
+  .tabs a{display:inline-flex; align-items:center}
+  .drop{padding:18px 14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Saída estéreo para dois flybacks</h1>
+    <nav class="tabs" aria-label="Páginas">
+      <a href="./">MIDI</a>
+      <a href="stems.html" aria-current="page">Stems</a>
+    </nav>
+  </header>
+  <p class="lede">Carregue duas faixas separadas. Uma sai no canal esquerdo, a outra no direito, em sincronia. O passa-baixa de cada canal corta os agudos que o arco não reproduz bem.</p>
+
+  <div class="screen">
+    <canvas id="cv"></canvas>
+    <span class="chip a">1▸</span>
+    <span class="chip b">2▸</span>
+    <div class="empty" id="empty">sem sinal — carregue as faixas abaixo</div>
+  </div>
+
+  <div class="chans">
+    <section class="ch a">
+      <h2>Canal esquerdo</h2>
+      <p class="side">traço 1 · amarelo</p>
+      <div class="drop" id="drop0" tabindex="0" role="button">solte um arquivo aqui ou toque para escolher</div>
+      <input type="file" id="file0" accept="audio/*">
+      <div class="ctl">
+        <div class="row"><label for="gain0">Ganho</label><span class="val" id="gainv0">100%</span></div>
+        <input type="range" id="gain0" min="0" max="200" value="100">
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="lp0">Passa-baixa</label><span class="val" id="lpv0">20,0 kHz</span></div>
+        <input type="range" id="lp0" min="0" max="1000" value="1000">
+      </div>
+      <div class="meter"><i id="lvl0"></i></div>
+      <button class="mute" id="mute0" aria-pressed="false">Mudo</button>
+    </section>
+
+    <section class="ch b">
+      <h2>Canal direito</h2>
+      <p class="side">traço 2 · ciano</p>
+      <div class="drop" id="drop1" tabindex="0" role="button">solte um arquivo aqui ou toque para escolher</div>
+      <input type="file" id="file1" accept="audio/*">
+      <div class="ctl">
+        <div class="row"><label for="gain1">Ganho</label><span class="val" id="gainv1">100%</span></div>
+        <input type="range" id="gain1" min="0" max="200" value="100">
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="lp1">Passa-baixa</label><span class="val" id="lpv1">20,0 kHz</span></div>
+        <input type="range" id="lp1" min="0" max="1000" value="1000">
+      </div>
+      <div class="meter"><i id="lvl1"></i></div>
+      <button class="mute" id="mute1" aria-pressed="false">Mudo</button>
+    </section>
+  </div>
+
+  <div class="tools">
+    <button id="swap">Trocar os lados</button>
+    <button id="clear">Limpar</button>
+    <button id="wavGo" disabled>Gerar WAV</button>
+    <a id="wavSave" class="btn hide">Salvar WAV</a>
+    <button id="wavShare" class="hide">Compartilhar</button>
+  </div>
+  <p class="msg" id="wavMsg"></p>
+
+  <div class="tip">
+    <p>As duas faixas começam juntas no instante zero. Se uma for mais curta, ela termina antes e a outra continua.</p>
+    <p>O passa-baixa ajuda quando o comparador está quadrateando a música: cortando perto de 500 Hz a 1 kHz, o LM311 passa a enxergar principalmente o grave e a fundamental, em vez da percussão.</p>
+    <p>O WAV sai com ganho, passa-baixa e mudo aplicados, esquerdo e direito separados, pronto para tocar em qualquer player pelo cabo P2.</p>
+  </div>
+</div>
+
+<div class="transport">
+  <div class="in">
+    <button class="play" id="play" disabled aria-label="Tocar">▶</button>
+    <button class="stop" id="stop" disabled aria-label="Voltar ao início">■</button>
+    <div class="pos">
+      <input type="range" id="seek" min="0" max="1000" value="0" disabled aria-label="Posição">
+      <span class="clock" id="clock">0:00 / 0:00</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const N = 2;
+const ch = [];
+for (let i = 0; i < N; i++) ch.push({buffer:null, name:null, src:null, gain:null, filter:null, an:null, data:null, muted:false, level:0});
+
+let actx = null, merger = null, startedAt = 0, offset = 0, playing = false, duration = 0, scrubbing = false, idle = 2;
+
+const $ = id => document.getElementById(id);
+const cv = $('cv'), g = cv.getContext('2d');
+const IDLE = 'solte um arquivo aqui ou toque para escolher';
+
+function ensureCtx(){
+  if (actx) return actx;
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} /* iOS: toca mesmo com a chave de silencioso */
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  merger = actx.createChannelMerger(2);
+  merger.connect(actx.destination);
+  ch.forEach((c, i) => {
+    c.filter = actx.createBiquadFilter();
+    c.filter.type = 'lowpass';
+    c.filter.frequency.value = freqOf(+$('lp'+i).value);
+    c.filter.Q.value = 0.707;
+    c.gain = actx.createGain();
+    c.gain.gain.value = c.muted ? 0 : (+$('gain'+i).value)/100;
+    c.an = actx.createAnalyser();
+    c.an.fftSize = 2048;
+    c.data = new Float32Array(c.an.fftSize);
+    c.filter.connect(c.gain);
+    c.gain.connect(c.an);
+    c.an.connect(merger, 0, i);
+  });
+  return actx;
+}
+
+function freqOf(v){ return 200 * Math.pow(100, v/1000); }
+function fmtFreq(f){ return f >= 1000 ? (f/1000).toFixed(1).replace('.',',')+' kHz' : Math.round(f)+' Hz'; }
+function fmtTime(t){ if(!isFinite(t)||t<0) t=0; const m=Math.floor(t/60), s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); }
+
+function toMono(buf){
+  if (buf.numberOfChannels === 1) return buf;
+  const out = actx.createBuffer(1, buf.length, buf.sampleRate);
+  const o = out.getChannelData(0);
+  for (let c = 0; c < buf.numberOfChannels; c++){
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < buf.length; i++) o[i] += d[i] / buf.numberOfChannels;
+  }
+  return out;
+}
+
+async function load(i, file){
+  if (!file) return;
+  const el = $('drop'+i);
+  el.textContent = 'lendo…';
+  try{
+    ensureCtx();
+    const raw = await file.arrayBuffer();
+    const decoded = await new Promise((ok, fail) => { const p = actx.decodeAudioData(raw, ok, fail); if (p && p.catch) p.catch(fail); });
+    stop();
+    ch[i].buffer = toMono(decoded);
+    ch[i].name = file.name;
+    el.textContent = file.name;
+    el.classList.add('has');
+    refresh();
+  }catch(e){
+    el.textContent = 'não deu para ler esse arquivo — tente WAV, MP3, FLAC ou M4A';
+    el.classList.remove('has');
+  }
+}
+
+function refresh(){
+  duration = Math.max(0, ...ch.map(c => c.buffer ? c.buffer.duration : 0));
+  const ready = ch.some(c => c.buffer);
+  ['play','stop','seek','wavGo'].forEach(id => $(id).disabled = !ready);
+  $('empty').style.display = ready ? 'none' : 'grid';
+  wavReset();
+  tick();
+}
+
+function position(){
+  if (!playing) return offset;
+  return Math.min(duration, offset + Math.max(0, actx.currentTime - startedAt));
+}
+
+function start(at){
+  const c = ensureCtx();
+  if (c.state !== 'running') c.resume();
+  stopSources();
+  const when = c.currentTime + 0.08;
+  ch.forEach(k => {
+    if (!k.buffer || at >= k.buffer.duration) return;
+    const s = c.createBufferSource();
+    s.buffer = k.buffer;
+    s.connect(k.filter);
+    s.start(when, at);
+    k.src = s;
+  });
+  startedAt = when; offset = at; playing = true;
+  $('play').textContent = '❚❚';
+  $('play').setAttribute('aria-label','Pausar');
+  keepAwake(true);
+}
+
+function stopSources(){
+  ch.forEach(k => { if (k.src){ try{ k.src.stop(); }catch(e){} k.src.disconnect(); k.src = null; } });
+}
+
+function pause(){
+  if (!playing) return;
+  offset = position(); playing = false; stopSources(); keepAwake(false); idle = 12;
+  $('play').textContent = '▶';
+  $('play').setAttribute('aria-label','Tocar');
+}
+
+function stop(){ pause(); offset = 0; tick(); }
+
+/* mantém a tela acesa enquanto toca; no celular, tela apagada suspende o áudio */
+let wake = null, wakeWanted = false;
+async function keepAwake(on){
+  wakeWanted = on;
+  try {
+    if (on && !wake && 'wakeLock' in navigator && document.visibilityState === 'visible'){
+      wake = 'pedindo';
+      const w = await navigator.wakeLock.request('screen');
+      if (!wakeWanted){ wake = null; w.release(); return; }
+      wake = w; w.addEventListener('release', () => { if (wake === w) wake = null; });
+    } else if (!on && wake && wake !== 'pedindo'){ const w = wake; wake = null; await w.release(); }
+  } catch (e) { wake = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !playing) return;
+  keepAwake(true);
+  if (actx && actx.state !== 'running') actx.resume();
+});
+
+$('play').onclick = () => playing ? pause() : start(Math.min(offset, Math.max(0, duration - 0.05)));
+$('stop').onclick = stop;
+$('swap').onclick = () => {
+  const wasPlaying = playing, at = position();
+  pause();
+  [ch[0].buffer, ch[1].buffer] = [ch[1].buffer, ch[0].buffer];
+  [ch[0].name, ch[1].name] = [ch[1].name, ch[0].name];
+  for (let i = 0; i < N; i++){
+    const el = $('drop'+i);
+    if (ch[i].name){ el.textContent = ch[i].name; el.classList.add('has'); }
+    else { el.textContent = IDLE; el.classList.remove('has'); }
+  }
+  refresh();
+  if (wasPlaying) start(at);
+};
+$('clear').onclick = () => {
+  stop();
+  ch.forEach((c,i) => { c.buffer = null; c.name = null;
+    const el = $('drop'+i); el.textContent = IDLE; el.classList.remove('has'); });
+  refresh();
+};
+
+const seek = $('seek');
+seek.addEventListener('input', () => { scrubbing = true; $('clock').textContent = fmtTime(seek.value/1000*duration)+' / '+fmtTime(duration); });
+seek.addEventListener('change', () => {
+  const at = seek.value/1000*duration;
+  scrubbing = false;
+  if (playing) start(at); else { offset = at; tick(); }
+});
+
+for (let i = 0; i < N; i++){
+  const drop = $('drop'+i), file = $('file'+i);
+  drop.onclick = () => file.click();
+  drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); file.click(); } };
+  file.onchange = () => { load(i, file.files[0]); file.value = ''; };
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); load(i, e.dataTransfer.files[0]); });
+
+  $('gain'+i).addEventListener('input', e => {
+    const v = +e.target.value;
+    $('gainv'+i).textContent = v+'%';
+    if (ch[i].gain && !ch[i].muted) ch[i].gain.gain.value = v/100;
+  });
+  $('lp'+i).addEventListener('input', e => {
+    const f = freqOf(+e.target.value);
+    $('lpv'+i).textContent = fmtFreq(f);
+    if (ch[i].filter) ch[i].filter.frequency.value = f;
+  });
+  $('mute'+i).addEventListener('click', e => {
+    ch[i].muted = !ch[i].muted;
+    e.target.setAttribute('aria-pressed', ch[i].muted);
+    if (ch[i].gain) ch[i].gain.gain.value = ch[i].muted ? 0 : (+$('gain'+i).value)/100;
+  });
+}
+
+/* ---------- WAV ---------- */
+function wavBlob(buf){
+  const nch = buf.numberOfChannels, sr = buf.sampleRate, n = buf.length, size = 44 + n * nch * 2;
+  const ab = new ArrayBuffer(size), v = new DataView(ab);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, size - 8, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, nch, true); v.setUint32(24, sr, true);
+  v.setUint32(28, sr * nch * 2, true); v.setUint16(32, nch * 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * nch * 2, true);
+  const out = new Int16Array(ab, 44), data = [];
+  for (let c = 0; c < nch; c++) data.push(buf.getChannelData(c));
+  for (let i = 0, k = 0; i < n; i++) for (let c = 0; c < nch; c++, k++){
+    const s = Math.max(-1, Math.min(1, data[c][i])); out[k] = s < 0 ? s * 32768 : s * 32767;
+  }
+  return new Blob([ab], { type: 'audio/wav' });
+}
+let wavUrl = null, wavFile = null;
+function wavReset(){
+  if (wavUrl) URL.revokeObjectURL(wavUrl);
+  wavUrl = wavFile = null;
+  $('wavSave').classList.add('hide'); $('wavShare').classList.add('hide'); $('wavMsg').textContent = '';
+}
+$('wavGo').onclick = async () => {
+  if (!duration) return;
+  wavReset();
+  const b = $('wavGo'); b.disabled = true; $('wavMsg').textContent = 'renderizando ' + fmtTime(duration) + ' de áudio…';
+  try {
+    const sr = actx.sampleRate;
+    const oc = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.ceil(duration * sr), sr);
+    const m = oc.createChannelMerger(2); m.connect(oc.destination);
+    ch.forEach((k, i) => {
+      if (!k.buffer || k.muted) return;
+      const f = oc.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freqOf(+$('lp'+i).value); f.Q.value = 0.707;
+      const gn = oc.createGain(); gn.gain.value = (+$('gain'+i).value)/100;
+      const s = oc.createBufferSource(); s.buffer = k.buffer;
+      s.connect(f); f.connect(gn); gn.connect(m, 0, i); s.start(0);
+    });
+    const blob = wavBlob(await oc.startRendering());
+    const base = (ch[0].name || ch[1].name || 'stems').replace(/\.[^.]+$/, '');
+    const name = base + ' - flybacks.wav';
+    wavUrl = URL.createObjectURL(blob);
+    wavFile = new File([blob], name, { type: 'audio/wav' });
+    const a = $('wavSave'); a.href = wavUrl; a.download = name; a.classList.remove('hide');
+    if (navigator.canShare && navigator.canShare({ files: [wavFile] })) $('wavShare').classList.remove('hide');
+    $('wavMsg').textContent = name + ' · ' + (blob.size / 1048576).toFixed(1).replace('.', ',') + ' MB';
+  } catch (e) { $('wavMsg').textContent = 'não deu para gerar: ' + e.message; }
+  b.disabled = false;
+};
+$('wavShare').onclick = () => { if (wavFile) navigator.share({ files: [wavFile], title: wavFile.name }).catch(() => {}); };
+
+function tick(){
+  const p = position();
+  if (!scrubbing){
+    $('seek').value = duration ? Math.round(p/duration*1000) : 0;
+    $('clock').textContent = fmtTime(p)+' / '+fmtTime(duration);
+  }
+  if (playing && p >= duration - 0.02) stop();
+}
+
+function sizeCanvas(){
+  const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio||1, 2);
+  cv.width = Math.max(1, Math.round(r.width*dpr));
+  cv.height = Math.max(1, Math.round(r.height*dpr));
+  idle = 2;
+}
+window.addEventListener('resize', sizeCanvas);
+
+function grid(w,h){
+  g.fillStyle = 'rgba(160,200,240,.30)';
+  const cols = 10, rows = 8;
+  for (let c = 0; c <= cols; c++){
+    for (let r = 0; r <= rows*5; r++){
+      const x = c*w/cols, y = r*h/(rows*5);
+      g.fillRect(Math.round(x), Math.round(y), 1, 1);
+    }
+  }
+  for (let r = 0; r <= rows; r++){
+    for (let c = 0; c <= cols*5; c++){
+      const x = c*w/(cols*5), y = r*h/rows;
+      g.fillRect(Math.round(x), Math.round(y), 1, 1);
+    }
+  }
+}
+
+function draw(){
+  requestAnimationFrame(draw);
+  if (playing) tick(); else if (idle > 0) idle--; else return;   /* parado, não gasta bateria redesenhando */
+  const w = cv.width, h = cv.height;
+  if (!w || !h) return;
+  g.fillStyle = '#041e3c'; g.fillRect(0,0,w,h);
+  grid(w,h);
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  ch.forEach((c,i) => {
+    if (!c.an) return;
+    c.an.getFloatTimeDomainData(c.data);
+    const mid = h*(i === 0 ? 0.28 : 0.72), amp = h*0.19, n = c.data.length;
+    let sum = 0;
+    g.beginPath();
+    for (let x = 0; x < w; x++){
+      const s = c.data[Math.floor(x/w*n)];
+      const y = mid - Math.max(-1, Math.min(1, s))*amp;
+      x ? g.lineTo(x,y) : g.moveTo(x,y);
+    }
+    for (let k = 0; k < n; k += 8) sum += c.data[k]*c.data[k];
+    c.level = Math.sqrt(sum/(n/8));
+    g.strokeStyle = i === 0 ? '#d6e33c' : '#43d3e6';
+    g.lineWidth = 1.5*dpr; g.lineJoin = 'round';
+    g.stroke();
+    $('lvl'+i).style.width = Math.min(100, c.level*280)+'%';
+  });
+}
+
+sizeCanvas();
+requestAnimationFrame(draw);
+refresh();
+if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>

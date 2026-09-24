@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+*.log
+.vscode/
+.idea/
+__pycache__/
+_site/
+# gerado a cada publicação por tools/gerar_acervo.py
+musicas/index.json

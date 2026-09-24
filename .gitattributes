@@ -1,0 +1,14 @@
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.mid binary
+*.midi binary
+*.kar binary
+*.rmi binary
+*.gp binary
+*.gp3 binary
+*.gp4 binary
+*.gp5 binary
+*.gpx binary
+*.mxl binary
+*.png binary
+*.wav binary
