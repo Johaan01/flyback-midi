@@ -1,0 +1,82 @@
+{
+ "Arco Voltaico.mid": {
+  "autor": "composição original, hard rock",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Alta Tensão.mid": {
+  "autor": "composição original, thrash metal",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Galope do Plasma.mid": {
+  "autor": "composição original, heavy metal com guitarras gêmeas",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Descarga.mid": {
+  "autor": "composição original, punk rock",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Ferrite.mid": {
+  "autor": "composição original, doom metal sobre o Dies Irae gregoriano",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Faísca em 7 por 8.mid": {
+  "autor": "composição original, metal progressivo em 7/8",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Blindagem.mid": {
+  "autor": "composição original, death metal",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Bobina de Tesla.mid": {
+  "autor": "composição original, power ballad",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Curto-Circuito.mid": {
+  "autor": "composição original, synthwave",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Fase 1-1.mid": {
+  "autor": "composição original, chiptune",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Na Gruta do Rei da Montanha (metal).mid": {
+  "autor": "arranjo metal de E. Grieg, Peer Gynt",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Tocata em Ré menor (metal).mid": {
+  "autor": "arranjo metal de J. S. Bach, BWV 565",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Für Elise (rock).mid": {
+  "autor": "arranjo rock de L. van Beethoven, WoO 59",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Greensleeves (balada metal).mid": {
+  "autor": "arranjo metal da canção tradicional inglesa",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Cânone em Ré (rock).mid": {
+  "autor": "arranjo rock de J. Pachelbel",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ },
+ "Quinta de Beethoven (metal).mid": {
+  "autor": "arranjo metal de L. van Beethoven, Sinfonia nº 5",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
+ }
+}

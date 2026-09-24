@@ -1,0 +1,43 @@
+{
+  "versao": 1,
+  "faixas": [
+    {
+      "nome": "Bateria",
+      "canal": "desligada"
+    },
+    {
+      "nome": "Baixo",
+      "canal": "esquerdo"
+    },
+    {
+      "nome": "Guitarra base",
+      "canal": "esquerdo"
+    },
+    {
+      "nome": "Melodia",
+      "canal": "desligada"
+    },
+    {
+      "nome": "Guitarra solo",
+      "canal": "direito"
+    },
+    {
+      "nome": "Guitarra solo 2",
+      "canal": "esquerdo"
+    }
+  ],
+  "canais": [
+    {
+      "ganho": 70,
+      "passaBaixa": 20000,
+      "oitava": 0,
+      "acorde": "agudo"
+    },
+    {
+      "ganho": 70,
+      "passaBaixa": 20000,
+      "oitava": 0,
+      "acorde": "agudo"
+    }
+  ]
+}
