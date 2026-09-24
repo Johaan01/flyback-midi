@@ -56,9 +56,24 @@ Para deixar uma música já roteada, ajuste no site, toque em **Baixar configura
 
 Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `tools\publicar.cmd`.
 
-A pasta `musicas/exemplos` tem três arquivos de teste: Korobeiniki (chiptune em MIDI formato 0),
-Ode à Alegria (arranjo de banda com 7 faixas e configuração pronta) e um riff em Guitar Pro.
-Apague quando tiver as suas.
+## O que já vem no acervo
+
+| Pasta | Conteúdo |
+|---|---|
+| `rock e metal` | 16 músicas prontas para os dois flybacks: 10 composições próprias (hard rock, thrash, heavy metal com guitarras gêmeas, punk, doom, prog em 7/8, death metal, power ballad, synthwave, chiptune) e 6 arranjos metal de temas em domínio público (Grieg, Bach, Beethoven, Pachelbel, Greensleeves) |
+| `exemplos` | Korobeiniki (MIDI formato 0), Ode à Alegria (banda de 7 faixas) e um riff em Guitar Pro |
+| `classicos` | 4.867 peças do [Mutopia Project](https://www.mutopiaproject.org), de 319 compositores, em domínio público ou Creative Commons |
+
+No site, o acervo tem filtro por pasta, busca por título, compositor ou instrumento, e um botão
+para sortear uma música. O crédito exigido pelas licenças aparece ao abrir cada peça.
+
+`tools/compor_rock.py` gera a pasta `rock e metal`; `tools/baixar_mutopia.py` baixa os clássicos
+e, rodado de novo, traz só as peças novas do Mutopia. `musicas/pastas.txt` define a ordem das pastas.
+
+Músicas de bandas (rock, metal, pop) são protegidas por direito autoral, inclusive as transcrições
+em MIDI que circulam na internet. Não as envie para este repositório: ele é público, e o GitHub
+remove conteúdo protegido quando notificado. Para tocar músicas assim, abra o arquivo do aparelho
+pelo botão "abrir arquivo do aparelho"; ele não sai do celular.
 
 ## Testar no computador antes de publicar
 

@@ -60,7 +60,12 @@ a{color:var(--ch2)}
 .lib[open]>summary::before{transform:rotate(90deg)}
 .lib .count{font-weight:400;color:var(--dim);font-size:12.5px;font-family:"IBM Plex Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .lib-body{padding:0 14px 14px}
-input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:6px 10px;width:100%;margin:0 0 10px}
+input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:6px 10px;width:100%;margin:0}
+.lib-tools{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:8px;margin:0 0 10px}
+.lib-tools select.hide+input{grid-column:1/-1}
+@media(max-width:560px){.lib-tools{grid-template-columns:minmax(0,1fr)}}
+.liblist .sub{display:block;font-size:12px;color:var(--dim)}
+.credit{margin:-6px 0 14px;color:var(--dim);font-size:12.5px;overflow-wrap:anywhere}
 .liblist{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto;overscroll-behavior:contain}
 .liblist li.grp{font-size:12px;color:var(--dim);padding:10px 0 4px;font-family:"IBM Plex Mono",monospace}
 .liblist button{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--soft);border-radius:0;background:transparent;padding:10px 6px}
@@ -178,10 +183,14 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
   <details class="lib" id="lib" open>
     <summary><span>Acervo</span><span class="count" id="libCount"></span></summary>
     <div class="lib-body">
-      <input type="search" id="libQ" class="hide" placeholder="buscar no acervo" aria-label="Buscar no acervo" autocomplete="off">
+      <div class="lib-tools hide" id="libTools">
+        <select id="libF" aria-label="Pasta do acervo"></select>
+        <input type="search" id="libQ" placeholder="buscar título, compositor, instrumento" aria-label="Buscar no acervo" autocomplete="off">
+      </div>
       <ul class="liblist" id="libList"></ul>
       <p class="note-line" id="libMsg">carregando…</p>
       <div class="btns">
+        <button id="libRnd" class="hide">Sortear uma</button>
         <button id="libOff" class="hide">Guardar para usar sem internet</button>
         <a id="libUp" class="btn hide" target="_blank" rel="noopener">Enviar música para o acervo</a>
       </div>
@@ -193,6 +202,7 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
 
   <div id="panel" class="hide">
     <h2>Faixas encontradas</h2>
+    <p class="credit hide" id="credito"></p>
     <div class="presets">
       <button data-p="bass">Baixo e melodia</button>
       <button data-p="guitars">Guitarras somadas</button>
@@ -818,13 +828,15 @@ async function loadFile(f){
     const n = await openBuffer(await f.arrayBuffer(), { key: 'arquivo:' + f.name + ':' + f.size, file: f.name });
     el.textContent = f.name + ' · ' + n + ' faixas'; el.classList.add('has');
     if (ONLINE) history.replaceState(null, '', location.pathname);
-    markLib();
+    markLib(); showCredit(null);
   } catch (e) { el.textContent = 'não deu para ler: ' + e.message; }
 }
 
 /* ---------- acervo: musicas/index.json, gerado pelo GitHub Actions a cada envio ---------- */
 const TIPOS = { mid: 'MIDI', midi: 'MIDI', kar: 'MIDI', rmi: 'MIDI', gp: 'GP', gp3: 'GP', gp4: 'GP', gp5: 'GP', gpx: 'GP', musicxml: 'XML', mxl: 'XML', xml: 'XML' };
-let lib = [];
+const LIMITE = 200;   /* itens desenhados de uma vez: milhares de botões pesam no celular */
+let lib = [], pastas = [], filtrados = [];
+const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const libUrl = path => 'musicas/' + path.split('/').map(encodeURIComponent).join('/');
 function itemFromPath(path, all){
   const ext = (path.match(/\.([^./]+)$/) || [])[1];
@@ -852,16 +864,29 @@ async function loadLibrary(){
     msg.textContent = 'O acervo aparece quando a página é aberta pelo site publicado ou pelo servidor local (python tools/servir.py).';
     return;
   }
-  let list = null;
+  let list = null, dados = null;
   try {
     const r = await fetch('musicas/index.json', { cache: 'no-cache' });
-    if (r.ok) list = (await r.json()).musicas;
+    if (r.ok){ dados = await r.json(); list = dados.musicas; }
   } catch (e) {}
-  if (!Array.isArray(list)) list = await libFromGitHub().catch(() => null);
+  if (!Array.isArray(list)){
+    list = await libFromGitHub().catch(() => null);
+    if (list) list.sort((a, b) => (a.pasta ? 1 : 0) - (b.pasta ? 1 : 0) || fold(a.pasta).localeCompare(fold(b.pasta)) || fold(a.titulo).localeCompare(fold(b.titulo)));
+  }
   if (!Array.isArray(list)){ msg.textContent = 'Não foi possível carregar o acervo. Sem internet, só aparecem músicas guardadas antes.'; return; }
   lib = list.filter(x => x && typeof x.arquivo === 'string');
-  lib.sort((a, b) => (a.pasta ? 1 : 0) - (b.pasta ? 1 : 0) || (a.pasta || '').localeCompare(b.pasta || '', 'pt') || a.titulo.localeCompare(b.titulo, 'pt'));
-  $('libQ').classList.toggle('hide', lib.length < 7);
+  lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.instrumentos].join(' ')); });
+  pastas = dados && Array.isArray(dados.pastas) ? dados.pastas : [];
+  if (!pastas.length) lib.forEach(it => { const r = it.pasta.split('/')[0]; if (!r) return;
+    const p = pastas.find(x => x.nome === r); p ? p.musicas++ : pastas.push({ nome: r, musicas: 1 }); });
+  const sel = $('libF'); sel.textContent = '';
+  sel.appendChild(new Option('todas as pastas (' + lib.length.toLocaleString('pt-BR') + ')', ''));
+  pastas.forEach(p => sel.appendChild(new Option(p.nome + ' (' + p.musicas.toLocaleString('pt-BR') + ')', p.nome)));
+  const salva = store.get('pasta');
+  if (salva && pastas.some(p => p.nome === salva)) sel.value = salva;
+  $('libTools').classList.toggle('hide', lib.length < 7);
+  $('libF').classList.toggle('hide', pastas.length < 2);
+  if (lib.length) $('libRnd').classList.remove('hide');
   if ('caches' in window && lib.length) $('libOff').classList.remove('hide');
   msg.textContent = lib.length ? '' : 'O acervo está vazio. Envie arquivos .mid ou .gp para a pasta musicas do repositório.';
   renderLib();
@@ -869,29 +894,52 @@ async function loadLibrary(){
   const it = want && lib.find(x => x.arquivo === want);
   if (it) openLib(it);
 }
+function filtrar(){
+  const ws = fold($('libQ').value.trim()).split(/\s+/).filter(Boolean), p = $('libF').value;
+  return lib.filter(it => (!p || it.pasta === p || it.pasta.startsWith(p + '/')) && ws.every(w => it._busca.includes(w)));
+}
 function renderLib(){
-  const ul = $('libList'), q = $('libQ').value.trim().toLocaleLowerCase('pt');
-  const fold = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('pt');
+  filtrados = filtrar();
+  const ul = $('libList'), p = $('libF').value, add = (cls, txt) => { const li = document.createElement('li'); li.className = cls; li.textContent = txt; ul.appendChild(li); };
   ul.textContent = '';
-  let folder = null, shown = 0;
-  lib.forEach(it => {
-    if (q && !fold(it.titulo + ' ' + (it.pasta || '')).includes(fold(q))) return;
-    if ((it.pasta || '') !== folder){
-      folder = it.pasta || '';
-      if (folder){ const g = document.createElement('li'); g.className = 'grp'; g.textContent = folder; ul.appendChild(g); }
+  let folder = null;
+  filtrados.slice(0, LIMITE).forEach(it => {
+    if (it.pasta !== folder){
+      folder = it.pasta;
+      const g = p ? folder.slice(p.length + 1) : folder;
+      if (g) add('grp', g.replace(/\//g, ' › '));
     }
     const li = document.createElement('li'), b = document.createElement('button');
     const t = document.createElement('span'); t.className = 't'; t.textContent = it.titulo;
+    const sub = it.instrumentos || it.autor;
+    if (sub){ const s = document.createElement('span'); s.className = 'sub'; s.textContent = sub; t.appendChild(s); }
     const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = it.tipo + (it.config ? ' · pronta' : '');
     b.append(t, tag); b.dataset.path = it.arquivo; b.onclick = () => openLib(it);
-    li.appendChild(b); ul.appendChild(li); shown++;
+    li.appendChild(b); ul.appendChild(li);
   });
-  if (q && !shown){ const li = document.createElement('li'); li.className = 'grp'; li.textContent = 'nada encontrado'; ul.appendChild(li); }
+  const n = filtrados.length;
+  if (!n && lib.length) add('grp', 'nada encontrado');
+  else if (n > LIMITE) add('grp', 'mais ' + (n - LIMITE).toLocaleString('pt-BR') + ' — busque pelo nome ou escolha uma pasta');
+  $('libOff').textContent = n === lib.length ? 'Guardar tudo para usar sem internet' : 'Guardar estas ' + n.toLocaleString('pt-BR') + ' para usar sem internet';
+  $('libOff').disabled = !n;
   markLib();
 }
 function markLib(){
   document.querySelectorAll('#libList button').forEach(b => b.setAttribute('aria-current', !!(current && current.lib && current.lib.arquivo === b.dataset.path)));
-  if (lib.length) $('libCount').textContent = lib.length + (lib.length === 1 ? ' música' : ' músicas') + (current && current.lib ? ' · ' + current.title : '');
+  if (lib.length) $('libCount').textContent = lib.length.toLocaleString('pt-BR') + (lib.length === 1 ? ' música' : ' músicas') + (current && current.lib ? ' · ' + current.title : '');
+}
+/* crédito exigido pelas licenças Creative Commons: aparece junto das faixas */
+function showCredit(it){
+  const el = $('credito'); el.textContent = '';
+  if (!it || !(it.autor || it.licenca)) { el.classList.add('hide'); return; }
+  const partes = [it.autor, it.instrumentos, it.licenca === 'deste projeto' ? null : it.licenca, it.credito].filter(Boolean);
+  el.appendChild(document.createTextNode(partes.join(' · ')));
+  if (/^https?:\/\//.test(it.fonte || '')){
+    const a = document.createElement('a'); a.href = it.fonte; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = new URL(it.fonte).hostname.replace(/^www\./, '');
+    el.append(' · ', a);
+  }
+  el.classList.remove('hide');
 }
 async function openLib(it){
   const el = $('drop'); el.textContent = 'baixando ' + it.titulo + '…'; el.classList.remove('has');
@@ -904,24 +952,33 @@ async function openLib(it){
     const n = await openBuffer(buf, { key: 'acervo:' + it.arquivo, file: it.arquivo.split('/').pop(), title: it.titulo, sidecar, lib: it });
     el.textContent = DROP_IDLE;
     history.replaceState(null, '', location.pathname + '?m=' + encodeURIComponent(it.arquivo));
-    markLib();
+    markLib(); showCredit(it);
     $('libMsg').textContent = it.titulo + ' · ' + n + ' faixas';
     if (matchMedia('(max-width:640px)').matches) $('lib').open = false;
   } catch (e) { el.textContent = 'não deu para abrir ' + it.titulo + ': ' + e.message; }
 }
-$('libQ').addEventListener('input', renderLib);
+let buscaTimer = 0;
+$('libQ').addEventListener('input', () => { clearTimeout(buscaTimer); buscaTimer = setTimeout(renderLib, 120); });
+$('libF').addEventListener('change', () => { store.set('pasta', $('libF').value); renderLib(); });
+$('libRnd').onclick = () => { const pool = filtrados.length ? filtrados : lib; if (pool.length) openLib(pool[Math.floor(Math.random() * pool.length)]); };
 $('libOff').onclick = async () => {
-  const msg = $('libMsg'), b = $('libOff'); b.disabled = true;
+  const msg = $('libMsg'), b = $('libOff'), lista = filtrados.slice();
+  if (lista.length > 300 && !confirm('Guardar ' + lista.length.toLocaleString('pt-BR') + ' músicas neste aparelho para usar sem internet?')) return;
+  b.disabled = true;
   try {
     const cache = await caches.open('flyback-acervo');
-    let ok = 0;
-    for (const it of lib){
-      const urls = [libUrl(it.arquivo)]; if (it.config) urls.push(libUrl(it.config));
-      try { await cache.addAll(urls); ok++; } catch (e) {}
-      msg.textContent = 'guardando ' + ok + ' de ' + lib.length + '…';
-    }
-    if (lib.some(it => it.tipo !== 'MIDI')){ try { await (await caches.open('flyback-cdn')).add(ALPHATAB_URL); } catch (e) {} }
-    msg.textContent = ok + ' de ' + lib.length + ' músicas guardadas neste aparelho para usar sem internet.';
+    let i = 0, feitos = 0, ok = 0;
+    const trabalho = async () => {
+      while (i < lista.length){
+        const it = lista[i++], urls = [libUrl(it.arquivo)];
+        if (it.config) urls.push(libUrl(it.config));
+        try { await cache.addAll(urls); ok++; } catch (e) {}
+        if (++feitos % 10 === 0) msg.textContent = 'guardando ' + feitos + ' de ' + lista.length + '…';
+      }
+    };
+    await Promise.all([trabalho(), trabalho(), trabalho(), trabalho()]);
+    if (lista.some(it => it.tipo !== 'MIDI')){ try { await (await caches.open('flyback-cdn')).add(ALPHATAB_URL); } catch (e) {} }
+    msg.textContent = ok + ' de ' + lista.length + ' músicas guardadas neste aparelho para usar sem internet.';
   } catch (e) { msg.textContent = 'este navegador não deixou guardar: ' + e.message; }
   b.disabled = false;
 };

@@ -18,7 +18,9 @@ Arquivos de apoio, fora das páginas:
 | `sw.js` | Service worker: uso sem internet. Rede primeiro para o próprio site, cópia guardada primeiro para CDN |
 | `manifest.webmanifest`, `icones/` | Instalação na tela inicial do celular |
 | `musicas/` | Acervo. Tudo que estiver aqui aparece no site |
-| `tools/gerar_acervo.py` | Gera `musicas/index.json`, a lista do acervo. Só biblioteca padrão |
+| `tools/gerar_acervo.py` | Gera `musicas/index.json`, a lista do acervo, juntando `creditos.json` e `pastas.txt`. Só biblioteca padrão |
+| `tools/compor_rock.py` | Compõe `musicas/rock e metal` numa notação de texto própria, com configuração pronta para cada música |
+| `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
 | `tools/publicar.ps1`, `tools/publicar.cmd` | Cria o repositório, envia e liga o GitHub Pages via GitHub CLI |
 | `.github/workflows/pages.yml` | A cada push na `main`: gera o índice do acervo e publica |
@@ -72,6 +74,16 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
+O acervo tem perto de 4.900 músicas, então a interface foi feita para isso: filtro pela pasta de primeiro nível (lembrado no aparelho), busca por palavras em título, pasta, autor e instrumentos (sem acento, todas as palavras precisam aparecer), no máximo `LIMITE` (200) botões desenhados de cada vez, "Sortear uma" dentro do filtro atual, e "Guardar para usar sem internet" aplicado ao filtro atual, com quatro downloads em paralelo. O índice tem cerca de 1,9 MB e 100 KB comprimido.
+
+`creditos.json` numa pasta dá `autor`, `instrumentos`, `licenca`, `credito` e `fonte` dos arquivos dela; o gerador copia esses campos para o índice e o site mostra o crédito abaixo de "Faixas encontradas". É o que cumpre a atribuição pedida pelas licenças CC BY e CC BY-SA do Mutopia.
+
+**Direito autoral.** O repositório é público. Só entra no acervo o que for domínio público, licença livre ou composição do próprio projeto. MIDIs de músicas de bandas, mesmo transcritos por fãs, ficam de fora; quem quiser tocá-los abre o arquivo do aparelho.
+
+### Rock e metal (`tools/compor_rock.py`)
+
+Cada música tem Bateria, Baixo, Guitarra base, Melodia e Guitarra solo, às vezes Guitarra solo 2, Órgão, Sintetizador ou outras. A melodia e o solo nunca soam ao mesmo tempo, então somados no canal direito tocam 100% das notas; a guitarra base (e a segunda guitarra, nas partes de guitarras gêmeas, com "acorde: agudo") vai no esquerdo. O `.json` de cada uma já traz esse roteamento. Os solos saem de `improviso()`, com semente fixa: rodar o script de novo gera os mesmos arquivos. A notação (`E2*m/8`, `|` conferindo a soma de cada compasso) está descrita no começo do script.
+
 ### Configuração por música
 
 Formato (o mesmo no `localStorage` e no `.json` ao lado da música):
@@ -124,4 +136,4 @@ Barra de reprodução fixa no rodapé, alvos de toque de 40 px ou mais (`pointer
 - Não usar `localStorage` sem `try/catch` e sem funcionar quando vazio (`store` em `index.html`).
 - Qualquer biblioteca externa só via `<script>` de CDN, com versão fixada.
 - Arquivo novo que o site precise servir tem de entrar no passo "Montar o site" do workflow e, se for do núcleo, em `BASE` no `sw.js`. Mudou `sw.js` de forma incompatível: troque o nome de `SITE`.
-- Testar com MIDI real antes de considerar pronto: um arquivo de música de videogame (3 a 4 faixas) e um arranjo de banda (6 a 8 faixas) cobrem os dois extremos. `musicas/exemplos` tem os dois casos e um Guitar Pro.
+- Testar com MIDI real antes de considerar pronto: um arquivo de música de videogame (3 a 4 faixas) e um arranjo de banda (6 a 8 faixas) cobrem os dois extremos. `musicas/exemplos` tem os dois casos e um Guitar Pro; `musicas/rock e metal` cobre compassos 7/8, 6/8 e 3/8, andamento acelerando e ritardando.
