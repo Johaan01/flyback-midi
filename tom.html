@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#041e3c">
+<meta name="description" content="Gerador de tom contínuo em dois canais, um para cada flyback: frequência livre no slider, forma de onda à escolha e varredura.">
+<title>Gerador de tom</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icones/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Flyback">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --field:#041e3c; --panel:#0a2e52; --chrome:#072744;
+  --rule:rgba(140,190,235,.22); --soft:rgba(140,190,235,.10);
+  --ink:#dceaf7; --dim:#7fa5c8;
+  --ch1:#d6e33c; --ch2:#43d3e6;
+  --bar:66px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#051a33;color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.55;
+  padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom,0px) + 12px)}
+.wrap{max-width:940px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em;line-height:1.25}
+.tabs{display:inline-flex;flex:none;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.tabs a{padding:6px 13px;font-size:13px;color:var(--dim);text-decoration:none}
+.tabs a+a{border-left:1px solid var(--rule)}
+.tabs a[aria-current=page]{background:var(--panel);color:var(--ink)}
+.lede{color:var(--dim);margin:0 0 20px;max-width:64ch}
+a{color:var(--ch2)}
+
+.screen{position:relative;border:1px solid var(--rule);background:var(--field);border-radius:3px;overflow:hidden}
+#cv{display:block;width:100%;height:220px}
+@media(max-width:640px){#cv{height:160px}}
+.chip{position:absolute;left:8px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;pointer-events:none}
+.chip.a{top:calc(28% - 9px);color:var(--ch1)}
+.chip.b{top:calc(72% - 9px);color:var(--ch2)}
+.note{position:absolute;right:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-variant-numeric:tabular-nums;pointer-events:none}
+.note.a{top:calc(28% - 9px);color:var(--ch1)}
+.note.b{top:calc(72% - 9px);color:var(--ch2)}
+.empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font-size:14px;text-align:center;padding:0 24px;pointer-events:none}
+
+button,.btn{font:inherit;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;cursor:pointer}
+.btn{display:inline-flex;align-items:center;text-decoration:none}
+button:hover:not(:disabled),.btn:hover{background:var(--panel)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--ch2);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.btns button,.btns .btn{padding:7px 13px;font-size:13px}
+
+.transport{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(5,26,51,.94);border-top:1px solid var(--rule);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  padding:9px max(16px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left))}
+.transport .in{max-width:940px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.play{width:46px;height:46px;display:grid;place-items:center;flex:none;font-size:15px}
+.play[aria-pressed=true]{background:var(--panel);border-color:var(--ink)}
+.pos{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.clock{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:520px){.live{display:none}}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:20px;cursor:pointer;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--rule)}
+input[type=range]::-moz-range-track{height:2px;background:var(--rule)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--ink);margin-top:-5.5px}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:var(--ink)}
+
+h2{font-size:14px;font-weight:600;margin:0 0 12px}
+.chans{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+@media(max-width:760px){.chans{grid-template-columns:1fr}}
+.ch{border:1px solid var(--rule);border-top-width:3px;border-radius:3px;padding:16px}
+.ch.a{border-top-color:var(--ch1)}
+.ch.b{border-top-color:var(--ch2)}
+.ch h2{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.onoff{padding:3px 11px;font-size:12px;font-weight:400;color:var(--dim)}
+.onoff[aria-pressed=true]{background:var(--panel);color:var(--ink)}
+.ch.a .onoff[aria-pressed=true]{border-color:var(--ch1)}
+.ch.b .onoff[aria-pressed=true]{border-color:var(--ch2)}
+.ctl{margin-bottom:14px}
+.ctl:last-of-type{margin-bottom:0}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:2px}
+.ctl label{font-size:13px;color:var(--dim)}
+.ctl .val{font-family:"IBM Plex Mono",monospace;font-size:12px;font-variant-numeric:tabular-nums}
+.ctl .val.big{font-size:18px;letter-spacing:-.01em}
+.ch.a .val.big{color:var(--ch1)}
+.ch.b .val.big{color:var(--ch2)}
+select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:4px 8px;width:100%}
+input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:13px;width:100%;color:var(--ink);
+  background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:4px 8px;font-variant-numeric:tabular-nums}
+.fine{display:flex;gap:6px;align-items:stretch;margin-top:9px}
+.fine button{flex:none;padding:5px 9px;font-size:12px;font-family:"IBM Plex Mono",monospace;color:var(--dim)}
+.fine input[type=number]{flex:1;min-width:0;text-align:center;padding:4px 2px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}
+@media(max-width:860px){.boxes{grid-template-columns:1fr}}
+.box{border:1px solid var(--rule);border-radius:3px;padding:16px}
+.box p{margin:0;color:var(--dim);font-size:13px}
+.box .pair{margin-top:12px}
+.box .btns{margin-top:10px}
+.box .btns button{padding:6px 11px;font-size:12.5px}
+.box .btns button[aria-pressed=true]{background:var(--panel);border-color:var(--ink)}
+.note-line{color:var(--dim);font-size:13px;margin:10px 0 0}
+.note-line:empty{display:none}
+
+.tip{margin-top:30px;padding-top:18px;border-top:1px solid var(--soft);color:var(--dim);font-size:13.5px;max-width:68ch}
+.tip p{margin:0 0 9px}
+.tip p:last-child{margin:0}
+.tip code{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.foot{margin-top:18px;color:var(--dim);font-size:12.5px}
+.hide{display:none!important}
+
+@media(pointer:coarse){
+  input[type=range]{height:34px}
+  input[type=range]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-10px}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px}
+  .btns button,.btns .btn,.tabs a,.onoff,.fine button{min-height:40px}
+  .tabs a,.onoff{display:inline-flex;align-items:center}
+  select,input[type=number]{font-size:16px;min-height:40px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Gerador de tom</h1>
+    <nav class="tabs" aria-label="Páginas">
+      <a href="./">MIDI</a>
+      <a href="stems.html">Stems</a>
+      <a href="tom.html" aria-current="page">Tom</a>
+    </nav>
+  </header>
+  <p class="lede">Um tom contínuo em cada canal, para achar a ressonância do arco, conferir a faixa útil do driver e casar o par de flybacks. Arraste o slider e a frequência acompanha sem degrau.</p>
+
+  <div class="screen">
+    <canvas id="cv"></canvas>
+    <span class="chip a">1▸</span>
+    <span class="chip b">2▸</span>
+    <span class="note a" id="nota0"></span>
+    <span class="note b" id="nota1"></span>
+    <div class="empty" id="empty">parado</div>
+  </div>
+
+  <div class="chans">
+    <section class="ch a">
+      <h2><span>Canal esquerdo</span><button class="onoff" id="on0" aria-pressed="true">ligado</button></h2>
+      <div class="ctl">
+        <div class="row"><label for="f0">Frequência</label><span class="val big" id="fv0">440,00 Hz</span></div>
+        <input type="range" id="f0" min="0" max="2000" value="1000" aria-label="Frequência do canal esquerdo">
+        <div class="fine">
+          <button type="button" data-ch="0" data-mul=".5" aria-label="Metade da frequência">×½</button>
+          <button type="button" data-ch="0" data-add="-1" aria-label="Um hertz abaixo">◀</button>
+          <input type="number" id="fn0" min="20" max="20000" step="any" value="440" aria-label="Frequência em hertz do canal esquerdo">
+          <button type="button" data-ch="0" data-add="1" aria-label="Um hertz acima">▶</button>
+          <button type="button" data-ch="0" data-mul="2" aria-label="Dobro da frequência">×2</button>
+        </div>
+      </div>
+      <div class="pair">
+        <div class="ctl">
+          <label for="w0">Forma de onda</label>
+          <select id="w0"></select>
+        </div>
+        <div class="ctl">
+          <label for="nt0">Nota</label>
+          <select id="nt0"></select>
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="g0">Ganho</label><span class="val" id="gv0">70%</span></div>
+        <input type="range" id="g0" min="0" max="100" value="70">
+      </div>
+    </section>
+
+    <section class="ch b">
+      <h2><span>Canal direito</span><button class="onoff" id="on1" aria-pressed="false">desligado</button></h2>
+      <div class="ctl">
+        <div class="row"><label for="f1">Frequência</label><span class="val big" id="fv1">440,00 Hz</span></div>
+        <input type="range" id="f1" min="0" max="2000" value="1000" aria-label="Frequência do canal direito">
+        <div class="fine">
+          <button type="button" data-ch="1" data-mul=".5" aria-label="Metade da frequência">×½</button>
+          <button type="button" data-ch="1" data-add="-1" aria-label="Um hertz abaixo">◀</button>
+          <input type="number" id="fn1" min="20" max="20000" step="any" value="440" aria-label="Frequência em hertz do canal direito">
+          <button type="button" data-ch="1" data-add="1" aria-label="Um hertz acima">▶</button>
+          <button type="button" data-ch="1" data-mul="2" aria-label="Dobro da frequência">×2</button>
+        </div>
+      </div>
+      <div class="pair">
+        <div class="ctl">
+          <label for="w1">Forma de onda</label>
+          <select id="w1"></select>
+        </div>
+        <div class="ctl">
+          <label for="nt1">Nota</label>
+          <select id="nt1"></select>
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="g1">Ganho</label><span class="val" id="gv1">70%</span></div>
+        <input type="range" id="g1" min="0" max="100" value="70">
+      </div>
+    </section>
+  </div>
+
+  <div class="boxes">
+    <div class="box">
+      <h2>Varredura</h2>
+      <p>Sobe e desce entre dois limites, para ouvir em que faixa o arco rende mais.</p>
+      <div class="pair">
+        <div class="ctl">
+          <label for="sv0">De</label>
+          <input type="number" id="sv0" min="20" max="20000" step="any" value="50" aria-label="Frequência inicial da varredura">
+        </div>
+        <div class="ctl">
+          <label for="sv1">Até</label>
+          <input type="number" id="sv1" min="20" max="20000" step="any" value="2000" aria-label="Frequência final da varredura">
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="sdur">Duração</label><span class="val" id="sdurv">10 s</span></div>
+        <input type="range" id="sdur" min="1" max="60" value="10">
+      </div>
+      <div class="btns">
+        <button id="swp" aria-pressed="false">Varrer</button>
+        <button id="swpv" aria-pressed="true">ida e volta</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Intervalo entre os dois</h2>
+      <p>Acerta o canal direito a partir do esquerdo. Batimento de 1 Hz é o jeito clássico de ouvir se os dois arcos estão casados.</p>
+      <div class="btns">
+        <button type="button" data-int="1">uníssono</button>
+        <button type="button" data-int="2">oitava</button>
+        <button type="button" data-int="1.5">quinta</button>
+        <button type="button" data-int="1.25">terça</button>
+        <button type="button" data-bat="1">batimento 1 Hz</button>
+      </div>
+      <div class="btns">
+        <button id="trava" aria-pressed="false">Travar a razão</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Compartilhar</h2>
+      <p>O endereço guarda os dois canais, a forma de onda e o ganho. Abrir o link devolve o mesmo ajuste.</p>
+      <div class="btns">
+        <button id="link">Copiar o link</button>
+        <button id="reset">Restaurar</button>
+      </div>
+      <p class="note-line" id="msg"></p>
+    </div>
+  </div>
+
+  <div class="tip">
+    <p><strong>Onda quadrada é o timbre real do arco.</strong> O comparador do driver quadrateia o sinal de qualquer jeito, então senoide e triangular servem para medir e comparar, não para prever como vai soar. Para ouvir o que o flyback vai fazer, deixe em quadrada.</p>
+    <p><strong>Cada canal vai para um flyback.</strong> A separação é dura, por <code>ChannelMergerNode</code>: o lado desligado sai com amostra zero, sem vazamento de um driver para o outro.</p>
+    <p><strong>Acima de uns 5 kHz o arco perde corpo</strong> e vira sopro. Uma varredura de 50 Hz a 2 kHz costuma cobrir a região onde o par rende mais.</p>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<div class="transport">
+  <div class="in">
+    <button class="play" id="play" aria-pressed="false" aria-label="Tocar">▶</button>
+    <div class="pos">
+      <input type="range" id="vol" min="0" max="100" value="50" aria-label="Volume">
+      <span class="clock" id="volv">50%</span>
+    </div>
+    <span class="clock live" id="live"></span>
+  </div>
+</div>
+
+<script>
+/* ---------- utilidades ---------- */
+const $ = id => document.getElementById(id);
+const N = 2;
+const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const nm = n => NAMES[((n % 12) + 12) % 12] + (Math.floor(n / 12) - 1);
+const hz = n => 440 * Math.pow(2, (n - 69) / 12);
+const FMIN = 20, FMAX = 20000, PASSOS = 2000, RAZAO = FMAX / FMIN;
+const freqOf = v => FMIN * Math.pow(RAZAO, v / PASSOS);
+const sliderOf = f => Math.round(PASSOS * Math.log(f / FMIN) / Math.log(RAZAO));
+const limitar = f => Math.min(FMAX, Math.max(FMIN, f));
+const br = s => String(s).replace('.', ',');
+const fmtHz = f => br(f >= 10000 ? f.toFixed(0) : f >= 1000 ? f.toFixed(1) : f.toFixed(2)) + ' Hz';
+const curto = f => br(f >= 1000 ? (f / 1000).toFixed(2) + ' kHz' : f.toFixed(1) + ' Hz');
+const ONLINE = /^https?:$/.test(location.protocol);
+const store = {
+  get(k){ try { const s = localStorage.getItem('flyback:' + k); return s ? JSON.parse(s) : null; } catch (e) { return null; } },
+  set(k, v){ try { localStorage.setItem('flyback:' + k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k){ try { localStorage.removeItem('flyback:' + k); } catch (e) {} }
+};
+const GH = (() => {
+  const m = location.hostname.match(/^([\w-]+)\.github\.io$/);
+  if (!m) return null;
+  const p = location.pathname.split('/').filter(Boolean);
+  return { owner: m[1], repo: p.length ? p[0] : m[1] + '.github.io' };
+})();
+
+/* Onda quadrada é o timbre do arco; as outras servem para medir e comparar. */
+const ONDAS = [['square', 'quadrada'], ['sine', 'senoide'], ['triangle', 'triangular'], ['sawtooth', 'dente de serra']];
+/* E0 (20,6 Hz) é a nota mais grave que cabe no limite de baixo; daí até o topo audível */
+const NOTA_LO = 16, NOTA_HI = 132;
+
+const ch = [{ on: true,  f: 440, onda: 'square', ganho: 70, osc: null, gn: null, an: null, data: null },
+            { on: false, f: 440, onda: 'square', ganho: 70, osc: null, gn: null, an: null, data: null }];
+let actx = null, merger = null, tocando = false, vol = 50, travado = false, razaoTravada = 1;
+let varrendo = false, varreVolta = true, varreT0 = 0, wake = null, wakeWanted = false, idle = 2;
+
+/* ---------- áudio ---------- */
+function ensureCtx(){
+  if (actx) return actx;
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} /* iOS: toca com a chave de silencioso */
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  merger = actx.createChannelMerger(N);
+  merger.connect(actx.destination);
+  ch.forEach((c, i) => {
+    /* um oscilador por canal, ligado o tempo todo: quem dá e tira voz é o ganho, e aí não há clique */
+    c.osc = actx.createOscillator(); c.osc.type = c.onda; c.osc.frequency.value = c.f;
+    c.gn = actx.createGain(); c.gn.gain.value = 0;
+    c.an = actx.createAnalyser(); c.an.fftSize = 2048; c.data = new Float32Array(c.an.fftSize);
+    /* separação dura, como no player: cada canal entra num lado do merger e não vaza para o outro */
+    c.osc.connect(c.gn); c.gn.connect(c.an); c.an.connect(merger, 0, i);
+    c.osc.start();
+  });
+  return actx;
+}
+const nivel = i => tocando && ch[i].on ? (vol / 100) * (ch[i].ganho / 100) : 0;
+function aplicarGanho(i){
+  const c = ch[i];
+  if (!c.gn) return;
+  const t = actx.currentTime;
+  c.gn.gain.cancelScheduledValues(t);
+  c.gn.gain.setValueAtTime(c.gn.gain.value, t);
+  c.gn.gain.linearRampToValueAtTime(nivel(i), t + .008);   /* rampa curta, como no player: sem clique ao ligar e desligar */
+}
+function aplicarFreq(i){
+  const c = ch[i];
+  if (!c.osc) return;
+  const t = actx.currentTime;
+  c.osc.frequency.cancelScheduledValues(t);
+  c.osc.frequency.setTargetAtTime(c.f, t, .006);           /* suaviza o arrasto do slider sem atrasar o ouvido */
+}
+
+/* ---------- estado e interface ---------- */
+let guardaT = 0;
+function guardar(){
+  clearTimeout(guardaT);                                   /* a varredura mexe na frequência a cada quadro: não grava a cada quadro */
+  guardaT = setTimeout(() => store.set('tom',
+    { v: vol, t: travado, c: ch.map(c => ({ on: c.on, f: c.f, onda: c.onda, ganho: c.ganho })) }), 400);
+}
+function mostrar(i){
+  const c = ch[i];
+  $('fv' + i).textContent = fmtHz(c.f);
+  const sl = $('f' + i), alvo = String(sliderOf(c.f));
+  if (sl.value !== alvo && document.activeElement !== sl) sl.value = alvo;
+  const num = $('fn' + i), txt = c.f >= 1000 ? c.f.toFixed(1) : c.f.toFixed(2);
+  if (document.activeElement !== num) num.value = txt;
+  const n = Math.round(69 + 12 * Math.log2(c.f / 440));
+  const cents = Math.round(1200 * Math.log2(c.f / hz(n)));
+  const sel = $('nt' + i), alvoN = n >= NOTA_LO && n <= NOTA_HI && !cents ? String(n) : '';
+  if (sel.value !== alvoN) sel.value = alvoN;
+  $('nota' + i).textContent = c.on ? curto(c.f) + '   ' + nm(n) + (cents ? (cents > 0 ? ' +' : ' −') + Math.abs(cents) : '') : '';
+  $('on' + i).setAttribute('aria-pressed', String(c.on));
+  $('on' + i).textContent = c.on ? 'ligado' : 'desligado';
+  $('gv' + i).textContent = c.ganho + '%';
+  $('w' + i).value = c.onda;
+}
+function mostrarTudo(){
+  for (let i = 0; i < N; i++) mostrar(i);
+  $('volv').textContent = vol + '%';
+  if (document.activeElement !== $('vol')) $('vol').value = String(vol);
+  $('play').setAttribute('aria-pressed', String(tocando));
+  $('play').textContent = tocando ? '⏸' : '▶';
+  $('play').setAttribute('aria-label', tocando ? 'Parar' : 'Tocar');
+  $('empty').classList.toggle('hide', tocando);
+  const vivos = ch.filter(c => c.on);
+  $('live').textContent = tocando && vivos.length ? vivos.map(c => curto(c.f)).join('  ·  ') : '';
+  guardar();
+}
+function setFreq(i, f){
+  f = limitar(f);
+  if (travado){
+    const o = 1 - i;
+    ch[o].f = limitar(i === 0 ? f * razaoTravada : f / razaoTravada);
+    if (actx) aplicarFreq(o);
+  }
+  ch[i].f = f;
+  if (actx) aplicarFreq(i);
+  mostrarTudo();
+}
+function setOnda(i, w){
+  ch[i].onda = w;
+  if (ch[i].osc) ch[i].osc.type = w;
+  mostrarTudo();
+}
+function ligar(i, on){
+  ch[i].on = on;
+  if (actx) aplicarGanho(i);
+  if (on && !tocando) tocar(true); else mostrarTudo();
+}
+function tocar(on){
+  if (on){
+    ensureCtx();
+    if (actx.state !== 'running') actx.resume();
+    if (!ch.some(c => c.on)) ch[0].on = true;
+  }
+  tocando = on;
+  if (!on && varrendo) varrer(false);
+  if (actx) for (let i = 0; i < N; i++) aplicarGanho(i);
+  manterAcordado(on);
+  idle = 2;
+  mostrarTudo();
+}
+
+/* ---------- varredura ---------- */
+function varrer(on){
+  varrendo = on;
+  $('swp').setAttribute('aria-pressed', String(on));
+  $('swp').textContent = on ? 'Parar a varredura' : 'Varrer';
+  if (on){ varreT0 = performance.now(); if (!tocando) tocar(true); }
+}
+function passoVarredura(){
+  const a = limitar(parseFloat($('sv0').value) || 50), b = limitar(parseFloat($('sv1').value) || 2000);
+  const dur = Math.max(1, +$('sdur').value) * 1000;
+  let u = ((performance.now() - varreT0) % (varreVolta ? dur * 2 : dur)) / dur;
+  if (u > 1) u = 2 - u;                                    /* a volta refaz o mesmo caminho ao contrário */
+  const f = a * Math.pow(b / a, u);                        /* passeio logarítmico: sobe parelho ao ouvido em toda a faixa */
+  for (let i = 0; i < N; i++) if (ch[i].on){ ch[i].f = f; aplicarFreq(i); }
+  mostrarTudo();
+}
+
+/* ---------- tela ligada enquanto toca ---------- */
+async function manterAcordado(on){
+  wakeWanted = on;
+  try {
+    if (on && !wake && 'wakeLock' in navigator && document.visibilityState === 'visible'){
+      wake = 'pedindo';
+      const w = await navigator.wakeLock.request('screen');
+      if (!wakeWanted){ wake = null; w.release(); return; }
+      wake = w; w.addEventListener('release', () => { if (wake === w) wake = null; });
+    } else if (!on && wake && wake !== 'pedindo'){ const w = wake; wake = null; await w.release(); }
+  } catch (e) { wake = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !tocando) return;
+  manterAcordado(true);
+  if (actx && actx.state !== 'running') actx.resume();
+});
+
+/* ---------- endereço e ajuste guardado ---------- */
+function paramAtual(){
+  const p = new URLSearchParams();
+  ch.forEach((c, i) => {
+    const s = i ? '2' : '';
+    p.set('f' + s, c.f.toFixed(2));
+    p.set('o' + s, c.onda);
+    p.set('g' + s, String(c.ganho));
+    p.set('l' + s, c.on ? '1' : '0');
+  });
+  p.set('v', String(vol));
+  return p;
+}
+function aplicarEstado(e){
+  if (!e) return;
+  if (typeof e.v === 'number') vol = Math.max(0, Math.min(100, Math.round(e.v)));
+  travado = !!e.t;
+  (e.c || []).forEach((d, i) => {
+    if (i >= N || !d) return;
+    if (typeof d.f === 'number' && isFinite(d.f)) ch[i].f = limitar(d.f);
+    if (ONDAS.some(o => o[0] === d.onda)) ch[i].onda = d.onda;
+    if (typeof d.ganho === 'number') ch[i].ganho = Math.max(0, Math.min(100, Math.round(d.ganho)));
+    if (typeof d.on === 'boolean') ch[i].on = d.on;
+  });
+}
+function lerEndereco(){
+  const p = new URLSearchParams(location.search);
+  if (!p.has('f') && !p.has('f2')) return false;
+  const num = (k, lo, hi) => { const v = parseFloat(p.get(k)); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : null; };
+  ch.forEach((c, i) => {
+    const s = i ? '2' : '';
+    const f = num('f' + s, FMIN, FMAX); if (f !== null) c.f = f;
+    const o = p.get('o' + s); if (ONDAS.some(w => w[0] === o)) c.onda = o;
+    const g = num('g' + s, 0, 100); if (g !== null) c.ganho = Math.round(g);
+    const l = p.get('l' + s); if (l !== null) c.on = l === '1';
+  });
+  const v = num('v', 0, 100); if (v !== null) vol = Math.round(v);
+  return true;
+}
+function recado(txt){
+  const el = $('msg'); el.textContent = txt;
+  clearTimeout(recado.t); recado.t = setTimeout(() => { el.textContent = ''; }, 2600);
+}
+
+/* ---------- montagem dos seletores ---------- */
+for (let i = 0; i < N; i++){
+  const w = $('w' + i);
+  ONDAS.forEach(([v, t]) => w.appendChild(new Option(t, v)));
+  const s = $('nt' + i);
+  s.appendChild(new Option('—', ''));
+  for (let n = NOTA_LO; n <= NOTA_HI; n++) s.appendChild(new Option(nm(n) + ' · ' + curto(hz(n)), String(n)));
+}
+
+/* ---------- ligações ---------- */
+for (let i = 0; i < N; i++){
+  $('f' + i).addEventListener('input', e => setFreq(i, freqOf(+e.target.value)));
+  $('fn' + i).addEventListener('input', e => { const v = parseFloat(e.target.value); if (isFinite(v) && v >= FMIN && v <= FMAX) setFreq(i, v); });
+  $('fn' + i).addEventListener('blur', () => mostrar(i));
+  $('w' + i).addEventListener('change', e => setOnda(i, e.target.value));
+  $('nt' + i).addEventListener('change', e => { if (e.target.value) setFreq(i, hz(+e.target.value)); });
+  $('g' + i).addEventListener('input', e => { ch[i].ganho = +e.target.value; if (actx) aplicarGanho(i); mostrarTudo(); });
+  $('on' + i).addEventListener('click', () => ligar(i, !ch[i].on));
+}
+document.querySelectorAll('.fine button').forEach(b => b.addEventListener('click', () => {
+  const i = +b.dataset.ch;
+  setFreq(i, b.dataset.mul ? ch[i].f * parseFloat(b.dataset.mul) : ch[i].f + parseFloat(b.dataset.add));
+}));
+document.querySelectorAll('[data-int],[data-bat]').forEach(b => b.addEventListener('click', () => {
+  ch[1].f = limitar(b.dataset.int ? ch[0].f * parseFloat(b.dataset.int) : ch[0].f + parseFloat(b.dataset.bat));
+  razaoTravada = ch[1].f / ch[0].f;
+  if (actx) aplicarFreq(1);
+  ligar(1, true);
+}));
+$('trava').addEventListener('click', () => {
+  travado = !travado;
+  razaoTravada = ch[1].f / ch[0].f;
+  $('trava').setAttribute('aria-pressed', String(travado));
+  guardar();
+});
+$('play').addEventListener('click', () => tocar(!tocando));
+$('vol').addEventListener('input', e => { vol = +e.target.value; if (actx) for (let i = 0; i < N; i++) aplicarGanho(i); mostrarTudo(); });
+$('sdur').addEventListener('input', e => { $('sdurv').textContent = e.target.value + ' s'; });
+$('swp').addEventListener('click', () => varrer(!varrendo));
+$('swpv').addEventListener('click', () => {
+  varreVolta = !varreVolta;
+  $('swpv').setAttribute('aria-pressed', String(varreVolta));
+  $('swpv').textContent = varreVolta ? 'ida e volta' : 'só ida';
+});
+$('link').addEventListener('click', async () => {
+  const url = location.origin + location.pathname + '?' + paramAtual().toString();
+  try { await navigator.clipboard.writeText(url); recado('link copiado'); }
+  catch (e) { history.replaceState(null, '', '?' + paramAtual().toString()); recado('link na barra de endereço'); }
+});
+$('reset').addEventListener('click', () => {
+  store.del('tom');
+  ch[0].on = true; ch[1].on = false;
+  ch.forEach(c => { c.f = 440; c.onda = 'square'; c.ganho = 70; });
+  vol = 50; travado = false; razaoTravada = 1;
+  $('trava').setAttribute('aria-pressed', 'false');
+  if (actx) for (let i = 0; i < N; i++){ aplicarFreq(i); aplicarGanho(i); }
+  history.replaceState(null, '', location.pathname);
+  mostrarTudo(); recado('ajuste restaurado');
+});
+addEventListener('keydown', e => {
+  if (e.key !== ' ' || /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.target.tagName)) return;
+  e.preventDefault(); tocar(!tocando);
+});
+
+/* ---------- osciloscópio ---------- */
+const cv = $('cv'), g = cv.getContext('2d');
+function sizeCanvas(){
+  const d = Math.min(devicePixelRatio || 1, 2), r = cv.getBoundingClientRect();
+  cv.width = Math.max(1, Math.round(r.width * d));
+  cv.height = Math.max(1, Math.round(r.height * d));
+  idle = 2;
+}
+addEventListener('resize', sizeCanvas);
+function grid(w, h){
+  g.fillStyle = 'rgba(160,200,240,.30)';
+  for (let c = 0; c <= 10; c++) for (let r = 0; r <= 40; r++) g.fillRect(Math.round(c * w / 10), Math.round(r * h / 40), 1, 1);
+  for (let r = 0; r <= 8; r++) for (let c = 0; c <= 50; c++) g.fillRect(Math.round(c * w / 50), Math.round(r * h / 8), 1, 1);
+}
+function draw(){
+  requestAnimationFrame(draw);
+  if (tocando){ if (varrendo) passoVarredura(); }
+  else if (idle > 0) idle--;
+  else return;                                             /* parado, não gasta bateria redesenhando */
+  const w = cv.width, h = cv.height; if (!w || !h) return;
+  g.fillStyle = '#041e3c'; g.fillRect(0, 0, w, h); grid(w, h);
+  const d = Math.min(devicePixelRatio || 1, 2), taxa = actx ? actx.sampleRate : 48000;
+  ch.forEach((c, i) => {
+    if (!c.an) return;
+    c.an.getFloatTimeDomainData(c.data);
+    /* mostra uns três ciclos, seja qual for a frequência: a forma fica legível de 20 Hz a 20 kHz */
+    const janela = Math.max(16, Math.min(c.data.length, Math.round(taxa / Math.max(1, c.f) * 3)));
+    const mid = h * (i === 0 ? .28 : .72), amp = h * .19;
+    g.beginPath();
+    for (let x = 0; x < w; x++){
+      const s = c.data[Math.floor(x / w * janela)];
+      const y = mid - Math.max(-1, Math.min(1, s)) * amp;
+      x ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.strokeStyle = i === 0 ? '#d6e33c' : '#43d3e6';
+    g.lineWidth = 1.5 * d; g.lineJoin = 'round'; g.stroke();
+  });
+}
+
+/* ---------- início ---------- */
+if (GH){
+  const f = $('foot'), a = document.createElement('a');
+  a.href = 'https://github.com/' + GH.owner + '/' + GH.repo; a.textContent = 'código, músicas e documentação no GitHub';
+  f.appendChild(a);
+}
+if (!lerEndereco()) aplicarEstado(store.get('tom'));
+razaoTravada = ch[1].f / ch[0].f;
+$('trava').setAttribute('aria-pressed', String(travado));
+mostrarTudo();
+sizeCanvas(); requestAnimationFrame(draw);
+if (ONLINE && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>
