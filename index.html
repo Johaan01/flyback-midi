@@ -166,6 +166,7 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
     <nav class="tabs" aria-label="Páginas">
       <a href="./" aria-current="page">MIDI</a>
       <a href="stems.html">Stems</a>
+      <a href="tom.html">Tom</a>
     </nav>
   </header>
   <p class="lede">Escolha uma música do acervo ou abra um MIDI ou Guitar Pro, decida qual instrumento vai para cada lado, e a página sintetiza onda quadrada em estéreo. Cada lado é monofônico, como o arco.</p>
@@ -207,7 +208,7 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
       <button data-p="bass">Baixo e melodia</button>
       <button data-p="guitars">Guitarras somadas</button>
       <button data-p="lead">Principal e acompanhamento</button>
-      <button data-p="complement">Faixas que não se atropelam</button>
+      <button data-p="complement">Melodia inteira, resto sem atropelo</button>
       <button data-p="split">Grave e agudo</button>
       <button data-p="none">Desligar tudo</button>
     </div>
@@ -504,7 +505,7 @@ function midiOffset(buf){
 /* ---------- estado ---------- */
 const ch = [{ osc: null, gain: null, filter: null, an: null, data: null, segs: [], cur: '' },
             { osc: null, gain: null, filter: null, an: null, data: null, segs: [], cur: '' }];
-let tracks = [], assign = [], actx = null, merger = null, current = null;
+let tracks = [], assign = [], prio = [], actx = null, merger = null, current = null;
 let startedAt = 0, offset = 0, playing = false, duration = 0, scrubbing = false, scrubAt = 0, loop = false;
 
 function ensureCtx(){
@@ -523,20 +524,34 @@ function ensureCtx(){
 }
 
 /* ---------- monta a linha monofônica ---------- */
+/* Varredura cronologica: num instante soa uma nota so. Entre as que estao soando ganha a de
+   prioridade mais alta, e e assim que o acompanhamento principal nao e atropelado pelo que
+   entra nas brechas dele. Empatada a prioridade, decide a altura, como sempre.
+   Com todas as faixas em prioridade 0 — todo preset menos o sem atropelo — o resultado e o
+   mesmo de antes. */
 function buildSegs(i){
-  const sel = [];
-  tracks.forEach((t, k) => { if (assign[k] === (i === 0 ? 'L' : 'R') || assign[k] === 'B') sel.push(t); });
+  const lado = i === 0 ? 'L' : 'R', sel = [];
+  tracks.forEach((t, k) => { if (assign[k] === lado || assign[k] === 'B') sel.push([t, Math.max(0, Math.min(15, prio[k] | 0))]); });
   if (!sel.length) return [];
   const pick = $('pick' + i).value, oct = +$('oct' + i).value;
   const ev = [];
-  sel.forEach(t => t.notes.forEach(n => { ev.push({ t: n.t0, on: 1, n: n.n }); ev.push({ t: n.t1, on: 0, n: n.n }); }));
+  sel.forEach(([t, p]) => t.notes.forEach(n => {
+    const k = (n.n << 4) | p;                                    /* altura e prioridade numa chave so */
+    ev.push({ t: n.t0, on: 1, k: k }); ev.push({ t: n.t1, on: 0, k: k });
+  }));
   ev.sort((a, b) => a.t - b.t || a.on - b.on);
   const live = new Map(); const segs = []; let cur = null;
-  const best = () => { if (!live.size) return null;
-    let b = null; for (const k of live.keys()) if (b === null || (pick === 'hi' ? k > b : k < b)) b = k; return b; };
+  const best = () => {
+    let bn = null, bp = -1;
+    for (const k of live.keys()){
+      const n = k >> 4, p = k & 15;
+      if (p > bp || (p === bp && (pick === 'hi' ? n > bn : n < bn))){ bp = p; bn = n; }
+    }
+    return bn;
+  };
   for (const e of ev){
-    if (e.on) live.set(e.n, (live.get(e.n) || 0) + 1);
-    else { const c = (live.get(e.n) || 0) - 1; c <= 0 ? live.delete(e.n) : live.set(e.n, c); }
+    if (e.on) live.set(e.k, (live.get(e.k) || 0) + 1);
+    else { const c = (live.get(e.k) || 0) - 1; c <= 0 ? live.delete(e.k) : live.set(e.k, c); }
     const b = best();
     if (cur && cur.n !== b){ cur.end = e.t; if (cur.end > cur.start + .005) segs.push(cur); cur = null; }
     if (b !== null && !cur) cur = { start: e.t, end: null, n: b };
@@ -614,7 +629,8 @@ function renderTracks(){
     const row = document.createElement('div'); row.className = 'trk'; row.setAttribute('role', 'listitem');
     const name = document.createElement('div'); name.className = 'nm'; name.textContent = t.name;
     const meta = document.createElement('span'); meta.className = 'meta';
-    meta.textContent = t.notes.length + ' notas · ' + nm(lo) + ' – ' + nm(hi) + (isDrum(t) ? ' · percussão' : '');
+    const papel = assign[k] === 'O' || !prio[k] ? '' : prio[k] >= 3 ? ' · principal' : prio[k] >= 2 ? ' · base' : ' · preenche as brechas';
+    meta.textContent = t.notes.length + ' notas · ' + nm(lo) + ' – ' + nm(hi) + (isDrum(t) ? ' · percussão' : '') + papel;
     name.appendChild(meta); row.appendChild(name);
     const seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Canal de ' + t.name);
     ROUTES.forEach(([lb, val, desc]) => {
@@ -647,47 +663,70 @@ function occupancy(){
     return a;
   });
 }
+/* Quanto a faixa e monofonica: fracao das notas que entram sem nada mais soando nela.
+   Linha de voz e de melodia fica perto de 1; naipe de acordes, perto de 0. */
+function monofonia(t){
+  const ns = t.notes.slice().sort((a, b) => a.t0 - b.t0);
+  if (ns.length < 2) return 1;
+  let sobre = 0, fim = ns[0].t1;
+  for (let i = 1; i < ns.length; i++){
+    if (ns[i].t0 < fim - .01) sobre++;
+    fim = Math.max(fim, ns[i].t1);
+  }
+  return 1 - sobre / ns.length;
+}
+/* nome de voz ou de melodia, valendo para faixa nomeada e para programa General MIDI
+   (Choir Aahs, Voice Oohs, Synth Voice, Lead 1...) */
+const RX_VOZ = /voc|voz|canto|cantor|sing|choir|coro|melod|lead|vox|aahs|oohs/i;
+function scoreVoz(i, occ, nb){
+  const t = tracks[i];
+  const agudo = Math.max(0, Math.min(1, (avgPitch(t) - 48) / 36));   /* de C3 a C6 */
+  let ocup = 0; for (let k = 0; k < nb; k++) ocup += occ[i][k];
+  let s = 2.2 * monofonia(t) + 1.1 * agudo + .6 * (nb ? ocup / nb : 0);
+  if (RX_VOZ.test(t.name)) s += 2;
+  if (isBass(t)) s -= 2.5;                                           /* baixo e acompanhamento, nunca a melodia */
+  return s;
+}
+
+/* "Melodia inteira, resto sem atropelo".
+   A faixa principal — de preferencia a voz — vai sozinha para a direita e sai inteira, sem
+   perder nota nenhuma. A esquerda recebe o acompanhamento de maior cobertura como base, e as
+   outras faixas entram so onde a base esta calada, com prioridade menor: nas brechas elas
+   aparecem, e no choque quem fica e a base. */
 function bestPartition(){
-  const occ = occupancy();
-  const size = occ.map(a => { let c = 0; for (let i = 0; i < a.length; i++) c += a[i]; return c; });
-  let cand = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]));
+  const occ = occupancy(), nb = occ.length ? occ[0].length : 0;
+  const tam = occ.map(a => { let c = 0; for (let k = 0; k < nb; k++) c += a[k]; return c; });
+  const cand = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]) && tracks[i].notes.length);
   if (cand.length < 2) return null;
-  if (cand.length > 10) cand = cand.slice().sort((a, b) => size[b] - size[a]).slice(0, 10);
-  const n = cand.length;
-  const ov = Array.from({ length: n }, () => new Array(n).fill(0));
-  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++){
-    const A = occ[cand[i]], B = occ[cand[j]]; let c = 0;
-    for (let k = 0; k < A.length; k++) if (A[k] && B[k]) c++;
-    ov[i][j] = ov[j][i] = c;
+
+  const sc = new Map();
+  cand.forEach(i => sc.set(i, scoreVoz(i, occ, nb)));
+  const li = cand.reduce((a, b) => sc.get(b) > sc.get(a) ? b : a);
+  const resto = cand.filter(i => i !== li).sort((a, b) => tam[b] - tam[a]);
+  if (!resto.length) return null;
+
+  const out = tracks.map(() => 'O'), pr = tracks.map(() => 0);
+  out[li] = 'R'; pr[li] = 3;
+  const base = resto[0];
+  out[base] = 'L'; pr[base] = 2;
+
+  const cheio = occ[base].slice();
+  for (const i of resto.slice(1)){
+    let novo = 0;
+    for (let k = 0; k < nb; k++) if (occ[i][k] && !cheio[k]) novo++;
+    /* so entra quem traz brecha de verdade: nem a sombra da base, nem um punhado de notas soltas */
+    if (novo < nb * .06 || novo < tam[i] * .3) continue;
+    out[i] = 'L'; pr[i] = 1;
+    for (let k = 0; k < nb; k++) if (occ[i][k]) cheio[k] = 1;
   }
-  let bestS = -Infinity, best = null;
-  const total = Math.pow(3, n);
-  for (let m = 0; m < total; m++){
-    let x = m; const side = new Array(n);
-    for (let i = 0; i < n; i++){ side[i] = x % 3; x = (x / 3) | 0; }
-    let covL = 0, covR = 0, ovL = 0, ovR = 0, hasL = false, hasR = false;
-    for (let i = 0; i < n; i++){
-      const si = side[i]; if (!si) continue;
-      if (si === 1){ covL += size[cand[i]]; hasL = true; } else { covR += size[cand[i]]; hasR = true; }
-      for (let j = i + 1; j < n; j++){
-        if (side[j] !== si) continue;
-        if (si === 1) ovL += ov[i][j]; else ovR += ov[i][j];
-      }
-    }
-    if (!hasL || !hasR) continue;
-    const netL = covL - ovL, netR = covR - ovR;
-    const sc = netL + netR - 1.4 * (ovL + ovR) - .3 * Math.abs(netL - netR);
-    if (sc > bestS){ bestS = sc; best = side; }
-  }
-  if (!best) return null;
-  const out = tracks.map(() => 'O');
-  cand.forEach((ti, i) => { out[ti] = best[i] === 1 ? 'L' : best[i] === 2 ? 'R' : 'O'; });
+  prio = pr;
   return out;
 }
 
 function computePreset(p){
   const idx = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]));
   const a = tracks.map(() => 'O');
+  prio = tracks.map(() => 0);   /* so o preset sem atropelo usa prioridade; nos outros as faixas valem o mesmo */
   if (p === 'bass'){
     let bi = -1, bv = 999, mi = -1, mv = -1;
     idx.forEach(i => { const v = avgPitch(tracks[i]); if (v < bv){ bv = v; bi = i; } });
@@ -739,7 +778,11 @@ const CANAL_IN = { desligada: 'O', esquerdo: 'L', direito: 'R', ambos: 'B', O: '
 function currentCfg(){
   return {
     versao: 1,
-    faixas: tracks.map((t, k) => ({ nome: t.name, canal: CANAL_OUT[assign[k]] })),
+    faixas: tracks.map((t, k) => {
+      const f = { nome: t.name, canal: CANAL_OUT[assign[k]] };
+      if (prio[k]) f.prioridade = prio[k];   /* só aparece quando um preset definiu quem ganha no choque */
+      return f;
+    }),
     canais: ch.map((c, i) => ({
       ganho: +$('gain' + i).value,
       passaBaixa: Math.round(freqOf(+$('lp' + i).value)),
@@ -764,11 +807,16 @@ function resetControls(){
 function applyCfg(cfg){
   if (!cfg || !Array.isArray(cfg.faixas)) return false;
   const byName = new Map();
-  cfg.faixas.forEach(f => { if (f && typeof f.nome === 'string') byName.set(f.nome, CANAL_IN[f.canal] || 'O'); });
+  cfg.faixas.forEach(f => { if (f && typeof f.nome === 'string') byName.set(f.nome, f); });
   let hit = 0;
-  const a = tracks.map(t => { if (byName.has(t.name)){ hit++; return byName.get(t.name); } return 'O'; });
+  const a = [], pr = [];
+  tracks.forEach(t => {
+    const f = byName.get(t.name);
+    if (f){ hit++; a.push(CANAL_IN[f.canal] || 'O'); pr.push(Math.max(0, Math.min(15, Math.round(+f.prioridade) || 0))); }
+    else { a.push('O'); pr.push(0); }
+  });
   if (!hit) return false;
-  assign = a;
+  assign = a; prio = pr;
   resetControls();
   (Array.isArray(cfg.canais) ? cfg.canais : []).slice(0, N).forEach((c, i) => {
     if (!c) return;
@@ -875,15 +923,13 @@ async function loadLibrary(){
   }
   if (!Array.isArray(list)){ msg.textContent = 'Não foi possível carregar o acervo. Sem internet, só aparecem músicas guardadas antes.'; return; }
   lib = list.filter(x => x && typeof x.arquivo === 'string');
-  lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.instrumentos].join(' ')); });
+  lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.artista, it.instrumentos, it.estilo].join(' ')); });
   pastas = dados && Array.isArray(dados.pastas) ? dados.pastas : [];
   if (!pastas.length) lib.forEach(it => { const r = it.pasta.split('/')[0]; if (!r) return;
     const p = pastas.find(x => x.nome === r); p ? p.musicas++ : pastas.push({ nome: r, musicas: 1 }); });
-  const sel = $('libF'); sel.textContent = '';
-  sel.appendChild(new Option('todas as pastas (' + lib.length.toLocaleString('pt-BR') + ')', ''));
-  pastas.forEach(p => sel.appendChild(new Option(p.nome + ' (' + p.musicas.toLocaleString('pt-BR') + ')', p.nome)));
+  montarFiltro();
   const salva = store.get('pasta');
-  if (salva && pastas.some(p => p.nome === salva)) sel.value = salva;
+  if (salva && [...$('libF').options].some(o => o.value === salva)) $('libF').value = salva;
   $('libTools').classList.toggle('hide', lib.length < 7);
   $('libF').classList.toggle('hide', pastas.length < 2);
   if (lib.length) $('libRnd').classList.remove('hide');
@@ -893,6 +939,35 @@ async function loadLibrary(){
   const want = new URLSearchParams(location.search).get('m');
   const it = want && lib.find(x => x.arquivo === want);
   if (it) openLib(it);
+}
+/* O seletor de pasta mostra dois níveis: a pasta de cima e, recuadas, as de dentro. Com o
+   acervo de clássicos dividido por região e o de bandas por nível, é o segundo nível que torna
+   o filtro útil — "classicos" sozinho continuaria sendo um balaio só. Um nível de cima com
+   muitas pastas dentro fica sem desdobramento, para o seletor não virar uma lista imensa. */
+const SUB_MAX = 25;
+function montarFiltro(){
+  const sel = $('libF'); sel.textContent = '';
+  sel.appendChild(new Option('todas as pastas (' + lib.length.toLocaleString('pt-BR') + ')', ''));
+  const conta = new Map();
+  lib.forEach(it => {
+    const p = it.pasta.split('/');
+    if (!p[0]) return;
+    conta.set(p[0], (conta.get(p[0]) || 0) + 1);
+    if (p[1]){ const k = p[0] + '/' + p[1]; conta.set(k, (conta.get(k) || 0) + 1); }
+  });
+  const ordem = pastas.map(p => p.nome);
+  const pos = r => { const i = ordem.indexOf(r); return i < 0 ? ordem.length : i; };
+  const n = v => v.toLocaleString('pt-BR');
+  [...conta.keys()].filter(k => !k.includes('/'))
+    .sort((a, b) => pos(a) - pos(b) || fold(a).localeCompare(fold(b)))
+    .forEach(r => {
+      sel.appendChild(new Option(r + ' (' + n(conta.get(r)) + ')', r));
+      const filhas = [...conta.keys()].filter(k => k.startsWith(r + '/'))
+        .sort((a, b) => fold(a).localeCompare(fold(b)));
+      if (filhas.length > 1 && filhas.length <= SUB_MAX)
+        filhas.forEach(k => sel.appendChild(
+          new Option('   ' + k.slice(r.length + 1) + ' (' + n(conta.get(k)) + ')', k)));
+    });
 }
 function filtrar(){
   const ws = fold($('libQ').value.trim()).split(/\s+/).filter(Boolean), p = $('libF').value;
@@ -932,7 +1007,10 @@ function markLib(){
 function showCredit(it){
   const el = $('credito'); el.textContent = '';
   if (!it || !(it.autor || it.licenca)) { el.classList.add('hide'); return; }
-  const partes = [it.autor, it.instrumentos, it.licenca === 'deste projeto' ? null : it.licenca, it.credito].filter(Boolean);
+  /* 'credito' já traz quem compôs e quem transcreveu nas músicas de banda; 'popularidade' diz
+     de onde saiu a posição delas no acervo. Ver USO-EDUCACIONAL.md. */
+  const partes = [it.autor, it.instrumentos, it.estilo, it.licenca === 'deste projeto' ? null : it.licenca,
+                  it.credito, it.popularidade].filter(Boolean);
   el.appendChild(document.createTextNode(partes.join(' · ')));
   if (/^https?:\/\//.test(it.fonte || '')){
     const a = document.createElement('a'); a.href = it.fonte; a.target = '_blank'; a.rel = 'noopener';
@@ -1211,11 +1289,16 @@ function draw(){
 }
 
 /* ---------- início ---------- */
+const foot = $('foot');
 if (GH){
-  const f = $('foot'), a = document.createElement('a');
+  const a = document.createElement('a');
   a.href = 'https://github.com/' + GH.owner + '/' + GH.repo; a.textContent = 'código, músicas e documentação no GitHub';
-  f.appendChild(a);
+  foot.append(a, ' · ');
 }
+/* o acervo tem transcrições de obras protegidas: a finalidade e a atribuição ficam à mão */
+const uso = document.createElement('a');
+uso.href = 'USO-EDUCACIONAL.md'; uso.textContent = 'uso educacional e atribuição';
+foot.appendChild(uso);
 sizeCanvas(); requestAnimationFrame(draw);
 loadLibrary();
 if (ONLINE && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
