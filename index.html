@@ -61,9 +61,13 @@ a{color:var(--ch2)}
 .lib .count{font-weight:400;color:var(--dim);font-size:12.5px;font-family:"IBM Plex Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .lib-body{padding:0 14px 14px}
 input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:6px 10px;width:100%;margin:0}
-.lib-tools{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:8px;margin:0 0 10px}
-.lib-tools select.hide+input{grid-column:1/-1}
-@media(max-width:560px){.lib-tools{grid-template-columns:minmax(0,1fr)}}
+.lib-tools{margin:0 0 10px}
+.acervos{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 9px}
+.acervos button{padding:6px 13px;font-size:13px;color:var(--dim)}
+.acervos button[aria-pressed=true]{background:var(--panel);color:var(--ink);border-color:var(--ink)}
+.lib-linha{display:grid;grid-template-columns:minmax(0,16rem) minmax(0,1fr);gap:8px}
+.lib-linha select.hide+input{grid-column:1/-1}
+@media(max-width:560px){.lib-linha{grid-template-columns:minmax(0,1fr)}}
 .liblist .sub{display:block;font-size:12px;color:var(--dim)}
 .credit{margin:-6px 0 14px;color:var(--dim);font-size:12.5px;overflow-wrap:anywhere}
 .liblist{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto;overscroll-behavior:contain}
@@ -89,6 +93,7 @@ button:disabled{opacity:.35;cursor:default}
 button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible,.drop:focus-visible,.roll:focus-visible{outline:2px solid var(--ch2);outline-offset:2px}
 .btns{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
 .btns button,.btns .btn{padding:7px 13px;font-size:13px}
+.btns button[aria-pressed=true]{background:var(--panel);border-color:var(--ink)}
 
 .transport{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(5,26,51,.94);border-top:1px solid var(--rule);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
@@ -185,13 +190,17 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
     <summary><span>Acervo</span><span class="count" id="libCount"></span></summary>
     <div class="lib-body">
       <div class="lib-tools hide" id="libTools">
-        <select id="libF" aria-label="Pasta do acervo"></select>
-        <input type="search" id="libQ" placeholder="buscar título, compositor, instrumento" aria-label="Buscar no acervo" autocomplete="off">
+        <div class="acervos" id="libA" role="group" aria-label="Acervo"></div>
+        <div class="lib-linha">
+          <select id="libF" aria-label="Grupo dentro do acervo"></select>
+          <input type="search" id="libQ" placeholder="buscar título, artista, compositor" aria-label="Buscar no acervo" autocomplete="off">
+        </div>
       </div>
       <ul class="liblist" id="libList"></ul>
       <p class="note-line" id="libMsg">carregando…</p>
       <div class="btns">
         <button id="libRnd" class="hide">Sortear uma</button>
+        <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
         <button id="libOff" class="hide">Guardar para usar sem internet</button>
         <a id="libUp" class="btn hide" target="_blank" rel="noopener">Enviar música para o acervo</a>
       </div>
@@ -927,11 +936,14 @@ async function loadLibrary(){
   pastas = dados && Array.isArray(dados.pastas) ? dados.pastas : [];
   if (!pastas.length) lib.forEach(it => { const r = it.pasta.split('/')[0]; if (!r) return;
     const p = pastas.find(x => x.nome === r); p ? p.musicas++ : pastas.push({ nome: r, musicas: 1 }); });
-  montarFiltro();
   const salva = store.get('pasta');
-  if (salva && [...$('libF').options].some(o => o.value === salva)) $('libF').value = salva;
+  /* o ajuste guardado pode ser de um acervo que não existe mais: só vale se ainda bater */
+  acervo = salva && pastas.some(p => p.nome === salva) ? salva : '';
+  montarAcervos();
+  montarFiltro();
   $('libTools').classList.toggle('hide', lib.length < 7);
-  $('libF').classList.toggle('hide', pastas.length < 2);
+  $('libA').classList.toggle('hide', pastas.length < 2);
+  if (lib.some(it => it.posicao > 0)) $('libTop').classList.remove('hide');
   if (lib.length) $('libRnd').classList.remove('hide');
   if ('caches' in window && lib.length) $('libOff').classList.remove('hide');
   msg.textContent = lib.length ? '' : 'O acervo está vazio. Envie arquivos .mid ou .gp para a pasta musicas do repositório.';
@@ -940,42 +952,77 @@ async function loadLibrary(){
   const it = want && lib.find(x => x.arquivo === want);
   if (it) openLib(it);
 }
-/* O seletor de pasta mostra dois níveis: a pasta de cima e, recuadas, as de dentro. Com o
-   acervo de clássicos dividido por região e o de bandas por nível, é o segundo nível que torna
-   o filtro útil — "classicos" sozinho continuaria sendo um balaio só. Um nível de cima com
-   muitas pastas dentro fica sem desdobramento, para o seletor não virar uma lista imensa. */
-const SUB_MAX = 25;
+/* Navegação do acervo em duas peças. Uma lista só de pastas não dá conta de 1.300 músicas:
+   os botões escolhem o acervo (bandas, clássicos, folk russo, exemplos) e o seletor mostra o
+   que há dentro dele — o artista, ou o compositor agrupado por região num <optgroup>. Assim
+   chegar no AC/DC são dois toques, em vez de rolar uma lista única.
+   Um botão à parte reduz às mais ouvidas, que é o que serve para demonstrar o aparelho. */
+const TOPO = 60;
+let acervo = '', soTopo = false;
+const dentroDe = (it, p) => !p || it.pasta === p || it.pasta.startsWith(p + '/');
+const contar = p => lib.reduce((s, it) => s + (dentroDe(it, p) ? 1 : 0), 0);
+const nBR = v => v.toLocaleString('pt-BR');
+
+function montarAcervos(){
+  const box = $('libA'); box.textContent = '';
+  const faz = (rotulo, valor) => {
+    const b = document.createElement('button');
+    b.textContent = rotulo + ' (' + nBR(contar(valor)) + ')';
+    b.setAttribute('aria-pressed', acervo === valor);
+    b.onclick = () => {
+      acervo = valor; soTopo = false;
+      store.set('pasta', valor);
+      montarAcervos(); montarFiltro(); renderLib();
+    };
+    box.appendChild(b);
+  };
+  faz('tudo', '');
+  pastas.forEach(p => faz(p.nome, p.nome));
+}
+
 function montarFiltro(){
   const sel = $('libF'); sel.textContent = '';
-  sel.appendChild(new Option('todas as pastas (' + lib.length.toLocaleString('pt-BR') + ')', ''));
-  const conta = new Map();
-  lib.forEach(it => {
-    const p = it.pasta.split('/');
-    if (!p[0]) return;
-    conta.set(p[0], (conta.get(p[0]) || 0) + 1);
-    if (p[1]){ const k = p[0] + '/' + p[1]; conta.set(k, (conta.get(k) || 0) + 1); }
+  const dentro = lib.filter(it => dentroDe(it, acervo));
+  /* o grupo é a pasta mais funda; a de cima, quando existe, vira cabeçalho do <optgroup> */
+  const grupos = new Map();
+  dentro.forEach(it => {
+    const resto = acervo ? it.pasta.slice(acervo.length + 1) : it.pasta;
+    if (!resto) return;
+    const corte = resto.lastIndexOf('/');
+    const g = grupos.get(it.pasta) || { rotulo: corte < 0 ? resto : resto.slice(corte + 1),
+                                        acima: corte < 0 ? '' : resto.slice(0, corte), n: 0 };
+    g.n++; grupos.set(it.pasta, g);
   });
-  const ordem = pastas.map(p => p.nome);
-  const pos = r => { const i = ordem.indexOf(r); return i < 0 ? ordem.length : i; };
-  const n = v => v.toLocaleString('pt-BR');
-  [...conta.keys()].filter(k => !k.includes('/'))
-    .sort((a, b) => pos(a) - pos(b) || fold(a).localeCompare(fold(b)))
-    .forEach(r => {
-      sel.appendChild(new Option(r + ' (' + n(conta.get(r)) + ')', r));
-      const filhas = [...conta.keys()].filter(k => k.startsWith(r + '/'))
-        .sort((a, b) => fold(a).localeCompare(fold(b)));
-      if (filhas.length > 1 && filhas.length <= SUB_MAX)
-        filhas.forEach(k => sel.appendChild(
-          new Option('   ' + k.slice(r.length + 1) + ' (' + n(conta.get(k)) + ')', k)));
-    });
+  const esconde = !acervo || grupos.size < 2;
+  sel.classList.toggle('hide', esconde);
+  if (esconde) return;
+  sel.appendChild(new Option('tudo em ' + acervo + ' (' + nBR(dentro.length) + ')', acervo));
+  const chave = k => fold(grupos.get(k).acima) + '\u0000' + fold(grupos.get(k).rotulo);
+  let og = null, atual = null;
+  [...grupos.keys()].sort((a, b) => chave(a).localeCompare(chave(b))).forEach(k => {
+    const g = grupos.get(k);
+    if (g.acima !== atual){
+      atual = g.acima;
+      og = atual ? document.createElement('optgroup') : null;
+      if (og){ og.label = atual; sel.appendChild(og); }
+    }
+    (og || sel).appendChild(new Option(g.rotulo + ' (' + nBR(g.n) + ')', k));
+  });
+}
+/* o que está realmente selecionado: o grupo quando há um, senão o acervo inteiro */
+function prefixo(){
+  const sel = $('libF');
+  return sel.classList.contains('hide') ? acervo : (sel.value || acervo);
 }
 function filtrar(){
-  const ws = fold($('libQ').value.trim()).split(/\s+/).filter(Boolean), p = $('libF').value;
-  return lib.filter(it => (!p || it.pasta === p || it.pasta.startsWith(p + '/')) && ws.every(w => it._busca.includes(w)));
+  const ws = fold($('libQ').value.trim()).split(/\s+/).filter(Boolean), p = prefixo();
+  return lib.filter(it => dentroDe(it, p)
+    && (!soTopo || (it.posicao > 0 && it.posicao <= TOPO))
+    && ws.every(w => it._busca.includes(w)));
 }
 function renderLib(){
   filtrados = filtrar();
-  const ul = $('libList'), p = $('libF').value, add = (cls, txt) => { const li = document.createElement('li'); li.className = cls; li.textContent = txt; ul.appendChild(li); };
+  const ul = $('libList'), p = prefixo(), add = (cls, txt) => { const li = document.createElement('li'); li.className = cls; li.textContent = txt; ul.appendChild(li); };
   ul.textContent = '';
   let folder = null;
   filtrados.slice(0, LIMITE).forEach(it => {
@@ -1037,7 +1084,12 @@ async function openLib(it){
 }
 let buscaTimer = 0;
 $('libQ').addEventListener('input', () => { clearTimeout(buscaTimer); buscaTimer = setTimeout(renderLib, 120); });
-$('libF').addEventListener('change', () => { store.set('pasta', $('libF').value); renderLib(); });
+$('libF').addEventListener('change', renderLib);
+$('libTop').onclick = () => {
+  soTopo = !soTopo;
+  $('libTop').setAttribute('aria-pressed', String(soTopo));
+  renderLib();
+};
 $('libRnd').onclick = () => { const pool = filtrados.length ? filtrados : lib; if (pool.length) openLib(pool[Math.floor(Math.random() * pool.length)]); };
 $('libOff').onclick = async () => {
   const msg = $('libMsg'), b = $('libOff'), lista = filtrados.slice();
