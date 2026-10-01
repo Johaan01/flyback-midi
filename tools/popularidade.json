@@ -1,0 +1,6047 @@
+{
+ "listenbrainz": {
+  "AC/DC": {
+   "mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1",
+   "musicas": {
+    "back in black": 1959511,
+    "highway to hell": 1987890,
+    "thunderstruck": 1416428,
+    "you shook me all night long": 1268531,
+    "hells bells": 1237468,
+    "t n t": 1238870,
+    "shoot to thrill": 960938,
+    "dirty deeds done dirt cheap": 603204,
+    "have drink on me": 542781,
+    "whole lotta rosie": 551088,
+    "let me put my love into you": 507949,
+    "what do you do for money honey": 504215,
+    "jack": 492375,
+    "touch too much": 454540,
+    "let there be rock": 474987,
+    "high voltage": 464809,
+    "its long way to top": 426593,
+    "rock and roll aint noise pollution": 408591,
+    "shake leg": 400666,
+    "moneytalks": 391999,
+    "for those about to rock": 472797,
+    "girls got rhythm": 399551,
+    "war machine": 365313,
+    "problem child": 347043,
+    "jailbreak": 336749,
+    "if you want blood": 386686,
+    "rocker": 324971,
+    "big jack": 307536,
+    "shot down in flames": 324270,
+    "givin dog bone": 315198,
+    "who made who": 335044,
+    "anything goes": 297078,
+    "hard rock": 297017,
+    "skies on fire": 294566,
+    "big balls": 292911,
+    "walk all over you": 294763,
+    "hell aint bad place to be": 299286,
+    "black ice": 282449,
+    "beating around bush": 261283,
+    "rock n roll damnation": 261473,
+    "get it hot": 256800,
+    "wire": 272045,
+    "fire your guns": 235125,
+    "are you ready": 234186,
+    "spoilin for fight": 227666,
+    "can i sit next to you girl": 225426,
+    "sin city": 237007,
+    "night prowler": 222573,
+    "stiff upper lip": 220895,
+    "heatseeker": 229048,
+    "rock n roll singer": 219396,
+    "decibel": 219077,
+    "stormy may day": 217214,
+    "love hungry man": 214717,
+    "wheels": 212002,
+    "rock n roll train": 208193,
+    "money made": 202349,
+    "big gun": 188535,
+    "rocking all way": 181606,
+    "bad boy boogie": 192022,
+    "riff raff": 181648,
+    "shake your foundations": 179586,
+    "shes got balls": 178191,
+    "little lover": 167007,
+    "dog eat dog": 166811,
+    "razors edge": 159339,
+    "ride on interviews": 153678,
+    "evil walks": 147547,
+    "sink pink": 140896,
+    "baby please dont go": 139857,
+    "ballbreaker": 136458,
+    "guns for hire": 132291,
+    "love at first feel": 126803,
+    "theres gonna be some rockin": 125322,
+    "gone shootin": 122892,
+    "go down": 121248,
+    "squealer": 119790,
+    "lets get it up": 119433,
+    "mistress for christmas": 119073,
+    "soul stripper": 118813,
+    "cover you in oil": 117728,
+    "rock your heart out": 115616,
+    "hail caesar": 114956,
+    "safe in new york city": 117159,
+    "boogie man": 112723,
+    "you aint got hold on me": 111997,
+    "furor": 110165,
+    "burnin alive": 108760,
+    "overdose": 107412,
+    "shot of love": 107209,
+    "got you by balls": 107097,
+    "inject venom": 103252,
+    "smash n grab": 101248,
+    "kicked in teeth": 100169,
+    "c d": 98749,
+    "gimme bullet": 97853,
+    "whiskey on rocks": 97307,
+    "flick of switch": 96933,
+    "honey roll": 96570,
+    "if you dare": 96512,
+    "show business": 96458,
+    "snowballed": 93644,
+    "down payment blues": 93140,
+    "love bomb": 92469,
+    "school days": 90608,
+    "night of long knives": 87893,
+    "breaking rules": 87522,
+    "whats next to moon": 87374,
+    "spellbound": 87009,
+    "meltdown": 86680,
+    "up to my neck in you": 86666,
+    "satellite blues": 85607,
+    "house of jazz": 85497,
+    "cant stand still": 85095,
+    "hold me back": 83471,
+    "ride on": 81898,
+    "caught with your pants down": 80411,
+    "rising power": 80410,
+    "fly on wall": 79567,
+    "put finger on you": 78054,
+    "cant stop rock n roll": 77959,
+    "nervous shakedown": 77646,
+    "come and get it": 75004,
+    "give it up": 73690,
+    "this house is on fire": 77488,
+    "all screwed up": 73149,
+    "damned": 72125,
+    "meanstreak": 70816,
+    "chase ace": 70105,
+    "d t": 69364,
+    "cold hearted man": 70541,
+    "twos up": 67497,
+    "landslide": 66399,
+    "badlands": 66340,
+    "bedlam in belgium": 65936,
+    "first blood": 64949,
+    "deep in hole": 64598,
+    "she likes rock n roll": 64547,
+    "nick of time": 65707,
+    "go zone": 63262,
+    "back in business": 62940,
+    "playing with girls": 61722,
+    "stand up": 61107,
+    "kissin dynamite": 60657,
+    "ruff stuff": 60609,
+    "this means war": 60560,
+    "brain shake": 60000,
+    "hell or high water": 59988,
+    "rock n roll dream": 58890,
+    "some sin for nuthin": 59186,
+    "thats way i wanna rock n roll": 58856,
+    "send for man": 57980,
+    "lets make it": 56936,
+    "love song": 52790,
+    "stick around": 44773,
+    "danger": 44279,
+    "bonny": 43308,
+    "goodbye and good riddance to bad luck": 42459,
+    "crabsody in blue": 28021,
+    "r i p": 25013,
+    "dirty eyes": 24601,
+    "back seat confidential": 20991,
+    "shes got jack": 18181,
+    "thats way i wanna rock and roll": 18673,
+    "carry me home": 18584,
+    "cyberspace": 17618,
+    "aint no fun": 15248,
+    "fling thing": 15616,
+    "down on borderline": 12369,
+    "dirty deeds": 11650,
+    "snake eye": 11244,
+    "borrowed time": 10444,
+    "shot in dark": 9748,
+    "if you want blood you got it": 9263,
+    "rock or bust": 8982,
+    "rock n roll aint noise pollution": 7331,
+    "realize": 5484,
+    "play ball": 5424,
+    "intro": 4886,
+    "dirty deeds done dirty cheap": 4645,
+    "rock blues away": 4330,
+    "demon fire": 4256,
+    "angus young guitar solo": 4196,
+    "hard times": 3736,
+    "rock in peace": 3653,
+    "can i sit next to you": 3575,
+    "baptism by fire": 3534,
+    "witchs spell": 3431,
+    "dogs of war": 3386,
+    "through mists of time": 3395,
+    "kick you when youre down": 3405,
+    "rejection": 3380,
+    "miss adventure": 3276,
+    "rock house": 3139,
+    "got some rock and roll thunder": 3078,
+    "crapsody in blue": 3051,
+    "sweet candy": 2998,
+    "boom boom": 2904,
+    "hellbillyditty": 2801,
+    "let it loose": 3205,
+    "shot in head": 2734,
+    "emission control": 2731,
+    "rosie": 2716,
+    "wild reputation": 2623,
+    "alright tonight": 2977,
+    "systems down": 2558,
+    "code red": 2534,
+    "desert sands": 2523,
+    "german narration parody": 2424,
+    "hell bells": 2416,
+    "twist": 2396,
+    "money shot": 2398,
+    "no mans land": 2357,
+    "lucille": 2816,
+    "rockinn parlor": 1398,
+    "rockin in parlor": 1119,
+    "johnny b goode": 1258,
+    "gone shooting": 923,
+    "endless rock": 666,
+    "tnt": 625,
+    "introduction": 603,
+    "round and round": 550,
+    "interview": 387,
+    "save in new york city": 355,
+    "hell aint bad place": 309,
+    "rocknroll aint noise pollution": 321,
+    "johnny be goode": 221,
+    "ballbreaker tour intro film": 218,
+    "boom boom boom": 212,
+    "whisky on rocks": 183,
+    "next to moon": 181,
+    "girls got rythm": 275,
+    "rock and roll damnation": 152,
+    "walk over you": 145,
+    "jack high voltage": 144,
+    "i put finger on you": 140,
+    "given dog bone": 138,
+    "angus country jam": 117,
+    "wire 2": 111,
+    "fling thing rocker": 110,
+    "intermission": 110,
+    "rockin in parlour": 168,
+    "death city": 98,
+    "thats way i wanna rocknroll": 97,
+    "flying thing": 96,
+    "you shock me all night long": 96,
+    "guitar solo": 92,
+    "gloria": 94,
+    "sooky sooky": 92,
+    "end credits": 74,
+    "credits": 75,
+    "angus solo": 78,
+    "bonny highway to hell": 61,
+    "dont shoot me": 57,
+    "black in black": 46,
+    "heatseaker": 45,
+    "life wire": 45,
+    "thats way": 39,
+    "guitar band": 38,
+    "rock me baby": 59,
+    "locked and loaded": 33,
+    "lack": 33,
+    "dirty dees done dirt cheap": 31,
+    "theres gonna be some rocking": 30,
+    "boom boom boom dimples": 30,
+    "newsflash": 29,
+    "messin with kid": 29,
+    "contre attak": 26,
+    "flight thing": 25,
+    "its along way to top": 24,
+    "outro": 29,
+    "ac dc london interview 1976 and 1977": 21,
+    "whole lotta rosie rocker": 45,
+    "you shook me": 33,
+    "encore": 21,
+    "open": 20,
+    "what you do for money honey": 20,
+    "shoot to trill": 20,
+    "my name is back in black": 20,
+    "allright tonite": 19,
+    "jupiters landscape": 19,
+    "thats way i wanna r and r": 19,
+    "rock and roll singer": 19,
+    "love songs": 17,
+    "contre attack": 16,
+    "closing credits": 15,
+    "shake your foundation": 13,
+    "blackballed": 13,
+    "can i sit next to you girls": 13,
+    "super 8 bootleg film": 12,
+    "rock and roll train": 12,
+    "bon scott broadcast interview": 17,
+    "interview in covent garden london july 1976": 11,
+    "if you want blood let there be rock": 29,
+    "rock and roller": 11,
+    "high voltage rock n roll": 10,
+    "intro dirty deeds done dirt cheap": 10,
+    "bye bye johnny": 10,
+    "johnny b good": 10,
+    "interview dirty deeds done dirt cheap": 10,
+    "bon interview": 10,
+    "dirty deeds done cheap": 10,
+    "hell aint no bad place to be": 9,
+    "honky tonk women": 10,
+    "rock funky beats back in black major tom love is battlefield": 9,
+    "interview at sydney airport april 1976": 9,
+    "bon scott interview": 15,
+    "im rocker": 16,
+    "down on borderlin": 9,
+    "they dont know freestyle": 9,
+    "shes my baby": 9,
+    "bad boy": 14,
+    "hail ceasar": 9,
+    "gohnorea": 8,
+    "welfare": 8,
+    "hells bells interview and": 8,
+    "let there be rock dj": 8,
+    "whola lotta rosie": 7,
+    "carey gully": 14,
+    "rockers": 7,
+    "who made you": 7,
+    "seasons of change": 7,
+    "warming up band": 7,
+    "introduction wire": 7,
+    "shot down in flame": 13,
+    "bonnie banks of loch lomond": 7,
+    "and interview": 7,
+    "stay for while": 10,
+    "brown sugar": 6,
+    "girl got rythm": 6,
+    "jumpin jack flash": 9,
+    "every day i have to cry": 6,
+    "for those about rock": 6,
+    "sun city": 6,
+    "making of shoot to thrill music video": 6,
+    "wbcn": 6,
+    "bon scott and angus young interview": 5,
+    "backstage": 5,
+    "radio interview angus and brian 1981": 5,
+    "intro dj": 10,
+    "rare interview": 5,
+    "intro back in black": 5,
+    "untitled": 5,
+    "getting off": 5,
+    "no particular place to go": 11,
+    "pete drummond": 11,
+    "cold hearted": 5,
+    "crowd": 6,
+    "carol": 8,
+    "bad boy boggie": 4,
+    "if you want blood youve got it let there be rock": 4,
+    "she said": 4,
+    "shake rattle and roll": 4,
+    "brian interview 1980": 4,
+    "superstition": 4,
+    "all right now": 4,
+    "crowd noise": 3,
+    "wbcn dj": 3,
+    "its all over now": 5,
+    "show down in flames": 3,
+    "end": 3,
+    "tom judge": 6,
+    "gone shooten": 3,
+    "bons death report": 3,
+    "high voltage rock and roll": 3,
+    "t n t let there be rock": 3,
+    "every thunderstruck is waterfall with no limits": 3,
+    "peter gunn theme jailhouse rock": 3,
+    "whole lotta noise": 3,
+    "audience": 3,
+    "blow up your video": 3,
+    "bon scott interview 1977": 3,
+    "wbcn radio intro": 2,
+    "close": 2,
+    "interview ii": 2,
+    "if you want bloody let there be rock": 2,
+    "stiff upper lip mega jam": 2,
+    "wire shot down in flames": 2,
+    "beavis and butthead": 2,
+    "dirty deeds done dirt cheep": 2,
+    "guitar solo t n t": 2,
+    "track10": 2,
+    "encore break": 2,
+    "unknow song": 2,
+    "backstage with bon scott": 1,
+    "beavis and butt head ballbreaker tour intro film 1996": 1,
+    "get back vs back in black": 1,
+    "bon scott interview london november 1977": 1,
+    "outro dj": 1,
+    "coca cola jingles": 1,
+    "making of hard rock": 2,
+    "hr3 radio jingle": 1,
+    "dirty deeps done dirt cheap": 1,
+    "angus young true guitar monster": 1,
+    "dope beat": 1,
+    "angus statue intro": 1,
+    "tv intro": 1,
+    "girl got rhythm": 1,
+    "wbcn radio outro": 1,
+    "stiff upper lipp": 1,
+    "and interview iv": 1,
+    "track06": 1,
+    "audience solo": 1,
+    "bon scott reported dead": 1,
+    "war machine anything goes": 1,
+    "rocknroll damnation let there be rock": 1,
+    "making of rock n roll train": 1,
+    "dj gone shootin": 1
+   }
+  },
+  "Black Sabbath": {
+   "mbid": "5182c1d9-c7d2-4dad-afa0-ccfeada921a8",
+   "musicas": {
+    "paranoid": 2167165,
+    "iron man": 1440507,
+    "planet caravan": 742768,
+    "children of grave": 711564,
+    "war pigs": 731798,
+    "black sabbath": 643365,
+    "sabbath bloody sabbath": 610556,
+    "sweet leaf": 606614,
+    "electric funeral": 601286,
+    "wizard": 579728,
+    "n i b": 572208,
+    "heaven and hell": 542638,
+    "hand of doom": 423764,
+    "snowblind": 410367,
+    "into void": 395718,
+    "changes": 357154,
+    "rat salad": 349683,
+    "fairies wear boots": 349313,
+    "neon knights": 326279,
+    "solitude": 320512,
+    "lord of this world": 315981,
+    "supernaut": 303616,
+    "after forever": 297495,
+    "sabbra cadabra": 296348,
+    "wicked world": 293897,
+    "killing yourself to": 293371,
+    "children of sea": 274834,
+    "behind wall of sleep": 273696,
+    "symptom of universe": 263653,
+    "national acrobat": 261384,
+    "hole in sky": 261167,
+    "orchid": 254633,
+    "die young": 248686,
+    "war pigs lukes wall": 241646,
+    "spiral architect": 236113,
+    "never say die": 235029,
+    "fluff": 223758,
+    "tomorrows dream": 214378,
+    "lady evil": 198943,
+    "sleeping village": 194098,
+    "cornucopia": 189173,
+    "looking for today": 176023,
+    "mob rules": 190026,
+    "laguna sunrise": 171534,
+    "lonely is word": 158441,
+    "dont start": 156675,
+    "wishing well": 154193,
+    "am i going insane": 153212,
+    "turn up night": 152544,
+    "megalomania": 146046,
+    "voodoo": 140631,
+    "jack stripper fairies wear boots": 135748,
+    "fx": 135346,
+    "dirty women": 128620,
+    "walk away": 128533,
+    "wheels of confusion": 126839,
+    "thrill of it all": 108051,
+    "warning": 105699,
+    "supertzar": 103587,
+    "country girl": 102109,
+    "hard road": 103088,
+    "sign of southern cross": 101269,
+    "who are you": 91899,
+    "falling off edge of world": 90104,
+    "e5150": 88165,
+    "tv crimes": 86046,
+    "i": 86006,
+    "writ": 90918,
+    "under sun every day comes and goes": 91973,
+    "back street kids": 76843,
+    "time machine": 82281,
+    "slipping away": 73984,
+    "evil woman": 86825,
+    "johnny blade": 73083,
+    "over and over": 72209,
+    "after all": 71924,
+    "rock n roll doctor": 71615,
+    "air dance": 70348,
+    "computer god": 69773,
+    "you wont change me": 69669,
+    "god is dead": 66655,
+    "shock wave": 64955,
+    "shes gone": 64587,
+    "gypsy": 63740,
+    "its alright": 75405,
+    "juniors eyes": 62453,
+    "over to you": 59284,
+    "zero hero": 56830,
+    "master of insanity": 57758,
+    "swinging chain": 55392,
+    "trashed": 55073,
+    "letters from earth": 54390,
+    "born again": 52835,
+    "headless cross": 50341,
+    "when death calls": 50015,
+    "too late": 49723,
+    "disturbing priest": 49714,
+    "breakout": 48814,
+    "shining": 47264,
+    "sins of father": 46371,
+    "all moving parts": 46286,
+    "digital bitch": 45325,
+    "buried alive": 44317,
+    "cross of thorns": 43220,
+    "end of beginning": 43103,
+    "stonehenge": 42186,
+    "dark": 41951,
+    "no stranger to": 41113,
+    "loner": 40557,
+    "black moon": 40478,
+    "valhalla": 39588,
+    "hot line": 39267,
+    "nightwing": 38394,
+    "zeitgeist": 37908,
+    "gates of hell": 37854,
+    "kill in spirit world": 37779,
+    "dying for love": 37412,
+    "i witness": 36182,
+    "keep it warm": 36040,
+    "age of reason": 36053,
+    "psychophobia": 35692,
+    "call of wild": 35546,
+    "sabbath stones": 35380,
+    "odins court": 35025,
+    "jerusalem": 34532,
+    "battle of tyr": 34366,
+    "born to lose": 34228,
+    "seventh star": 33171,
+    "ancient warrior": 33114,
+    "law maker": 33090,
+    "heaven in black": 33044,
+    "feels good to me": 33210,
+    "i wont cry for you": 32199,
+    "in for kill": 32137,
+    "psycho man": 34301,
+    "forever": 31826,
+    "damaged soul": 31461,
+    "glory ride": 31019,
+    "hard life to love": 30614,
+    "virtual death": 30443,
+    "st vitus dance": 30135,
+    "heart like wheel": 30427,
+    "angry heart": 29468,
+    "selling my soul": 29618,
+    "lost forever": 29408,
+    "evil eye": 29072,
+    "scarlet pimpernel": 28550,
+    "nightmare": 28369,
+    "dear father": 28249,
+    "devil and daughter": 46790,
+    "kiss of death": 27507,
+    "guilty hell": 27279,
+    "turn to stone": 27171,
+    "hand that rocks cradle": 26751,
+    "sphinx": 26197,
+    "immaculate deception": 26181,
+    "back to eden": 26059,
+    "eternal idol": 26026,
+    "get grip": 25209,
+    "cardinal sin": 24944,
+    "illusion of power": 24988,
+    "forbidden": 23911,
+    "cant get close enough": 23529,
+    "rusty angels": 22823,
+    "danger zone": 32465,
+    "sick and tired": 21777,
+    "shaking off chains": 21669,
+    "devil cried": 21463,
+    "methademic": 18949,
+    "shadow of wind": 18422,
+    "ear in wall": 17218,
+    "peace of mind": 16614,
+    "bit of finger sleeping village warning": 16604,
+    "pariah": 16154,
+    "dark zero hero": 15771,
+    "in memory": 15557,
+    "wasp behind wall of sleep bassically n i b": 13695,
+    "loser gets it all": 13111,
+    "smoke on water": 10724,
+    "blue suede shoes": 9342,
+    "whats use": 8493,
+    "weevil woman 71": 7399,
+    "anno mundi": 7541,
+    "cloak and dagger": 5808,
+    "embryo": 4623,
+    "orchid lord of this world": 2803,
+    "under sun": 4793,
+    "guitar solo": 2276,
+    "drum solo": 2052,
+    "writ blow on jug": 2021,
+    "sign of southern cross heaven and hell": 2150,
+    "rock and roll doctor": 1802,
+    "no stranger to love": 3052,
+    "fallen": 1839,
+    "some kind of woman": 1061,
+    "intro": 983,
+    "embryo children of grave": 924,
+    "naivete in black": 734,
+    "season of dead": 591,
+    "isolated man": 574,
+    "take me home": 545,
+    "cry all night": 534,
+    "warning part 1": 398,
+    "sometimes im happy": 440,
+    "bassically n i b": 390,
+    "jam": 360,
+    "into void spanish sid": 322,
+    "seventh sign": 311,
+    "supernaut sabbath bloody sabbath megalomania": 314,
+    "band introductions": 239,
+    "rat salad drum solo": 236,
+    "riffs": 169,
+    "introduction": 147,
+    "straightener": 139,
+    "love on line": 114,
+    "wasp behind wall of sleep bassically n i b 2014": 101,
+    "haunting": 99,
+    "bit of finger": 97,
+    "elecric funeral": 94,
+    "eye of storm": 87,
+    "supertzar killing yourself to": 87,
+    "rebel": 105,
+    "sabbath bloody sabbath paranoid": 86,
+    "take my heart 1": 103,
+    "chance on love": 101,
+    "star of india 1": 107,
+    "walpurgis": 112,
+    "unknown song": 75,
+    "sabra cadabra": 88,
+    "scary dreams": 66,
+    "master of reality": 64,
+    "wasp behind wall of sleep basically n i b": 108,
+    "star of india 2": 85,
+    "take my heart 2": 66,
+    "wasp": 56,
+    "unreleased jam 6": 50,
+    "supernaut drum solo": 45,
+    "bit of finger sleeping village warning 2013": 45,
+    "unreleased jam 4": 41,
+    "unreleased jam 5": 39,
+    "unreleased jam 3": 38,
+    "neon nights": 44,
+    "sabbra cadabra sometimes im happy": 36,
+    "superstzar": 34,
+    "she is gone": 33,
+    "unreleased jam 1": 33,
+    "am i going insane 2013": 30,
+    "eye of storm 2": 30,
+    "dj intro": 29,
+    "musical intro": 27,
+    "paranoid heaven and hell": 27,
+    "bill solo": 26,
+    "improvisation": 26,
+    "supertzar symptom of universe": 26,
+    "orchid rock n roll doctor dont start": 26,
+    "behind wall of sleep jazz improvisation": 25,
+    "guitar intro and black sabbath": 24,
+    "early one morning": 45,
+    "black sabath": 22,
+    "end credits": 22,
+    "star of india 3": 21,
+    "war pigs drum solo": 21,
+    "tony iommi": 20,
+    "jam 1": 18,
+    "when i came down": 32,
+    "medley master of insanity after all": 17,
+    "jam 2": 17,
+    "thrill is gone": 16,
+    "drum solo guitar solo": 16,
+    "shaking chains": 14,
+    "tomorrow dream": 14,
+    "vol 4": 13,
+    "thomas jam": 13,
+    "unreleased jam 2": 13,
+    "hand of doom rat salad": 13,
+    "band intros": 13,
+    "sabbath medley": 13,
+    "drums solo": 12,
+    "wicked world orchid into void sometimes im happy": 11,
+    "bassically": 11,
+    "sleeping village children of grave": 10,
+    "killing yourself to die": 8,
+    "eye of storm 1": 8,
+    "exclusive interview with dante of raw magazine featuring tony iommi cozy powell and tony martin": 7,
+    "orchid rock and roll doctor": 7,
+    "rock and roll doctor guitar solo": 6,
+    "ave satani": 6,
+    "black sabbath radio documentary": 5,
+    "unknown": 5,
+    "technical ecstacy": 5,
+    "shoot war pigs": 5,
+    "band introduction": 5,
+    "blue coat man": 5,
+    "sympton of universe": 5,
+    "intro war pigs": 5,
+    "end side": 4,
+    "blow on jug": 4,
+    "ozzy and bill ward talking to audience": 4,
+    "fearies wear boots": 4,
+    "supernaut drum solo rock n roll doctor": 3,
+    "snownblind": 3,
+    "exit announcement": 3,
+    "jam guitar solo 1": 3,
+    "vinny appice drum solo": 3,
+    "song in b": 3,
+    "hands of doom": 3,
+    "guitar solo jam 2": 2,
+    "master of reality radio documentary": 2,
+    "step up": 2,
+    "guitar improvisation black sabbath": 2,
+    "i love you sweatleaf": 2,
+    "blues": 1,
+    "please dont let me be misunderstood": 1,
+    "deathmask": 1,
+    "drum solo jam": 1,
+    "ozzy osbourne": 1,
+    "paranoid radio documentary": 1,
+    "i dont wanna go to sleep again": 1,
+    "heaven and hell guitar solo digital bitch": 1,
+    "tony solo": 1,
+    "dirty woman": 1,
+    "radio spot for black sabbath": 1,
+    "end": 1,
+    "black sabbath fluff": 1,
+    "lords of this world": 1,
+    "tony iommi guitar solo": 1
+   }
+  },
+  "Disturbed": {
+   "mbid": "4bb4e4e4-5f66-4509-98af-62dbb90c45c5",
+   "musicas": {
+    "down with sickness": 1400351,
+    "inside fire": 832851,
+    "land of confusion": 798120,
+    "stupify": 749092,
+    "ten thousand fists": 727677,
+    "indestructible": 666617,
+    "prayer": 655042,
+    "decadence": 605306,
+    "voices": 617768,
+    "liberate": 558706,
+    "guarded": 514535,
+    "night": 505743,
+    "im alive": 491277,
+    "sons of plunder": 488250,
+    "deify": 481717,
+    "just stop": 483325,
+    "perfect insanity": 445210,
+    "game": 671750,
+    "remember": 414674,
+    "fear": 421062,
+    "pain redefined": 407795,
+    "violence fetish": 396526,
+    "meaning of life": 395789,
+    "conflict": 378431,
+    "overburdened": 366603,
+    "haunted": 362887,
+    "believe": 361796,
+    "darkness": 360646,
+    "sacred lie": 360613,
+    "criminal": 358885,
+    "deceiver": 356513,
+    "forgiven": 355017,
+    "awaken": 352824,
+    "stricken": 402123,
+    "shout 2000": 343396,
+    "enough": 338375,
+    "numb": 337240,
+    "droppin plates": 336594,
+    "avarice": 333013,
+    "curse": 322698,
+    "intoxication": 322442,
+    "rise": 319925,
+    "mistress": 315455,
+    "bound": 315379,
+    "facade": 312966,
+    "want": 306779,
+    "divide": 303724,
+    "another way to die": 296367,
+    "asylum": 293091,
+    "breathe": 288880,
+    "torn": 284228,
+    "devour": 272364,
+    "warrior": 256968,
+    "animal": 215683,
+    "infection": 210429,
+    "this moment": 190125,
+    "never again": 182745,
+    "serpentine": 172257,
+    "hell": 166100,
+    "god of mind": 161978,
+    "crucified": 157477,
+    "innocence": 154613,
+    "remnants": 151035,
+    "my child": 140778,
+    "sacrifice": 137763,
+    "run": 115364,
+    "welcome burden": 112615,
+    "monster": 107713,
+    "parasite": 103535,
+    "leave it alone": 99284,
+    "dehumanized": 89285,
+    "two worlds": 88864,
+    "living after midnight": 83401,
+    "sound of silence": 85468,
+    "ishfwilf": 80197,
+    "sickened": 77629,
+    "midlife crisis": 56827,
+    "glass shatters": 56376,
+    "old friend": 43330,
+    "3": 32831,
+    "vengeful one": 32541,
+    "mine": 31834,
+    "fade to black": 23868,
+    "loading weapon": 22748,
+    "light": 16415,
+    "immortalized": 15301,
+    "open your eyes": 13673,
+    "are you ready": 13633,
+    "no more": 11906,
+    "reason to fight": 10785,
+    "who taught you how to hate": 10041,
+    "what are you waiting for": 8993,
+    "youre mine": 7627,
+    "never wrong": 6799,
+    "hey you": 6675,
+    "eye of storm": 6661,
+    "legion of monsters": 6378,
+    "save our last goodbye": 6148,
+    "who": 5813,
+    "unstoppable": 5795,
+    "hold on to memories": 5653,
+    "bad man": 7508,
+    "fire it up": 4620,
+    "brave and bold": 4328,
+    "tyrant": 4240,
+    "in another time": 3814,
+    "stronger on your own": 3771,
+    "i will not break": 3760,
+    "divisive": 3659,
+    "uninvited guest": 3634,
+    "best ones lie": 3528,
+    "intermedio": 3316,
+    "intermedio 2": 3105,
+    "dont tell me": 3093,
+    "despedida": 2892,
+    "saviour of nothing": 2871,
+    "already gone": 2833,
+    "this venom": 2593,
+    "watch you burn": 2378,
+    "feeding fire": 2188,
+    "wont back down": 2138,
+    "decadance": 1979,
+    "if i ever lose my faith in you": 1924,
+    "love to hate": 1924,
+    "part of me": 1823,
+    "take back your life": 1685,
+    "intro": 863,
+    "introduction": 334,
+    "closing": 329,
+    "flashback": 323,
+    "credits": 308,
+    "break shit": 307,
+    "maaw3": 301,
+    "b room": 296,
+    "cymbal choke": 285,
+    "bonus features": 284,
+    "producing ii": 284,
+    "david tracking": 283,
+    "electronica": 279,
+    "old songs": 275,
+    "guitar solo perfect insanity": 274,
+    "dannys guitar": 274,
+    "lyric writng": 272,
+    "producing i": 267,
+    "writing": 264,
+    "papa john": 260,
+    "lost soul": 252,
+    "drum intro enough": 251,
+    "studio": 246,
+    "naming record": 245,
+    "i still havent found what im looking for": 206,
+    "warning sign": 180,
+    "walk": 85,
+    "shout": 90,
+    "shout2000": 53,
+    "fetish": 37,
+    "making of stricken": 18,
+    "indestructible music video": 6,
+    "stricken toxic": 4,
+    "down withthe sickness": 4,
+    "truth": 4,
+    "shape of sickness": 4,
+    "decisions": 1
+   }
+  },
+  "Iron Maiden": {
+   "mbid": "ca891d65-d9b0-4258-89f7-e6ba29d83767",
+   "musicas": {
+    "run to hills": 1595125,
+    "number of beast": 1460653,
+    "trooper": 1442257,
+    "fear of dark": 1288304,
+    "2 minutes to midnight": 1144913,
+    "hallowed be thy name": 1134181,
+    "aces high": 824636,
+    "evil that men do": 773272,
+    "wicker man": 755327,
+    "wasted years": 746528,
+    "iron maiden": 696898,
+    "can i play with madness": 693870,
+    "wrathchild": 663784,
+    "brave new world": 607352,
+    "blood brothers": 574074,
+    "phantom of opera": 570418,
+    "running free": 568681,
+    "be quick or be dead": 551101,
+    "flight of icarus": 536971,
+    "children of damned": 523725,
+    "powerslave": 508509,
+    "dance of death": 511657,
+    "clairvoyant": 501723,
+    "afraid to shoot strangers": 484423,
+    "rainmaker": 475834,
+    "rime of ancient mariner": 462011,
+    "ghost of navigator": 457982,
+    "wasting love": 423481,
+    "revelations": 397127,
+    "where eagles dare": 381335,
+    "22 acacia avenue": 378784,
+    "dream of mirrors": 376525,
+    "prisoner": 376701,
+    "no more lies": 371945,
+    "heaven can wait": 371025,
+    "sanctuary": 371593,
+    "prowler": 365150,
+    "different world": 355557,
+    "infinite dreams": 342842,
+    "mercenary": 341241,
+    "invaders": 338540,
+    "transylvania": 338479,
+    "remember tomorrow": 336190,
+    "killers": 332584,
+    "man on edge": 328523,
+    "die with your boots on": 321592,
+    "paschendale": 316899,
+    "flash of blade": 311382,
+    "moonchild": 311228,
+    "holy smoke": 308847,
+    "out of silent planet": 306926,
+    "from here to eternity": 300559,
+    "seventh son of seventh son": 288697,
+    "strange world": 280873,
+    "gangland": 278728,
+    "wildest dreams": 278572,
+    "these colours dont run": 276707,
+    "el dorado": 273872,
+    "fallen angel": 272968,
+    "clansman": 269241,
+    "journeyman": 265026,
+    "sign of cross": 264973,
+    "caught somewhere in time": 262826,
+    "losfer words": 264201,
+    "brighter than thousand suns": 259795,
+    "for greater good of god": 258947,
+    "murders in rue morgue": 259173,
+    "futureal": 251966,
+    "ides of march": 244682,
+    "nomad": 244256,
+    "only good die young": 243868,
+    "when wild wind blows": 243494,
+    "pilgrim": 243472,
+    "back in village": 242934,
+    "duellists": 241816,
+    "judas be my guide": 238076,
+    "coming home": 237475,
+    "longest day": 235222,
+    "still life": 235240,
+    "stranger in strange land": 229382,
+    "childhoods end": 226535,
+    "purgatory": 222791,
+    "bring your daughter to slaughter": 223343,
+    "tailgunner": 220790,
+    "out of shadows": 217980,
+    "another life": 217820,
+    "charlotte harlot": 212892,
+    "fear is key": 211753,
+    "prophecy": 210588,
+    "to tame land": 207758,
+    "reincarnation of benjamin breeg": 218507,
+    "sun and steel": 205829,
+    "drifter": 203992,
+    "sea of madness": 201499,
+    "genghis khan": 201444,
+    "chains of misery": 201274,
+    "face in sand": 200678,
+    "quest for fire": 200472,
+    "thin line between love and hate": 198197,
+    "legacy": 196549,
+    "loneliness of long distance runner": 196076,
+    "fugitive": 195039,
+    "new frontier": 194473,
+    "gates of tomorrow": 192737,
+    "weekend warrior": 192564,
+    "lord of light": 192526,
+    "alexander great": 192332,
+    "mother of mercy": 184840,
+    "innocent exile": 184637,
+    "apparition": 183628,
+    "no prayer for dying": 181925,
+    "alchemist": 181090,
+    "talisman": 180477,
+    "age of innocence": 176473,
+    "prodigal son": 172975,
+    "total eclipse": 169527,
+    "starblind": 165721,
+    "lord of flies": 165192,
+    "isle of avalon": 162135,
+    "mother russia": 160581,
+    "man who would be king": 145911,
+    "como estais amigos": 132264,
+    "deja vu": 132158,
+    "twilight zone": 131238,
+    "public enema number one": 128525,
+    "hooks in you": 125738,
+    "run silent run deep": 122164,
+    "fates warning": 121941,
+    "assassin": 120812,
+    "fortunes of war": 113156,
+    "lightning strikes twice": 107966,
+    "virus": 106962,
+    "aftermath": 106702,
+    "educated fool": 105407,
+    "dont look to eyes of stranger": 105046,
+    "look for truth": 102286,
+    "edge of darkness": 100483,
+    "when two worlds collide": 99963,
+    "judgement of heaven": 99909,
+    "angel and gambler": 96857,
+    "2 m": 91449,
+    "unbeliever": 83065,
+    "blood on worlds hands": 82323,
+    "satellite 15 final frontier": 66921,
+    "intro": 67144,
+    "doctor doctor": 54205,
+    "intro churchills speech": 50985,
+    "invasion": 50375,
+    "ive got fire": 45135,
+    "reach out": 45625,
+    "montsegur": 42066,
+    "burning ambition": 38204,
+    "women in uniform": 32156,
+    "cross eyed mary": 30443,
+    "king of twilight": 29942,
+    "rainbows gold": 28249,
+    "that girl": 29008,
+    "prowler 88": 27155,
+    "communication breakdown": 26849,
+    "black bart blues": 26593,
+    "juanita": 27120,
+    "kill me ce soir": 25576,
+    "final frontier": 25112,
+    "all in your mind": 23757,
+    "charlotte harlot 88": 21891,
+    "im mover": 20547,
+    "my generation": 20388,
+    "justice of peace": 18768,
+    "judgement day": 18225,
+    "i cant see my feelings": 18065,
+    "roll over vic vella": 16900,
+    "nodding donkey blues": 16658,
+    "massacre": 15719,
+    "space station no 5": 12509,
+    "writing on wall": 12311,
+    "speed of light": 11603,
+    "sheriff of huddersfield": 11067,
+    "if eternity should fail": 9537,
+    "red and black": 7885,
+    "empire of clouds": 7415,
+    "stratego": 7172,
+    "days of future past": 6920,
+    "senjutsu": 6550,
+    "book of souls": 6613,
+    "great unknown": 6404,
+    "death or glory": 5948,
+    "tears of clown": 5668,
+    "when river runs deep": 5550,
+    "ripper": 5403,
+    "mission from arry": 5308,
+    "i my way": 5232,
+    "pass jam": 5164,
+    "hell on earth": 4935,
+    "shadows of valley": 4847,
+    "man of sorrows": 4462,
+    "time machine": 4345,
+    "lost in lost world": 4248,
+    "death of celts": 4235,
+    "parchment": 3943,
+    "space truckin": 3806,
+    "darkest hour": 3672,
+    "guitar solo": 2995,
+    "more tea vicar": 3035,
+    "listen with nicko part ix": 1977,
+    "listen with nicko part vi": 1875,
+    "listen with nicko part v": 1780,
+    "listen with nicko part iii": 1759,
+    "listen with nicko part iv": 1669,
+    "listen with nicko part ii": 1666,
+    "listen with nicko part i": 1665,
+    "churchills speech": 2860,
+    "bladerunner theme": 1526,
+    "listen with nicko part viii": 1516,
+    "listen with nicko part vii": 1509,
+    "xmas wishes": 1487,
+    "listen with nicko part x": 1482,
+    "zoo": 1420,
+    "satellite 15": 1063,
+    "two minutes to midnight": 1088,
+    "intro churchills speech aces high": 662,
+    "wasted years 99": 658,
+    "stairway to heaven": 653,
+    "2 am": 543,
+    "bayswater aint bad place to be": 422,
+    "hocus pocus": 329,
+    "wratchild": 493,
+    "iron maiden fear of dark": 193,
+    "bring your daughter": 183,
+    "space station 5": 154,
+    "instrumental": 141,
+    "hallowed be name": 140,
+    "intro transylvania": 139,
+    "intro caught somewhere in time": 129,
+    "phatoor": 126,
+    "journeyman age of innocence how old": 125,
+    "reading festival 1982": 117,
+    "hallowed by thy name": 115,
+    "smoke on water": 82,
+    "part 1 early maiden days": 65,
+    "part 2 groundwork": 52,
+    "hallowed by name": 51,
+    "part 3 ascendancy": 48,
+    "part 5 legends": 42,
+    "part 4 supremacy": 42,
+    "blaze bayley interview": 40,
+    "rock in rio 85": 38,
+    "tush": 48,
+    "acacia avenue": 34,
+    "losfer words big orra": 32,
+    "excerpt of churchills speech and beginning of aces high": 26,
+    "clarivoyant": 25,
+    "22 acacia avenue wicker man": 25,
+    "excerpt of revelations": 25,
+    "evil that man do": 24,
+    "halloweed be thy name": 22,
+    "wrathchild 99": 21,
+    "public enema no 1": 18,
+    "i cant see my feeling": 17,
+    "drum solo": 25,
+    "woman in uniform": 15,
+    "bruce speech": 15,
+    "details of twilight zone": 14,
+    "bruce introduction": 14,
+    "public enema 1": 13,
+    "rosalie": 13,
+    "prisoners": 12,
+    "transsylvania": 11,
+    "encore cheer": 12,
+    "french message from bruce dickinson": 7,
+    "ello texas": 7,
+    "intro ides of march": 7,
+    "happy birthday nicko": 6,
+    "silver and gold": 5,
+    "always look on bright side of life": 5,
+    "see right throught you": 5,
+    "behind iron curtain": 5,
+    "band introduction": 4,
+    "maiden voyage story behind empire of clouds": 4,
+    "bruces birthday": 4,
+    "history of iron maiden part 2 after death": 4,
+    "shes gone": 4,
+    "transylvania guitar solo": 4,
+    "school days i": 4,
+    "sfx video": 4,
+    "gallery": 4,
+    "chevrolet": 4,
+    "closing": 3,
+    "making of matter of life and death": 3,
+    "pre intro doctor doctor": 3,
+    "keep away from me": 3,
+    "lady": 3,
+    "intro mars bringer of war": 3,
+    "fighting man": 3,
+    "opening film": 3,
+    "walking on glass": 3,
+    "dance of death behind scenes": 3,
+    "clive burr drum solo": 3,
+    "blaze bayley interview part 1": 3,
+    "se opening": 3,
+    "flight 666 film": 2,
+    "day in life": 2,
+    "blaze bayley interview part 2": 2,
+    "opening": 2,
+    "promotional clips": 2,
+    "iron maiden 1995 interview part 2": 2,
+    "genghis kahn": 2,
+    "bruce dickinson interview 2000": 2,
+    "intro aces high": 2,
+    "try": 2,
+    "intro blade runner theme": 1,
+    "mars bringer of war": 1,
+    "track21": 1,
+    "ides of march sanctuary": 1,
+    "rainbow in dark": 1,
+    "charlotte harlot 88 bonu": 1,
+    "wasted love": 1,
+    "track24": 1,
+    "last sunrise": 1,
+    "outro always look on bright side of life": 1,
+    "ian camfield introduces matter of life and death different world these colours dont run brighter than thousand suns reincarnation of benjamin breeg": 1,
+    "infinate dreams": 1,
+    "se announcement": 1,
+    "iron maiden 1995 interview part 1": 1,
+    "intro where eagles dare": 1,
+    "track23": 1,
+    "x factor epk": 1
+   }
+  },
+  "Megadeth": {
+   "mbid": "a9044915-8be3-4c7e-b11f-9e2d2ea0a91e",
+   "musicas": {
+    "symphony of destruction": 1029825,
+    "hangar 18": 786607,
+    "peace sells": 741555,
+    "tornado of souls": 638533,
+    "tout le monde": 661723,
+    "trust": 528652,
+    "sweating bullets": 434549,
+    "wake up dead": 440585,
+    "take no prisoners": 437007,
+    "in my darkest hour": 405148,
+    "skin my teeth": 372370,
+    "she wolf": 362621,
+    "lucretia": 352780,
+    "train of consequences": 339492,
+    "five magics": 341867,
+    "poison was cure": 318781,
+    "dawn patrol": 295268,
+    "angry again": 295199,
+    "countdown to extinction": 309809,
+    "foreclosure of dream": 251690,
+    "mechanix": 265836,
+    "devils island": 237529,
+    "architecture of aggression": 229871,
+    "dread and fugitive mind": 247534,
+    "reckoning day": 229754,
+    "washington is next": 214394,
+    "dialectic chaos": 213454,
+    "ashes in your mouth": 214728,
+    "head crusher": 210959,
+    "this was my life": 210295,
+    "almost honest": 213572,
+    "high speed dirt": 207935,
+    "44 minutes": 206109,
+    "conjuring": 227446,
+    "this day we fight": 205425,
+    "sleepwalker": 204880,
+    "holy wars punishment due": 242914,
+    "addicted to chaos": 194416,
+    "my last words": 192961,
+    "kill king": 191167,
+    "psychotron": 193064,
+    "killing road": 180522,
+    "captive honour": 178735,
+    "anarchy in u k": 174867,
+    "blood of heroes": 173461,
+    "paranoid": 171770,
+    "family tree": 171237,
+    "die dead enough": 170466,
+    "use man": 166475,
+    "bad omen": 166444,
+    "hook in mouth": 170277,
+    "rattlehead": 164154,
+    "gears of war": 162829,
+    "youthanasia": 158104,
+    "set world afire": 171761,
+    "secret place": 158332,
+    "scorpion": 154556,
+    "rust in peace polaris": 164007,
+    "endgame": 152477,
+    "elysian fields": 152412,
+    "back in day": 151585,
+    "kick chair": 150025,
+    "promises": 149922,
+    "right to go insane": 149691,
+    "how story ends": 148754,
+    "i thought i knew it all": 147086,
+    "i aint superstitious": 144784,
+    "crush em": 143420,
+    "united abominations": 142286,
+    "bite hand": 141662,
+    "victory": 141207,
+    "bodies": 139510,
+    "prince of darkness": 144157,
+    "into lungs of hell": 154298,
+    "blackmail universe": 136753,
+    "skull beneath skin": 155163,
+    "99 ways to die": 129632,
+    "return to hangar": 131750,
+    "mary jane": 142261,
+    "liar": 127744,
+    "of mice and men": 125527,
+    "black curtains": 124770,
+    "disintegrators": 124560,
+    "vortex": 141186,
+    "public enemy no 1": 123107,
+    "chosen ones": 121873,
+    "looking down cross": 116028,
+    "blessed are dead": 114496,
+    "mastermind": 114390,
+    "play for blood": 114380,
+    "burnt ice": 114321,
+    "1000 times goodbye": 113848,
+    "502": 113537,
+    "amerikhastan": 112902,
+    "moto psycho": 112865,
+    "sudden death": 111551,
+    "fff": 111061,
+    "my creation": 108968,
+    "i know jack": 108246,
+    "tears in vial": 105572,
+    "youre dead": 105181,
+    "black swan": 103416,
+    "sin": 102860,
+    "insomnia": 112679,
+    "have cool will travel": 98822,
+    "go to hell": 95767,
+    "new world order": 115723,
+    "burning bridges": 92693,
+    "truth be told": 90602,
+    "shadow of deth": 88514,
+    "world needs hero": 87675,
+    "good mourning black friday": 100685,
+    "ill be there": 86557,
+    "disconnect": 86321,
+    "breadline": 98238,
+    "these boots": 83308,
+    "whose life": 81945,
+    "my kingdom": 80401,
+    "no more mr nice guy": 80239,
+    "ecstasy": 77351,
+    "never dead": 76531,
+    "millennium of blind": 76469,
+    "something that im not": 75115,
+    "wanderlust": 73110,
+    "enter arena": 71547,
+    "holy wars": 73822,
+    "breakpoint": 74265,
+    "diadems": 69418,
+    "13": 68543,
+    "we people": 68365,
+    "duke nukem theme": 104143,
+    "doctor is calling": 67288,
+    "silent scorn": 66270,
+    "losing my senses": 64019,
+    "guns drugs and money": 63981,
+    "ill get even part ii": 62811,
+    "fast lane": 61376,
+    "seven": 61238,
+    "ill get even": 60015,
+    "never walk alone call to arms": 59749,
+    "time beginning": 59394,
+    "wrecker": 58756,
+    "deadly nightshade": 56648,
+    "when": 55412,
+    "crown of worms": 54317,
+    "1 320": 50110,
+    "time end": 49576,
+    "problems": 49357,
+    "killing is my business and business is good": 46116,
+    "last rites loved to deth": 43742,
+    "hardest part of letting go sealed with kiss": 36211,
+    "something im not": 36108,
+    "recipe for hate warhorse": 18362,
+    "bullprick": 18072,
+    "coming home": 18555,
+    "evil thats within": 16965,
+    "absolution": 16840,
+    "never say die": 14582,
+    "creed": 12857,
+    "one thing": 11925,
+    "dystopia": 11259,
+    "coming home to argentina": 7633,
+    "killing is my business": 7440,
+    "threat is real": 7268,
+    "conquer or die": 7058,
+    "skin of my teeth": 6660,
+    "out on tiles": 6411,
+    "fatal illusion": 5936,
+    "well be back": 5817,
+    "poisonous shadows": 4747,
+    "black friday": 4657,
+    "tipping point": 4441,
+    "anarchy problems": 4256,
+    "post american world": 4227,
+    "lying in state": 4188,
+    "death from within": 4146,
+    "sick dying and dead": 4012,
+    "bullet to brain": 3912,
+    "night stalkers": 3771,
+    "i dont care": 3264,
+    "my sweet lord": 3258,
+    "emperor": 3170,
+    "soldier on": 3153,
+    "life in hell": 3048,
+    "let there be shred": 2861,
+    "kingmaker": 2847,
+    "super collider": 2799,
+    "in my darkest hours": 2763,
+    "its electric": 2719,
+    "foreign policy": 2703,
+    "dogs of chernobyl": 2466,
+    "schools out": 2635,
+    "time use man": 2304,
+    "jet": 2278,
+    "peace sells holy wars": 2334,
+    "puppet parade": 2274,
+    "cold sweat": 2197,
+    "killing time": 2124,
+    "sacrifice": 1970,
+    "forget to remember": 1927,
+    "junkie": 1871,
+    "peace sells capitol punishment": 1871,
+    "burn": 1867,
+    "hey god": 1867,
+    "blackest crow": 1841,
+    "another bad day": 1813,
+    "mission to mars": 1804,
+    "ride lightning": 1768,
+    "celebutante": 1752,
+    "psychopathy": 1736,
+    "dance in rain": 1709,
+    "built for war": 1665,
+    "made to kill": 1646,
+    "dont turn your back": 1613,
+    "beginning of sorrow": 1610,
+    "off edge": 1571,
+    "i am war": 1506,
+    "police truck": 1498,
+    "last note": 1537,
+    "obey call": 1457,
+    "battery": 1452,
+    "this planets on fire": 1181,
+    "dark themes": 1072,
+    "capitol punishment": 1045,
+    "melt ice away": 1020,
+    "keeping score": 894,
+    "look whos talking": 832,
+    "last dying wish": 782,
+    "loved to deth": 778,
+    "guitar solo": 768,
+    "intro rattlehead": 600,
+    "delivering goods": 556,
+    "reckoning day peace sells": 500,
+    "in my darkness hour": 457,
+    "burnt offerings": 447,
+    "house divided": 401,
+    "these boots are made for walkin": 400,
+    "these boots were made for walkin": 399,
+    "quicksand": 403,
+    "anarchy in philadelphia": 375,
+    "dave solo": 361,
+    "next victim": 371,
+    "all i want": 355,
+    "bodies left behind": 347,
+    "outro": 344,
+    "special message for japanese fans": 338,
+    "interview": 376,
+    "interview with dave mustaine": 332,
+    "public enemy": 312,
+    "dave speaks": 305,
+    "tornado of souls trust": 305,
+    "punishment due": 293,
+    "strange ways": 265,
+    "introduction": 255,
+    "set world on fire": 221,
+    "me hate you": 216,
+    "peace sells but whos buying": 395,
+    "time beginning intro ill get even": 178,
+    "secret place interview": 176,
+    "conjuring wake up dead": 159,
+    "hangar 18 return to hangar": 134,
+    "punishment is due": 126,
+    "bloodlust": 120,
+    "marty friedman solo": 109,
+    "nobodys hero": 106,
+    "rust in peace": 84,
+    "anarchy in buenos aires": 73,
+    "in my darkest hour she wolf": 65,
+    "drum solo": 43,
+    "never walk alone": 41,
+    "well be back chapter i": 31,
+    "intro skin my teeth": 26,
+    "skin on my teeth": 25,
+    "peace sells victory": 24,
+    "holly wars": 20,
+    "holy wars punishment due silent scorn": 16,
+    "killing time chapter v": 15,
+    "night stalkers chapter ii": 14,
+    "hangar": 14,
+    "life in hell chapter iv": 13,
+    "intro reckoning day": 12,
+    "special messages for japan": 11,
+    "symphony of desctruction": 9,
+    "intro holy wars punishment due": 9,
+    "headcrusher": 9,
+    "intros holy wars punishment due": 9,
+    "anarchy in usa": 9,
+    "sick dying and dead chapter iii": 8,
+    "am i evil": 7,
+    "countdown": 6,
+    "anarchy in baltimore": 6,
+    "interview part 17": 4,
+    "symphony of unconditionally": 4,
+    "interview part 12": 4,
+    "interview part 31": 4,
+    "interview part 10": 4,
+    "interview part 07": 4,
+    "peace sells these boots": 4,
+    "interview part 28": 4,
+    "interview part 16": 4,
+    "interview part 05": 3,
+    "interview part 14": 3,
+    "interview part 29": 3,
+    "interview part 19": 3,
+    "interview part 27": 3,
+    "interview part 21": 3,
+    "interview part 09": 3,
+    "interview part 30": 3,
+    "interview part 06": 3,
+    "interview part 11": 3,
+    "interview part 20": 3,
+    "interview part 04": 3,
+    "interview part 32": 3,
+    "interview part 13": 3,
+    "interview part 08": 3,
+    "interview part 24": 3,
+    "interview part 15": 3,
+    "countdown of extinction": 2,
+    "youthanasia album release tv spot": 2,
+    "cryptic tv epk for cryptic writings album": 1,
+    "youthanasia album cover shoot credits": 1,
+    "fight hate": 1,
+    "dave mustaines appearance on drew carey show 1998": 1,
+    "argentina 1998 backstage footage interview footage distant shots": 1,
+    "evolver making of youthanasia": 1,
+    "rock vote clip 1": 1,
+    "cryptic writings album release tv spot": 1,
+    "night of living megadeth halloween 1994 interview excerpts and reckoning day performed": 1,
+    "interview excerpt with dave mustaine on song tout le monde 1994": 1,
+    "cutting edge happy hour interview intro": 1,
+    "interview excerpt with dave mustaine and nick menza on shows and touring 1994": 1,
+    "intro dread and fugitive mind": 1,
+    "interview excerpt with nick menza on youthanasias album cover 1994": 1,
+    "rock vote clip 3": 1,
+    "no pain": 1,
+    "day music died": 1,
+    "rock vote clip 2": 1
+   }
+  },
+  "Metallica": {
+   "mbid": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+   "musicas": {
+    "nothing else matters": 2840110,
+    "master of puppets": 2274595,
+    "enter sandman": 2080962,
+    "one": 1950285,
+    "for whom bell tolls": 1757748,
+    "unforgiven": 1733590,
+    "sad but true": 1667236,
+    "fade to black": 1377504,
+    "day that never comes": 1273190,
+    "wherever i may roam": 1243194,
+    "fuel": 1207721,
+    "welcome home": 1216045,
+    "battery": 1170397,
+    "whiskey in jar": 1145374,
+    "creeping death": 1039551,
+    "of wolf and man": 986499,
+    "unforgiven ii": 974713,
+    "memory remains": 959667,
+    "all nightmare long": 915652,
+    "thing that should not be": 896282,
+    "unforgiven iii": 864496,
+    "ride lightning": 858692,
+    "blackened": 849920,
+    "until it sleeps": 841959,
+    "hero of day": 784473,
+    "orion": 766071,
+    "that was just your life": 759635,
+    "harvester of sorrow": 754061,
+    "disposable heroes": 707778,
+    "cyanide": 706511,
+    "four horsemen": 743862,
+    "end of line": 686414,
+    "holier than thou": 682314,
+    "whiplash": 714533,
+    "turn page": 710617,
+    "die die my darling": 695413,
+    "seek and destroy": 1064288,
+    "through never": 658373,
+    "motorbreath": 676637,
+    "dont tread on me": 643040,
+    "hit lights": 658518,
+    "leper messiah": 631813,
+    "and justice for all": 616738,
+    "st anger": 613736,
+    "my friend of misery": 606768,
+    "god that failed": 605498,
+    "damage inc": 588667,
+    "trapped under ice": 587165,
+    "broken beat and scarred": 666564,
+    "devils dance": 576864,
+    "my apocalypse": 559422,
+    "no leaf clover": 560151,
+    "jump in fire": 563054,
+    "eye of beholder": 534874,
+    "judas kiss": 529119,
+    "escape": 526920,
+    "fight fire with fire": 524864,
+    "shortest straw": 530563,
+    "dyers eve": 519055,
+    "to is to die": 518306,
+    "struggle within": 504340,
+    "bleeding me": 485039,
+    "frantic": 472779,
+    "suicide and redemption": 470474,
+    "no remorse": 460134,
+    "metal militia": 455344,
+    "frayed ends of sanity": 436078,
+    "call of ktulu": 422676,
+    "phantom lord": 448115,
+    "king nothing": 426844,
+    "ecstasy of gold": 386092,
+    "aint my bitch": 380099,
+    "so what": 360184,
+    "astronomy": 342050,
+    "some kind of monster": 348811,
+    "mama said": 326849,
+    "stone cold crazy": 326508,
+    "am i evil": 299276,
+    "outlaw torn": 488140,
+    "unnamed feeling": 293152,
+    "house jack built": 282638,
+    "blitzkrieg": 278803,
+    "carpe diem baby": 276452,
+    "helpless": 283658,
+    "poor twisted me": 264753,
+    "dirty window": 259985,
+    "cure": 257034,
+    "i disappear": 269122,
+    "breadfan": 254792,
+    "2 4": 251580,
+    "ronnie": 248664,
+    "bad seed": 247433,
+    "sweet amber": 251405,
+    "slither": 244249,
+    "invisible kid": 250470,
+    "wait": 242559,
+    "shoot me again": 238070,
+    "wasting my hate": 236147,
+    "prince charming": 235197,
+    "sabbra cadabra": 241871,
+    "fixxxer": 229471,
+    "my world": 228990,
+    "where wild things are": 227294,
+    "thorn within": 225939,
+    "crash course in brain surgery": 222257,
+    "attitude": 222142,
+    "small hours": 228503,
+    "its electric": 216449,
+    "mercyful fate": 215807,
+    "free speech for dumb": 206498,
+    "prince": 203764,
+    "all within my hands": 210546,
+    "purify": 206404,
+    "killing time": 203145,
+    "human": 184068,
+    "more i see": 170099,
+    "stone dead forever": 167136,
+    "damage case": 166101,
+    "too late too late": 159498,
+    "low mans lyric": 159422,
+    "better than you": 148181,
+    "last caress": 152869,
+    "last caress green hell": 142608,
+    "intro better than you": 119697,
+    "hate train": 63749,
+    "hell and back": 53509,
+    "kirk solo 1": 52733,
+    "remember tomorrow": 51420,
+    "just bullet away": 48554,
+    "rebel of babylon": 47171,
+    "kirk solo 2": 44710,
+    "overkill": 50981,
+    "green hell": 43680,
+    "justice medley": 43328,
+    "view": 33239,
+    "hardwired": 31239,
+    "53rd and 3rd": 28476,
+    "brandenburg gate": 28378,
+    "am i evil damage inc": 26904,
+    "when blind man cries": 24285,
+    "moth into flame": 24811,
+    "pulling teeth": 63268,
+    "iced honey": 22543,
+    "pumping blood": 22197,
+    "bass solo": 23549,
+    "mechanix": 26640,
+    "loverman": 21456,
+    "tuesdays gone": 21724,
+    "lux terna": 19164,
+    "mistress dread": 19100,
+    "cheat on me": 18875,
+    "atlas rise": 18673,
+    "encore jam": 17936,
+    "frustration": 16796,
+    "junior dad": 15846,
+    "kirk solo": 15609,
+    "spit out bone": 15741,
+    "dragon": 15208,
+    "little dog": 14579,
+    "now that were dead": 14382,
+    "commando": 13379,
+    "smoke on water": 13211,
+    "holier than you": 12507,
+    "halo on fire": 12877,
+    "screaming suicide": 11358,
+    "dream no more": 10418,
+    "2x4": 10362,
+    "72 seasons": 10267,
+    "now i wanna sniff some glue": 9542,
+    "confusion": 10204,
+    "prowler run to hills": 9129,
+    "if darkness had son": 8349,
+    "today your love tomorrow world": 8185,
+    "manunkind": 7739,
+    "murder one": 7606,
+    "let it loose": 7839,
+    "here comes revenge": 7494,
+    "am i savage": 7355,
+    "shadows follow": 7211,
+    "solos": 7137,
+    "too far gone": 6289,
+    "were happy family": 6020,
+    "cretin hop": 5775,
+    "you must burn": 5677,
+    "sleepwalk my life away": 5613,
+    "melbourne": 5712,
+    "inamorata": 4962,
+    "crown of barbed wire": 4875,
+    "hi guy": 4795,
+    "lords of summer": 5437,
+    "chasing light": 4650,
+    "disposable heros": 4455,
+    "little wing": 4397,
+    "room of mirrors": 4346,
+    "flamingo": 4234,
+    "casper": 4176,
+    "black squirrel": 4085,
+    "ecstacy of gold": 6599,
+    "saint anger": 4020,
+    "kill ride medley": 4019,
+    "king of nothing": 3746,
+    "un3": 3614,
+    "neinteen": 3472,
+    "german soup": 3443,
+    "chase is better than catch": 3264,
+    "ten": 3083,
+    "k2lu": 3028,
+    "hey jude": 2927,
+    "symptom of universe": 2538,
+    "rapid fire": 2512,
+    "three horse in ground": 2388,
+    "ronnie rising medley light in black tarot woman stargazer kill king": 2303,
+    "mercyful fate satans fall curse of pharaohs corpse without soul into coven evil": 2263,
+    "doomed by living dead": 2238,
+    "wonderwall": 2238,
+    "gymbag": 2198,
+    "ronnie rising medley": 2182,
+    "black album intro": 2178,
+    "better than thou": 2074,
+    "at sound of demon bell": 2069,
+    "hole in sky": 2044,
+    "fuel for fire": 3218,
+    "black night": 2026,
+    "memory": 3324,
+    "corpse without soul": 1744,
+    "you really got me": 1729,
+    "medley": 1720,
+    "dont touch me there": 1602,
+    "in my time of dying": 1585,
+    "nuns have no fun": 1582,
+    "into coven": 1552,
+    "mouldy": 2463,
+    "jump into fire": 1536,
+    "justice on wheels intro": 1526,
+    "riff": 1468,
+    "last caress am i evil battery": 1562,
+    "another jam": 1377,
+    "motorcycle man": 1445,
+    "jazz jam": 1354,
+    "devil eyes": 1268,
+    "just jam": 1248,
+    "merry fuckin christmas from metallica": 1205,
+    "blackened 2020": 1196,
+    "guitar solo": 1491,
+    "ecstasy of gold enter sandman": 834,
+    "mistreated": 1187,
+    "justice medley eye of beholder blackened frayed ends of sanity and justice for all blackened": 768,
+    "2 x 4": 1710,
+    "waste my hate": 723,
+    "when hell freezes over": 1142,
+    "instrumental": 699,
+    "f d": 677,
+    "please dont judas me": 858,
+    "we did it again": 646,
+    "la bamba": 637,
+    "introduction": 647,
+    "so what battery": 602,
+    "dont tread on else matters": 598,
+    "prowler": 610,
+    "drum solo": 589,
+    "deep purple medley": 559,
+    "sweet jane": 556,
+    "veteran of psychic wars": 640,
+    "low mans lyrics": 523,
+    "so fucking crazy": 510,
+    "we are road crew": 507,
+    "youthanasia": 481,
+    "f b d": 577,
+    "brothers in arms": 513,
+    "bp17": 443,
+    "bass guitar doodle": 479,
+    "how many more times": 451,
+    "mechanics ii": 430,
+    "let it lose": 422,
+    "am i devil": 413,
+    "return of vampire": 378,
+    "fuel2": 374,
+    "intro to scythian suite": 383,
+    "one of these days": 368,
+    "havester of sorrow": 367,
+    "nothing": 360,
+    "paranoid": 604,
+    "all day and all of night": 375,
+    "last caress fade to black": 340,
+    "harvester of sorrows": 335,
+    "iron man": 719,
+    "intro to iron foundry": 333,
+    "jason newsted bass solo": 308,
+    "jason solo": 275,
+    "iron foundry opus 19": 244,
+    "last caress green heel": 235,
+    "bass and guitar solo": 225,
+    "load": 326,
+    "streamline": 317,
+    "bitch": 336,
+    "four horseman": 263,
+    "devil dance": 252,
+    "mine eyes": 214,
+    "to is to die call of ktulu": 195,
+    "only happy when it rains": 237,
+    "london dungeon last caress green hell": 185,
+    "fixer": 187,
+    "scythian suite opus 20 ii enemy god and dance of dark spirits": 326,
+    "outlaw": 236,
+    "you and me": 172,
+    "kirk hammett guitar solo": 181,
+    "back to cave": 163,
+    "edie": 162,
+    "seek and destroy fight fire with fire": 172,
+    "anesthesia": 160,
+    "are you gonna go my way": 154,
+    "mercyful fate medley": 208,
+    "for whom bells tolls": 387,
+    "no fun": 142,
+    "money will roll right in": 206,
+    "i just want to celebrate": 260,
+    "corpie": 138,
+    "happy birthday": 137,
+    "rock me": 135,
+    "chat 11": 134,
+    "back in black etc": 134,
+    "come kingdom lie": 130,
+    "devils eye": 130,
+    "nothing else matters enter sandman": 128,
+    "interview": 126,
+    "encore jam 2": 160,
+    "skimpy": 142,
+    "black on black": 119,
+    "jam": 120,
+    "star spangled banner": 116,
+    "sucking my love": 136,
+    "kirk hammet solo i": 101,
+    "instrumental improvisation": 98,
+    "old shit medley": 94,
+    "chat 10": 74,
+    "dazed and confused": 69,
+    "metalli medley": 64,
+    "untill it sleepz": 72,
+    "cliff solo": 62,
+    "death is not end": 59,
+    "intro": 95,
+    "sweat": 53,
+    "kirk doodle": 53,
+    "bass guitar solos": 50,
+    "stairway to heaven": 49,
+    "vulturus": 48,
+    "detroit rock city": 46,
+    "intro jam": 109,
+    "peanuts run to hills my sharona four horsemen": 44,
+    "solo bass": 44,
+    "intro bass": 42,
+    "4 horsemen": 40,
+    "guitar doodle": 49,
+    "iron man paranoid": 49,
+    "ecstasy of gold blackened": 37,
+    "masters of puppets": 40,
+    "seek n destroy": 35,
+    "late night skynyrd jam": 34,
+    "nothing else matters until it sleeps": 33,
+    "halloween": 33,
+    "colossus": 32,
+    "pulling teeth for whom bells tolls": 31,
+    "kill ride medley ride lightning no remorse hit lights four horsemen seek and destroy fight fire with fire": 31,
+    "franitc": 31,
+    "instrumental medley": 41,
+    "mama": 95,
+    "mastertarium": 43,
+    "dusty": 50,
+    "white light white heat": 50,
+    "la grange": 32,
+    "run to hills": 29,
+    "to is to die jam": 28,
+    "ecstasy of gold breadfan": 28,
+    "beds are burning for whom bell tolls oh sheila": 27,
+    "road crew": 28,
+    "la bamba prowler run to hills helpless": 27,
+    "custard pie": 26,
+    "donington medley": 26,
+    "happy birthday kirk": 26,
+    "bass guitar noodle": 26,
+    "ending": 25,
+    "extra footage": 25,
+    "nc 17": 69,
+    "last caress so what": 26,
+    "believe": 119,
+    "good bad and ugly": 24,
+    "jack": 107,
+    "halloween ii": 24,
+    "mixer steve thompson reflects on missing bass parts": 23,
+    "am i evil battery": 22,
+    "motorbeath": 22,
+    "mercyful fate satans fall curse of pharaohs corpse without soul into cover evil": 21,
+    "metal blues": 21,
+    "boss": 93,
+    "st anger snare": 21,
+    "jamming": 21,
+    "jason talks about pre and justice for all days": 20,
+    "cliff burtons bass solo": 20,
+    "blue and gray": 20,
+    "riff tape intro": 20,
+    "funeral for friend love lies bleeding": 19,
+    "kirk hammet solo 2": 19,
+    "ride lighting": 19,
+    "goddamnit its metallica": 18,
+    "solo jason": 18,
+    "black": 18,
+    "of wolf and man unforgiven": 17,
+    "nothing else matters music video": 17,
+    "all your lies": 17,
+    "back in black": 16,
+    "goat boy speaks": 16,
+    "train kept rollin": 16,
+    "shadows of cross": 15,
+    "drum doodle": 16,
+    "house of rising sun": 15,
+    "enter sandman music video": 15,
+    "kirks guitar solo": 15,
+    "intro creeping death": 14,
+    "kill ride medley ride lightning no remorse four horsemen phantom lord fight fire with fire": 14,
+    "poor twizted me": 14,
+    "video screen dressing room": 14,
+    "mechanics": 15,
+    "m72 world tour mexico city": 14,
+    "love lockdown vs day that never comes": 15,
+    "road crew overkill": 13,
+    "freeze em all in antarctica": 13,
+    "tuning room": 13,
+    "robert trujillo": 13,
+    "on phone with mike piazza": 13,
+    "chat 8": 13,
+    "instrumental interlude": 12,
+    "cliff burton bass solo": 12,
+    "smashing guitar solo": 12,
+    "garage days re visited": 12,
+    "orion jam": 12,
+    "ronny": 11,
+    "masa ito inteviews kirk": 11,
+    "star spangled banner pulling teeth": 11,
+    "egypt": 11,
+    "james hetfield": 11,
+    "jamming to oldies": 11,
+    "kind nothing": 11,
+    "guitar solo harvester of sorrow": 11,
+    "aint no fun": 10,
+    "metal forces magazine interview with lars": 10,
+    "pulling teeth whiplash": 10,
+    "credits": 10,
+    "interview with metallica": 10,
+    "la bamba prowler run to hills helpless jam": 10,
+    "documentary of metallica": 10,
+    "would": 10,
+    "knight rider": 10,
+    "one music video": 10,
+    "bass doodle": 16,
+    "medley 3": 10,
+    "medley 1": 10,
+    "creeping death die die my darling": 10,
+    "atlas arise": 9,
+    "solo guitar kirk h": 9,
+    "last caress am i evil": 9,
+    "radio ids with lars james and cliff from 1984": 9,
+    "medley 4": 9,
+    "spread love one call me d nice": 9,
+    "kirk hammett": 9,
+    "berlin magnetic": 9,
+    "talk in studio": 8,
+    "medley 6": 8,
+    "sabbra cadabra until it sleeps": 9,
+    "heavy joke 2": 8,
+    "unforgiven forever": 7,
+    "destroy your friends": 7,
+    "bob rock in desert": 7,
+    "temptation": 7,
+    "interview dressing room": 7,
+    "acida": 7,
+    "kirk and robs doodle": 7,
+    "per un pugno di dollari": 6,
+    "cliff burton solo": 6,
+    "closer master of puppets": 6,
+    "rabalderstr de": 6,
+    "end credits": 8,
+    "bleeding me part 1": 6,
+    "fight fire with fire ride lightning": 6,
+    "khdx interview with kirk": 6,
+    "sabbra cadabara national acrobat": 6,
+    "masters and end of story": 6,
+    "lenny": 14,
+    "kill ride medley ride lightning no remorse hit lights four horsemen phantom lord fight fire with fire": 7,
+    "medley 7": 6,
+    "american bad ass": 7,
+    "soundcheck": 6,
+    "medley 2": 6,
+    "jason talks about my friend of misery": 8,
+    "in my life": 6,
+    "martini": 13,
+    "metal madness magazine interview with cliff": 5,
+    "knac report from la monsters of rock": 5,
+    "fish tank": 10,
+    "metal force magazine interview with lars": 5,
+    "ecstasy of gold creeping death": 5,
+    "kirk hammet guitar solo": 5,
+    "la bamba run to hills helpless": 5,
+    "kirk": 5,
+    "medley 5": 5,
+    "circus magazine interview with james": 5,
+    "borderline": 5,
+    "donington jam": 5,
+    "diary of madman": 7,
+    "head injury": 5,
+    "ecstasy of gold hit lights": 5,
+    "unforgiven 2": 7,
+    "kirk hammett solo": 5,
+    "james and lars discuss songwriting": 5,
+    "voodoo queen": 4,
+    "jason momoas intro": 4,
+    "bass guitar doodle four horsemen": 4,
+    "more than this": 4,
+    "drum recording techniques": 4,
+    "instrumental jam": 4,
+    "introduction hit lights": 4,
+    "bastard": 12,
+    "drivin": 16,
+    "its killing me": 4,
+    "chat 1": 4,
+    "damage": 4,
+    "pulling teeth for whom bell tolls": 4,
+    "away from home": 4,
+    "rust in peace": 4,
+    "echo chamber": 4,
+    "orion call of ktulu to is to die": 4,
+    "unbridled": 4,
+    "bleeding me part 2": 4,
+    "bass and guitar jam": 4,
+    "mr soul": 4,
+    "making of nothing else matters": 3,
+    "was load difficult album to put together": 3,
+    "clampdown": 6,
+    "set 2": 3,
+    "jimmy kimmels intro": 3,
+    "los luchadores": 3,
+    "guitar solo nothing else matters": 3,
+    "ksdt interview with jason": 3,
+    "james": 3,
+    "cliff em all": 3,
+    "chat 4": 3,
+    "deep purple medley smoke on water how many more times black night": 3,
+    "chosen ones": 3,
+    "metal madness interview with lars": 3,
+    "id from james hetfield": 3,
+    "chat 2": 3,
+    "london dungeon": 6,
+    "swedish radio rockbox interview with lars": 3,
+    "breadfan last caress": 4,
+    "devils lettuce": 3,
+    "wysp philadelphia metal shop radio interview with lars and james": 3,
+    "ace of spades": 3,
+    "twist of cain": 3,
+    "orca attack": 3,
+    "chat 3": 3,
+    "chat 9": 3,
+    "raining blood": 3,
+    "chat 6": 3,
+    "dead kennedy rolls": 3,
+    "spitfire cider": 3,
+    "sounds magazine interview with kirk cliff and lars": 3,
+    "ecstasy of gold battery": 3,
+    "broadcast interview": 2,
+    "pulling teeth bass solo for whom bell tolls": 2,
+    "metal militia hang on sloopy": 2,
+    "kirk and rob doodle": 4,
+    "chat 7": 2,
+    "rock im park container rehearsal": 2,
+    "eye of beholder blackened frayed ends of sanity and justice for all": 2,
+    "anesthesia whiplash": 2,
+    "when did you start recording load": 2,
+    "nothing else matters vs f cking society": 2,
+    "minneapolis funkatropolis purple 1": 2,
+    "symptom of universe back in black jam": 2,
+    "ecstasy of gold four horsemen": 2,
+    "breadfan overkill": 2,
+    "from whom bell tolls": 2,
+    "better": 7,
+    "t v eye": 2,
+    "curse of pharaohs": 2,
+    "with 5 year gap between albums did you lose any songs you had written in meantime": 2,
+    "my friend of misery welcome home nothing else matters": 2,
+    "swedish radio rockbox interview with lars and jason": 2,
+    "holier than thou smoke on water slow and easy more human than human welcome to jungle black magic youth gone wild": 2,
+    "chat 5": 2,
+    "la bamba run to hills helpless last caress": 2,
+    "wherever i roam": 2,
+    "raw and uncut interview": 2,
+    "philadelphia freedom disposable heroes gonna fly now": 2,
+    "intro ecstasy of gold": 2,
+    "its been 5 year since black album why has it taken so long to come up with load": 2,
+    "40 years film": 2,
+    "holier than though": 2,
+    "all nighter at hong kong bar": 2,
+    "seek and destroys": 2,
+    "fight fire with fire part 2": 2,
+    "lars ulrich": 2,
+    "flip out kurt": 2,
+    "metallica some kind of monster trailer": 2,
+    "past band members film": 2,
+    "s and m": 2,
+    "creaping death": 2,
+    "witch touch me im sick": 2,
+    "to is to die4": 2,
+    "kocham cie kochanie moje": 2,
+    "so fuckn what": 2,
+    "mastertarium master of puppets welcome home": 2,
+    "back in warsaw": 1,
+    "jump in fire fight fire with fire": 1,
+    "screamin suicide": 1,
+    "pulling teeth cliff burton solo": 1,
+    "creeping death jam die die my darling": 1,
+    "kill ride medley ride lightning no remorse hit lights seek and destroy fight fire with fire": 1,
+    "intro to tuesdays gone": 2,
+    "halo of fire": 1,
+    "all hell breaks loose": 1,
+    "why did you choose to work with bob rock again": 1,
+    "kirks guitar solo wherever i may roam": 1,
+    "having had such huge success with black album did band feel they should stick to same formula in writing songs for load": 1,
+    "hitting big leagues film": 1,
+    "happy birthday kirk nothing else matters": 1,
+    "bass solo 1": 1,
+    "raw and uncut interview 1991": 1,
+    "kill em all medley": 1,
+    "enter sandman vs i love rock n roll": 1,
+    "kirk robert doodle": 1,
+    "rosamunde": 1,
+    "motown yo town": 1,
+    "am i evil motorbreath": 1,
+    "no life til leather": 1,
+    "broken beaten and scarred": 1,
+    "woodstock jam": 1,
+    "die my darling": 1,
+    "behind scenes": 1,
+    "load has very feel to it was this conscious decision by band": 1,
+    "all within mys hands": 1,
+    "primo": 1,
+    "interview with cliff": 1,
+    "behind scenes making of show": 1,
+    "interlude 2": 1,
+    "rob and kirk doodle": 1,
+    "kirk hammett interview": 1,
+    "motorbreath call of ktulu": 1,
+    "orion fade to black": 1,
+    "my last words arpeggio": 1,
+    "foxborough on run": 1,
+    "frayed ends of sanity creeping death": 1,
+    "kirk hammett and rob trujillo duel": 1,
+    "seemann": 1,
+    "enter sandman cure": 1,
+    "sucking my love cure highway to hell": 1,
+    "masa ito inteviews lars": 1,
+    "guitar solo kirk hammet": 1,
+    "do you ever face blank periods when youre writing songs for your albums": 1,
+    "rehearsal day with queen": 1,
+    "atlast rise": 1,
+    "2 of one introduction": 1,
+    "intro film": 1,
+    "la chona": 1,
+    "can you tell us about song until it sleeps": 1,
+    "last caress breadfan": 1,
+    "did load take long time to write": 1,
+    "s and m documentary": 1,
+    "bad omen": 2,
+    "guitar and bass solo": 1,
+    "how many more times jam": 1,
+    "horror business": 1,
+    "rattlehead": 1,
+    "enter cameraman": 1,
+    "ron and james unfinished song": 1,
+    "all within my hands promo": 1,
+    "national acrobat sad but true": 1,
+    "cover songs film": 1,
+    "are you gonna go my way so what": 1,
+    "how did album start to take shape while you were recording": 1
+   }
+  },
+  "Ozzy Osbourne": {
+   "mbid": "8aa5b65a-5b3c-4029-92bf-47a544356934",
+   "musicas": {
+    "crazy train": 909880,
+    "mr crowley": 592577,
+    "bark at moon": 446295,
+    "mama im coming home": 420096,
+    "dreamer": 417464,
+    "i just want you": 358967,
+    "no more tears": 358810,
+    "let me hear you scream": 272953,
+    "goodbye to romance": 267052,
+    "i dont wanna stop": 261361,
+    "shot in dark": 220489,
+    "suicide solution": 216537,
+    "hellraiser": 204178,
+    "i dont know": 220434,
+    "perry mason": 194916,
+    "over mountain": 173416,
+    "road to nowhere": 171369,
+    "flying high again": 167480,
+    "diary of madman": 146740,
+    "see you on other side": 151703,
+    "let it die": 140534,
+    "gets me through": 142540,
+    "i dont want to change world": 140682,
+    "desire": 131465,
+    "life wont wait": 122700,
+    "dee": 128162,
+    "paranoid": 155118,
+    "miracle man": 119023,
+    "not going away": 120429,
+    "no bone movies": 111934,
+    "time after time": 110310,
+    "revelation": 110180,
+    "black rain": 104833,
+    "youre no different": 104443,
+    "believer": 104526,
+    "crazy babies": 102385,
+    "crucify dead": 99040,
+    "soul sucker": 98336,
+    "steal away": 99485,
+    "iron man": 94472,
+    "rock n roll rebel": 92954,
+    "mr tinkertrain": 92900,
+    "lay your world on me": 86732,
+    "thunder underground": 86048,
+    "diggin me down": 85500,
+    "here for you": 86981,
+    "time": 81187,
+    "crucify": 81129,
+    "so tired": 79964,
+    "no easy way out": 77879,
+    "fearless": 77676,
+    "i aint no nice guy": 76321,
+    "almighty dollar": 75631,
+    "breaking all rules": 73403,
+    "s i n": 72352,
+    "i love you all": 71250,
+    "you cant kill rock and roll": 71229,
+    "ghost behind my eyes": 70806,
+    "facing hell": 69849,
+    "zombie stomp": 69100,
+    "i want it more": 68568,
+    "trap door": 68098,
+    "civilize universe": 67433,
+    "ultimate sin": 66382,
+    "fire in sky": 64548,
+    "countdowns begun": 64221,
+    "running out of time": 64063,
+    "tomorrow": 62715,
+    "old l tonight": 62540,
+    "waiting for darkness": 62444,
+    "junkie": 61134,
+    "war pigs": 61974,
+    "that i never had": 59995,
+    "killer of giants": 58881,
+    "s t": 58846,
+    "secret loser": 58362,
+    "centre of eternity": 57244,
+    "latimers mercy": 57010,
+    "v h": 55403,
+    "slow down": 53901,
+    "tonight": 53603,
+    "denial": 52474,
+    "little dolls": 51765,
+    "bloodbath in paradise": 49827,
+    "11 silver": 49255,
+    "my little man": 48617,
+    "in my life": 46189,
+    "my jekyll doesnt hide": 45415,
+    "tattooed dancer": 44683,
+    "black illusion": 44433,
+    "alive": 43609,
+    "working class hero": 42770,
+    "now you see it": 41718,
+    "back on earth": 41654,
+    "black sabbath": 41526,
+    "take what you want": 40546,
+    "thank god for bomb": 44160,
+    "lightning strikes": 39467,
+    "never know why": 43247,
+    "devils daughter": 38287,
+    "demon alcohol": 37740,
+    "changes": 47976,
+    "fool like you": 36704,
+    "never": 36523,
+    "mississippi queen": 36194,
+    "can you hear them": 31127,
+    "21st century schizoid man": 28592,
+    "hero": 28199,
+    "you lookin at me lookin at you": 28164,
+    "sympathy for devil": 28012,
+    "all young dudes": 27162,
+    "sweet leaf": 26881,
+    "n i b": 24321,
+    "for what its worth": 22543,
+    "wake dead": 21903,
+    "woman": 21807,
+    "fire": 21430,
+    "good times": 21451,
+    "party with animals": 20700,
+    "walk on water": 28125,
+    "snowblind": 20372,
+    "children of grave": 20465,
+    "nightmare": 19892,
+    "rocky mountain way": 19654,
+    "spiders": 19524,
+    "symptom of universe": 19005,
+    "sabbath bloody sabbath": 18960,
+    "dont blame me": 18949,
+    "sunshine of your love": 18869,
+    "i cant save you": 18421,
+    "go now": 18201,
+    "wizard": 17774,
+    "never say die": 17206,
+    "no place for angels": 15992,
+    "fairies wear boots": 17010,
+    "aimee": 14150,
+    "spiders in night": 12768,
+    "shock monkey": 12353,
+    "close my eyes forever": 13176,
+    "one up b side": 11106,
+    "purple haze": 10454,
+    "intro": 9593,
+    "whole worlds fallin down": 9369,
+    "under graveyard": 7722,
+    "love to hate": 7349,
+    "one more time": 7133,
+    "born to be wild": 6805,
+    "bang bang": 6293,
+    "pictures of matchstick men": 7568,
+    "patient number 9": 6004,
+    "ordinary man": 6747,
+    "liar": 5845,
+    "jump moon": 5793,
+    "faries wear boots": 5668,
+    "stayin alive": 5493,
+    "straight to hell": 5101,
+    "wont be coming home": 5242,
+    "living with enemy": 4807,
+    "hand of enemy": 3766,
+    "iron man children of grave": 3677,
+    "its raid": 3554,
+    "forever": 3262,
+    "therapy": 4094,
+    "voodoo dancer": 3158,
+    "dog bounty hunter": 3003,
+    "black skies": 2797,
+    "breakin all rules": 2797,
+    "one of those days": 2784,
+    "you said it all": 3048,
+    "scary little green men": 2620,
+    "staying alive": 2710,
+    "all my life": 2572,
+    "behind wall of sleep": 2517,
+    "parasite": 2240,
+    "degradation rules": 2218,
+    "vodoo dancer": 2168,
+    "whole worlds falling down": 2168,
+    "this means war": 2097,
+    "immortal": 2068,
+    "thousand shades": 2023,
+    "jacks land": 1918,
+    "eat me": 1870,
+    "goodbye": 1849,
+    "nothing feels right": 1751,
+    "you looking at me looking at you": 2968,
+    "today is end": 1660,
+    "mr darkness": 1580,
+    "holy for tonight": 1466,
+    "led clones": 1361,
+    "dead and gone": 1335,
+    "you know part 1": 1333,
+    "evil shuffle": 1322,
+    "mama im comin home": 1256,
+    "buried alive": 1691,
+    "god only knows": 1224,
+    "rr": 1197,
+    "darkside blues": 1137,
+    "bombers": 970,
+    "i dont wanna change world": 857,
+    "you looking at me": 852,
+    "nowhere to run": 1115,
+    "whos fooling who": 637,
+    "interview with ozzy 1988": 621,
+    "crack cocaine": 748,
+    "mrs j": 540,
+    "close my eyes": 539,
+    "no escape from now": 515,
+    "gods of rock n roll": 546,
+    "i dont want change world": 426,
+    "revelation mother earth": 340,
+    "how": 327,
+    "iron man with therapy": 274,
+    "urpney song": 209,
+    "dont want to be your hero": 205,
+    "for heavens sake 2000": 182,
+    "blue suede shoes": 119,
+    "shake your head": 214,
+    "day": 79,
+    "shake your head lets go to bed": 93,
+    "going away": 60,
+    "evil woman": 57,
+    "something that i never had": 55,
+    "keyboard solo": 46,
+    "get me through": 42,
+    "revelation steal away": 41,
+    "zakk solo": 41,
+    "iron man paranoid": 49,
+    "randy solo": 35,
+    "hey stoopid": 33,
+    "t aldridge solo": 31,
+    "suicide solution reprised": 27,
+    "introduction": 27,
+    "iron head": 25,
+    "feels so good to be bad": 25,
+    "too far gone": 24,
+    "tommy aldridge drum solo": 20,
+    "my new rock and roll": 20,
+    "flyin high again": 21,
+    "oh no bitch wont go": 18,
+    "frustrated yes im hated": 18,
+    "dream for tomorrow": 18,
+    "say yeah yeah": 17,
+    "suicide solution guitar solo": 16,
+    "drum solo tommy aldridge": 16,
+    "stillborn": 16,
+    "masters of war": 15,
+    "vertical man": 14,
+    "ozzy speaks": 14,
+    "war song of urpneys": 13,
+    "ozzy osbourne": 12,
+    "seasons greetings from ozzy osbourne": 12,
+    "randy guitar solo": 11,
+    "zakk wylde solo": 10,
+    "intro i dont know": 10,
+    "for heavens sake": 9,
+    "ozzy on steve wright show": 9,
+    "interview": 8,
+    "this christmas time": 8,
+    "fortuna": 8,
+    "end credits": 7,
+    "fearies wear boots": 4,
+    "intro diary of madman": 4,
+    "thirty years after blizzard": 3,
+    "radio announcer introduction and intro music": 3,
+    "psycho man": 3,
+    "center of eternity": 3,
+    "interview with ozzy 5 13 92": 2,
+    "rock and roll rebel": 2,
+    "wars pigs": 2,
+    "stealaway": 2,
+    "program start": 2,
+    "carl orff carmina burana": 2,
+    "twinkle twinkle littel star": 2,
+    "at and t interview": 2,
+    "opening": 1,
+    "what u gon do vs iron man": 1,
+    "shock wave": 1,
+    "steal away night": 1,
+    "i wont be coming home": 1,
+    "its only rock n roll": 1,
+    "holiday greetings from greeting 1": 1,
+    "parety with animals": 1,
+    "whole words falling down": 1,
+    "blizzard of ozz radio advert": 1
+   }
+  },
+  "Pantera": {
+   "mbid": "541f16f5-ad7a-428e-af89-9fa1b16d3c9c",
+   "musicas": {
+    "cowboys from hell": 1170590,
+    "walk": 972261,
+    "cemetery gates": 892809,
+    "this love": 596110,
+    "fucking hostile": 557215,
+    "mouth for war": 525922,
+    "5 minutes alone": 511356,
+    "im broken": 510351,
+    "domination": 509722,
+    "becoming": 415732,
+    "new level": 402460,
+    "primal concrete sledge": 365700,
+    "psycho holiday": 349590,
+    "hollow": 340031,
+    "heresy": 317145,
+    "planet caravan": 291869,
+    "revolution is my name": 276755,
+    "rise": 266376,
+    "drag waters": 261377,
+    "shattered": 258420,
+    "floods": 256359,
+    "strength beyond strength": 250818,
+    "art of shredding": 246560,
+    "sleep": 232301,
+    "clash with reality": 226127,
+    "medicine man": 218508,
+    "message in blood": 218256,
+    "no good": 215657,
+    "by demons be driven": 214578,
+    "in hole": 213445,
+    "regular people": 209750,
+    "war nerve": 197916,
+    "slaughtered": 181629,
+    "great southern trendkill": 173302,
+    "shedding skin": 165008,
+    "goddamn electric": 163745,
+    "good friends and bottle of pills": 151249,
+    "hard lines sunken cheeks": 146709,
+    "25 years": 145479,
+    "10s": 143663,
+    "use my third arm": 142796,
+    "13 steps to nowhere": 135183,
+    "throes of rejection": 134590,
+    "ill cast shadow": 118553,
+    "underground in america": 117576,
+    "hellbound": 117179,
+    "yesterday dont mean shit": 109006,
+    "where you come from": 103235,
+    "youve got to belong to it": 92701,
+    "it makes them disappear": 91931,
+    "uplift": 88246,
+    "badge": 83166,
+    "cat scratch fever": 66292,
+    "i cant hide": 55718,
+    "sandblasted skin": 58598,
+    "down below": 52569,
+    "immortally insane": 51857,
+    "power metal": 42994,
+    "proud to be loud": 42293,
+    "hole in sky": 39694,
+    "well meet again": 39437,
+    "living through me": 37873,
+    "hard ride": 35845,
+    "rock world": 35842,
+    "over and out": 33758,
+    "death trap": 32409,
+    "forever tonight": 26421,
+    "biggest part of me": 25538,
+    "hot and heavy": 25269,
+    "ride my rocket": 24926,
+    "heavy metal rules": 24411,
+    "metal magic": 24251,
+    "ill be alright": 24234,
+    "tell me if you want it": 24154,
+    "all over tonight": 24122,
+    "i am night": 23793,
+    "latest lover": 23381,
+    "come on eyes": 23275,
+    "piss": 23029,
+    "takin my life": 22650,
+    "widowmaker": 22643,
+    "onward we rock": 22248,
+    "like fire": 22754,
+    "in over my head": 21926,
+    "killers": 22480,
+    "out for blood": 22016,
+    "daughters of queen": 21372,
+    "right on edge": 21054,
+    "projects in jungle": 21614,
+    "sad lover": 20979,
+    "valhalla": 21184,
+    "avoid light": 21264,
+    "burnnn": 20332,
+    "nothin on": 20234,
+    "only heartbeat away": 19714,
+    "d g t t m": 19139,
+    "rock out": 19029,
+    "blue light turnin red": 18631,
+    "electric funeral": 12994,
+    "suicide note pt ii": 7849,
+    "suicide note pt i": 6176,
+    "death rattle": 5174,
+    "well grind that axe for long time": 4015,
+    "suicide note pt 1": 3876,
+    "dom hollow": 3632,
+    "pre hibernation": 3852,
+    "suicide note part ii": 2261,
+    "will to survive": 2258,
+    "p s t 88": 2240,
+    "suicide note pt 2": 2261,
+    "domination hollow": 1775,
+    "cold gin": 1541,
+    "kill all white people": 972,
+    "suicide note part i": 678,
+    "whiplash": 638,
+    "walk psycho holiday": 267,
+    "refuse resist": 237,
+    "yesterday dont mean sh": 154,
+    "becoming throes of rejection": 110,
+    "five minutes alone": 83,
+    "vulgar display of power": 75,
+    "im broken by demons be driven": 71,
+    "all over tonite": 69,
+    "light comes out of black": 49,
+    "metal gods": 48,
+    "cemetary gates": 43,
+    "phils rant 1": 36,
+    "far beyond driven": 35,
+    "reinventing steel": 31,
+    "intro": 30,
+    "medley domination hollow": 25,
+    "conversation dynamo": 24,
+    "this buds for you": 22,
+    "domination slaughtered": 20,
+    "diamond darrells solo": 18,
+    "suicide note part 2": 17,
+    "audio bio": 16,
+    "medley walk psycho holiday": 15,
+    "janet": 15,
+    "medley cowboys from hell purple haze": 15,
+    "grinder": 13,
+    "use my 3rd arm": 12,
+    "raining blood": 10,
+    "walk 1992": 9,
+    "medley cowboys from hell cemetery gates heresy": 8,
+    "fucking hostile 1992": 7,
+    "mouth for war 1992": 7,
+    "interview": 5,
+    "puck off": 5,
+    "new level 1992": 5,
+    "cowboys from hell 1992": 5,
+    "cemetery gates fucking hostile": 4,
+    "this love 1992": 4,
+    "cemetry gates": 4,
+    "by demons be driven 1992": 4,
+    "phils rant 2 space cowboy tales from hardside": 3,
+    "cemetery gates 1992": 3,
+    "psycho holidays": 3,
+    "cowboys from hell purple haze": 6,
+    "intro domination": 2,
+    "love this": 2,
+    "walk psycho holidays": 2,
+    "jam": 2,
+    "anselmo shuffle": 2,
+    "everybody wants some": 1,
+    "domination hollow 1992": 1,
+    "101 proof": 1,
+    "new recruit": 1,
+    "maldita dulzura": 1,
+    "observing sabbath": 1
+   }
+  }
+ },
+ "wikipedia": {
+  "10cc|dreadlock holiday": {
+   "artigo": "Dreadlock Holiday",
+   "visitas": 52799
+  },
+  "10cc|im not in love": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "10cc|things we do for love": {
+   "artigo": "The Things We Do for Love (song)",
+   "visitas": 38306
+  },
+  "1910 Fruitgum Company|simon says": {
+   "artigo": "Simon Says (1910 Fruitgum Company song)",
+   "visitas": 9387
+  },
+  "38 Special|caught up in you": {
+   "artigo": "Caught Up in You",
+   "visitas": 25984
+  },
+  "38 Special|fantasy girl": {
+   "artigo": "Fantasy Girl",
+   "visitas": 4948
+  },
+  "911|day we find love": {
+   "artigo": "The Day We Find Love",
+   "visitas": 1620
+  },
+  "A-Ha|take on me": {
+   "artigo": "Take On Me",
+   "visitas": 281994
+  },
+  "A-Ha|hunting high and low": {
+   "artigo": "Hunting High and Low (song)",
+   "visitas": 3084
+  },
+  "A-Ha|sun always shines on tv": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "ABBA|dancing queen": {
+   "artigo": "Dancing Queen",
+   "visitas": 196543
+  },
+  "ABC|poison arrow": {
+   "artigo": "Poison Arrow",
+   "visitas": 17704
+  },
+  "ABC|look of love": {
+   "artigo": "The Look of Love (ABC song)",
+   "visitas": 33266
+  },
+  "AC/DC|highway to hell": {
+   "artigo": "Highway to Hell (song)",
+   "visitas": 50394
+  },
+  "Aaron Neville|tell it like it is": {
+   "artigo": "Tell It Like It Is (song)",
+   "visitas": 25324
+  },
+  "Ace|how long": {
+   "artigo": "How Long (Ace song)",
+   "visitas": 71516
+  },
+  "Aerosmith|dude looks like lady": {
+   "artigo": "Dude (Looks Like a Lady)",
+   "visitas": 75731
+  },
+  "Aerosmith|janies got gun": {
+   "artigo": "Janie's Got a Gun",
+   "visitas": 73694
+  },
+  "Aerosmith|dream on": {
+   "artigo": "Dream On (Aerosmith song)",
+   "visitas": 151642
+  },
+  "Aerosmith|walk this way": {
+   "artigo": "Walk This Way",
+   "visitas": 157596
+  },
+  "Aerosmith|blind man": {
+   "artigo": "Blind Man (Aerosmith song)",
+   "visitas": 5196
+  },
+  "Aerosmith|crazy": {
+   "artigo": "Crazy (Aerosmith song)",
+   "visitas": 59452
+  },
+  "Aerosmith|cryin": {
+   "artigo": "Cryin'",
+   "visitas": 53490
+  },
+  "Aerosmith|falling in love is hard on my knees": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Aerosmith|hole in my soul": {
+   "artigo": "Hole in My Soul",
+   "visitas": 12546
+  },
+  "Aerosmith|i dont wanna miss thing": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Aerosmith|kings and queens": {
+   "artigo": "Kings and Queens (Aerosmith song)",
+   "visitas": 9109
+  },
+  "Aerosmith|living on edge": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Aerosmith|pink": {
+   "artigo": "Pink (Aerosmith song)",
+   "visitas": 19994
+  },
+  "Aerosmith|seasons of wither": {
+   "artigo": "Seasons of Wither",
+   "visitas": 6944
+  },
+  "Aerosmith|other side": {
+   "artigo": "The Other Side (Aerosmith song)",
+   "visitas": 11845
+  },
+  "Aerosmith|what it takes": {
+   "artigo": "What It Takes (Aerosmith song)",
+   "visitas": 16716
+  },
+  "Al Green|lets stay together": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Al Stewart|on border": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Al Stewart|time passages": {
+   "artigo": "Time Passages (song)",
+   "visitas": 11727
+  },
+  "Al Stewart|year of cat": {
+   "artigo": "Year of the Cat (song)",
+   "visitas": 92202
+  },
+  "Al Wilson|show and tell": {
+   "artigo": "Show and Tell (song)",
+   "visitas": 13617
+  },
+  "Alan Parsons|eye in sky": {
+   "artigo": "Eye in the Sky (song)",
+   "visitas": 92413
+  },
+  "Alan Parsons|turn of friendly card": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Alan Parsons|ammonia avenue": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Alan Parsons|damned if i do": {
+   "artigo": "Damned If I Do (The Alan Parsons Project song)",
+   "visitas": 3214
+  },
+  "Alan Parsons|dont answer me": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Alan Parsons|dont let it show": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Alan Parsons|eve": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Alan Parsons|games people play": {
+   "artigo": "Games People Play (The Alan Parsons Project song)",
+   "visitas": 30488
+  },
+  "Alan Parsons|i wouldnt want to be like": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Alan Parsons|prime time": {
+   "artigo": "Prime Time (The Alan Parsons Project song)",
+   "visitas": 2510
+  },
+  "Alan Parsons|time": {
+   "artigo": "Time (The Alan Parsons Project song)",
+   "visitas": 19909
+  },
+  "Albert Hammond|it never rains in so cal": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Alive|tighter tighter": {
+   "artigo": "Tighter, Tighter",
+   "visitas": 10534
+  },
+  "All 4 One|i swear": {
+   "artigo": "I Swear (John Michael Montgomery song)",
+   "visitas": 38157
+  },
+  "Allwood Richard|claro pascali gaudio": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ambrosia|holding on to yesterday": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "America|ventura highway": {
+   "artigo": "Ventura Highway",
+   "visitas": 95208
+  },
+  "America|daisy jane": {
+   "artigo": "Daisy Jane",
+   "visitas": 11075
+  },
+  "America|i need you": {
+   "artigo": "I Need You (America song)",
+   "visitas": 17768
+  },
+  "America|lonely people": {
+   "artigo": "Lonely People",
+   "visitas": 21714
+  },
+  "America|sandman": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "America|sister golden hair": {
+   "artigo": "Sister Golden Hair",
+   "visitas": 55583
+  },
+  "America|tin man": {
+   "artigo": "Tin Man (America song)",
+   "visitas": 32123
+  },
+  "Andrew Gold|lonely boy": {
+   "artigo": "Lonely Boy (Andrew Gold song)",
+   "visitas": 32928
+  },
+  "Andrew Gold|thank you for being fr": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Andy Kim|baby i love you": {
+   "artigo": "Baby, I Love You",
+   "visitas": 41302
+  },
+  "Andy Kim|rock me gently": {
+   "artigo": "Rock Me Gently (Andy Kim song)",
+   "visitas": 27509
+  },
+  "Animotion|obsession": {
+   "artigo": "Obsession (Michael Des Barres & Holly Knight song)",
+   "visitas": 15950
+  },
+  "Anita Baker|sweet love": {
+   "artigo": "Sweet Love (Anita Baker song)",
+   "visitas": 33303
+  },
+  "Anita Ward|ring my bell": {
+   "artigo": "Ring My Bell",
+   "visitas": 82844
+  },
+  "Annie Lennox|no more i love yous": {
+   "artigo": "No More \"I Love You's\"",
+   "visitas": 57054
+  },
+  "Archies|sugar sugar": {
+   "artigo": "Sugar, Sugar",
+   "visitas": 175817
+  },
+  "Arlo Guthrie|city of new orleans": {
+   "artigo": "City of New Orleans (song)",
+   "visitas": 83216
+  },
+  "Arlo Guthrie|alices restaurant": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Asia|dont cry": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Asia|heat of moment": {
+   "artigo": "Heat of the Moment (Asia song)",
+   "visitas": 56405
+  },
+  "Asia|only time will tell": {
+   "artigo": "Only Time Will Tell (song)",
+   "visitas": 16823
+  },
+  "Asia|smile has left your eye": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Atlanta Rhythm Section|imaginary lover": {
+   "artigo": "Imaginary Lover",
+   "visitas": 8712
+  },
+  "Atlanta Rhythm Section|so in to you": {
+   "artigo": "So in to You",
+   "visitas": 13400
+  },
+  "Atlantic Starr|always": {
+   "artigo": "Always (Atlantic Starr song)",
+   "visitas": 19774
+  },
+  "BW Stevenson|my maria": {
+   "artigo": "My Maria",
+   "visitas": 30119
+  },
+  "Bad English|when i see you smile": {
+   "artigo": "When I See You Smile",
+   "visitas": 27985
+  },
+  "Badfinger|baby blue": {
+   "artigo": "Baby Blue (Badfinger song)",
+   "visitas": 58190
+  },
+  "Badfinger|come and get it": {
+   "artigo": "Come and Get It (Badfinger song)",
+   "visitas": 45305
+  },
+  "Badfinger|day after day": {
+   "artigo": "Day After Day (Badfinger song)",
+   "visitas": 38750
+  },
+  "Badfinger|no matter what": {
+   "artigo": "No Matter What (Badfinger song)",
+   "visitas": 35466
+  },
+  "Bananarama|cruel summer": {
+   "artigo": "Cruel Summer (Bananarama song)",
+   "visitas": 89656
+  },
+  "Bananarama|venus": {
+   "artigo": "Venus (Shocking Blue song)",
+   "visitas": 161122
+  },
+  "Barry Mann|weekend in new england": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Barry Mann|who put bomp": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Bay City Rollers|i only want to be with you": {
+   "artigo": "I Only Want to Be with You",
+   "visitas": 93334
+  },
+  "Beau Brummels|laugh laugh": {
+   "artigo": "Laugh, Laugh",
+   "visitas": 9203
+  },
+  "Bedroom Audio|in f": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Bedroom Audio|": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Berlin|take my breath away": {
+   "artigo": "Take My Breath Away",
+   "visitas": 166739
+  },
+  "Berlin|metro": {
+   "artigo": "The Metro (song)",
+   "visitas": 18606
+  },
+  "Big Country|big country": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Bill Haley and The Comets|rock around clock": {
+   "artigo": "Rock Around the Clock",
+   "visitas": 95142
+  },
+  "Billie Myers|kiss rain": {
+   "artigo": "Kiss the Rain",
+   "visitas": 18138
+  },
+  "Billy Idol|dancing with myself": {
+   "artigo": "Dancing with Myself",
+   "visitas": 98463
+  },
+  "Billy Idol|mony mony": {
+   "artigo": "Mony Mony",
+   "visitas": 87214
+  },
+  "Billy Idol|eyes without face": {
+   "artigo": "Eyes Without a Face (song)",
+   "visitas": 141485
+  },
+  "Billy Idol|catch my fall": {
+   "artigo": "Catch My Fall",
+   "visitas": 7484
+  },
+  "Billy Idol|do not stand in shadows": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Billy Idol|flesh for fantasy": {
+   "artigo": "Flesh for Fantasy",
+   "visitas": 16452
+  },
+  "Billy Idol|hot in city": {
+   "artigo": "Hot in the City",
+   "visitas": 21101
+  },
+  "Billy Joel|its still rock and roll to me": {
+   "artigo": "It's Still Rock and Roll to Me",
+   "visitas": 34639
+  },
+  "Billy Ocean|carribean queen": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|black sabbath": {
+   "artigo": "Black Sabbath (song)",
+   "visitas": 42892
+  },
+  "Black Sabbath|electric funeral": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|heaven and hell": {
+   "artigo": "Heaven and Hell (Black Sabbath song)",
+   "visitas": 14067
+  },
+  "Black Sabbath|n i b": {
+   "artigo": "N.I.B.",
+   "visitas": 62276
+  },
+  "Black Sabbath|planet caravan": {
+   "artigo": "Planet Caravan",
+   "visitas": 38340
+  },
+  "Black Sabbath|sabbath bloody sabbath": {
+   "artigo": "Sabbath Bloody Sabbath (song)",
+   "visitas": 20144
+  },
+  "Black Sabbath|war pigs": {
+   "artigo": "War Pigs",
+   "visitas": 170330
+  },
+  "Black Sabbath|iron man": {
+   "artigo": "Iron Man (song)",
+   "visitas": 112597
+  },
+  "Black Sabbath|paranoid": {
+   "artigo": "Paranoid (Black Sabbath song)",
+   "visitas": 101618
+  },
+  "Black Sabbath|after forever": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|bassically": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|behind wall of sleep": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|changes": {
+   "artigo": "Changes (Black Sabbath song)",
+   "visitas": 149687
+  },
+  "Black Sabbath|children of grave": {
+   "artigo": "Children of the Grave",
+   "visitas": 26919
+  },
+  "Black Sabbath|embryo": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|laguana sunrise": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|neon knights": {
+   "artigo": "Neon Knights",
+   "visitas": 12341
+  },
+  "Black Sabbath|snowblind": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Black Sabbath|supernaut": {
+   "artigo": "Supernaut (song)",
+   "visitas": 17451
+  },
+  "Black Sabbath|sweet leaf": {
+   "artigo": "Sweet Leaf",
+   "visitas": 21150
+  },
+  "Black Sabbath|symptom of universe": {
+   "artigo": "Symptom of the Universe",
+   "visitas": 14552
+  },
+  "Black Sabbath|tomorrows dream": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Bobby Vinton|sealed with kiss": {
+   "artigo": "Sealed with a Kiss",
+   "visitas": 55846
+  },
+  "Celine Dion|because you loved me": {
+   "artigo": "Because You Loved Me",
+   "visitas": 66539
+  },
+  "Celine Dion|falling into you": {
+   "artigo": "Falling into You (song)",
+   "visitas": 9845
+  },
+  "Celine Dion|thats way it is": {
+   "artigo": "That's the Way It Is (Celine Dion song)",
+   "visitas": 68604
+  },
+  "Celine Dion|all by myself": {
+   "artigo": "All by Myself",
+   "visitas": 175460
+  },
+  "Celine Dion|power of love": {
+   "artigo": "The Power of Love (Jennifer Rush song)",
+   "visitas": 165244
+  },
+  "Celine Dion|im your angel": {
+   "artigo": "I'm Your Angel",
+   "visitas": 21496
+  },
+  "Celine Dion|immortality": {
+   "artigo": "Immortality (Celine Dion song)",
+   "visitas": 21706
+  },
+  "Celine Dion|its all coming back to me": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Celine Dion|tell him": {
+   "artigo": "Tell Him (Barbra Streisand and Celine Dion song)",
+   "visitas": 22025
+  },
+  "Celine Dion|colour of my love": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Celine Dion|to love you more": {
+   "artigo": "To Love You More",
+   "visitas": 21941
+  },
+  "Christmas Carols|i saw mommy kissing santa claus": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Deep Purple|child in time": {
+   "artigo": "Child in Time",
+   "visitas": 68573
+  },
+  "Deep Purple|smoke on water": {
+   "artigo": "Smoke on the Water",
+   "visitas": 208921
+  },
+  "Deep Purple|deamon eye": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Deep Purple|fireball": {
+   "artigo": "Fireball (Deep Purple song)",
+   "visitas": 9569
+  },
+  "Deep Purple|hallelujah": {
+   "artigo": "Hallelujah (Deep Purple song)",
+   "visitas": 6432
+  },
+  "Deep Purple|highway star": {
+   "artigo": "Highway Star (song)",
+   "visitas": 46970
+  },
+  "Deep Purple|hush": {
+   "artigo": "Hush (Billy Joe Royal song)",
+   "visitas": 50952
+  },
+  "Deep Purple|lazy": {
+   "artigo": "Lazy (Deep Purple song)",
+   "visitas": 10887
+  },
+  "Deep Purple|mistreated": {
+   "artigo": "Mistreated (song)",
+   "visitas": 11396
+  },
+  "Deep Purple|rat bat blue": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Deep Purple|soldier of fortune": {
+   "artigo": "Soldier of Fortune (Deep Purple song)",
+   "visitas": 26260
+  },
+  "Deep Purple|speed king": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Deep Purple|woman from tokyo": {
+   "artigo": "Woman from Tokyo",
+   "visitas": 17098
+  },
+  "Desree|kissing you": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Dionne Warwick|i say little prayer": {
+   "artigo": "I Say a Little Prayer",
+   "visitas": 96338
+  },
+  "Dionne Warwick|thats what friends are for": {
+   "artigo": "That's What Friends Are For",
+   "visitas": 114604
+  },
+  "Dionne Warwick|do you know way to san jose": {
+   "artigo": "Do You Know the Way to San Jose",
+   "visitas": 30873
+  },
+  "Dionne Warwick|heartbreaker": {
+   "artigo": "Heartbreaker (Dionne Warwick song)",
+   "visitas": 39373
+  },
+  "Dionne Warwick|ill never fall in love again": {
+   "artigo": "I'll Never Fall in Love Again",
+   "visitas": 48169
+  },
+  "Dionne Warwick|ill never love this way again": {
+   "artigo": "I'll Never Love This Way Again",
+   "visitas": 20366
+  },
+  "Dionne Warwick|walk on by": {
+   "artigo": "Walk On By",
+   "visitas": 60806
+  },
+  "Disney Themes|kiss girl": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Disturbed|sound of silence": {
+   "artigo": "The Sound of Silence",
+   "visitas": 404835
+  },
+  "Donna Summer|on radio": {
+   "artigo": "On the Radio (Donna Summer song)",
+   "visitas": 27594
+  },
+  "Exile|kiss you all over": {
+   "artigo": "Kiss You All Over",
+   "visitas": 39695
+  },
+  "Guns N' Roses|dont cry": {
+   "artigo": "Don't Cry",
+   "visitas": 63871
+  },
+  "Guns N' Roses|paradise city": {
+   "artigo": "Paradise City",
+   "visitas": 68035
+  },
+  "Guns N' Roses|rocket queen": {
+   "artigo": "Rocket Queen",
+   "visitas": 66400
+  },
+  "Guns N' Roses|knockin on heavens door": {
+   "artigo": "Knockin' on Heaven's Door",
+   "visitas": 307234
+  },
+  "Guns N' Roses|and let die": {
+   "artigo": "Live and Let Die (song)",
+   "visitas": 175824
+  },
+  "Guns N' Roses|november rain": {
+   "artigo": "November Rain",
+   "visitas": 177224
+  },
+  "Guns N' Roses|sweet child mine": {
+   "artigo": "Sweet Child o' Mine",
+   "visitas": 193618
+  },
+  "Guns N' Roses|welcome to jungle": {
+   "artigo": "Welcome to the Jungle",
+   "visitas": 333506
+  },
+  "Guns N' Roses|nightrain": {
+   "artigo": "Nightrain",
+   "visitas": 25559
+  },
+  "Guns N' Roses|patience": {
+   "artigo": "Patience (Guns N' Roses song)",
+   "visitas": 43881
+  },
+  "Guns N' Roses|you could be mine": {
+   "artigo": "You Could Be Mine",
+   "visitas": 44986
+  },
+  "Hall and Oates|kiss on my list": {
+   "artigo": "Kiss on My List",
+   "visitas": 34835
+  },
+  "Helmet|wilmas rainbow": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|aces high": {
+   "artigo": "Aces High (song)",
+   "visitas": 28796
+  },
+  "Iron Maiden|dance of death": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|hallowed be thy name": {
+   "artigo": "Hallowed Be Thy Name (song)",
+   "visitas": 38038
+  },
+  "Iron Maiden|iron maiden": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|phantom of opera": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|powerslave": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|run to hills": {
+   "artigo": "Run to the Hills",
+   "visitas": 67591
+  },
+  "Iron Maiden|wasted years": {
+   "artigo": "Wasted Years",
+   "visitas": 35882
+  },
+  "Iron Maiden|wrathchild": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|minutes to midnight": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|2am": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|acacia avenue": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|afraid to shoot strangers": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|alexander great": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|back in village": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|be quick or be dead": {
+   "artigo": "Be Quick or Be Dead",
+   "visitas": 12587
+  },
+  "Iron Maiden|blood brothers": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|blood on worlds hands": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|can i play with madness": {
+   "artigo": "Can I Play with Madness",
+   "visitas": 24916
+  },
+  "Iron Maiden|caught somewhere in time": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|charlotte harlot": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|children of damned": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|deja vu": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|die with your boots on": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|doctor doctor": {
+   "artigo": "Doctor Doctor (UFO song)",
+   "visitas": 27208
+  },
+  "Iron Maiden|dont look to eyes of stranger": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|flash of blade": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|flight of icarus": {
+   "artigo": "Flight of Icarus",
+   "visitas": 20987
+  },
+  "Iron Maiden|fortunes of war": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|futureal": {
+   "artigo": "Futureal",
+   "visitas": 7388
+  },
+  "Iron Maiden|genghis khan": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|heaven can wait": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|holy smoke": {
+   "artigo": "Holy Smoke (song)",
+   "visitas": 11197
+  },
+  "Iron Maiden|infinite dreams": {
+   "artigo": "Infinite Dreams",
+   "visitas": 13322
+  },
+  "Iron Maiden|innocent exile": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|invaders": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|judas be my guide": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|judgement of heaven": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|killers": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|look for truth": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|lord of flies": {
+   "artigo": "Lord of the Flies (song)",
+   "visitas": 10166
+  },
+  "Iron Maiden|losfer words": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|man on edge": {
+   "artigo": "Man on the Edge",
+   "visitas": 13017
+  },
+  "Iron Maiden|moonchild": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|mother russia": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|murders in rue morgue": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|no prayer for dying": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|only good die young": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|prowler": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|purgatory": {
+   "artigo": "Purgatory (song)",
+   "visitas": 13844
+  },
+  "Iron Maiden|quest for fire": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|remember tomorrow": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|revelations": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|rime of ancient mariner": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|running free": {
+   "artigo": "Running Free",
+   "visitas": 27662
+  },
+  "Iron Maiden|sea of madness": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|seventh son of seventh son": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|sign of cross": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|still life": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|strange world": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|stranger in strange land": {
+   "artigo": "Stranger in a Strange Land (Iron Maiden song)",
+   "visitas": 22570
+  },
+  "Iron Maiden|sun and steel": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|aftermath": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|angel and gambler": {
+   "artigo": "The Angel and the Gambler",
+   "visitas": 8663
+  },
+  "Iron Maiden|book of souls": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|clairvoyant": {
+   "artigo": "The Clairvoyant (song)",
+   "visitas": 12970
+  },
+  "Iron Maiden|clansman": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|duellists": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|edge of darkness": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|evil that men do": {
+   "artigo": "The Evil That Men Do (song)",
+   "visitas": 17136
+  },
+  "Iron Maiden|ides of march": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|loneliness of long distance runner": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|prisoner": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|prophecy": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|unbeliever": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|to tame land": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|total eclipse": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|transylvania": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|wasting love": {
+   "artigo": "Wasting Love",
+   "visitas": 11231
+  },
+  "Iron Maiden|when two worlds collide": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Iron Maiden|where eagles dare": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|diamonds and rust": {
+   "artigo": "Diamonds & Rust (song)",
+   "visitas": 83325
+  },
+  "Judas Priest|painkiller": {
+   "artigo": "Painkiller (Judas Priest song)",
+   "visitas": 24013
+  },
+  "Judas Priest|before dawn": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|beyond realms of death": {
+   "artigo": "Beyond the Realms of Death",
+   "visitas": 11885
+  },
+  "Judas Priest|breaking law": {
+   "artigo": "Breaking the Law",
+   "visitas": 37738
+  },
+  "Judas Priest|electric eye": {
+   "artigo": "Electric Eye (song)",
+   "visitas": 13867
+  },
+  "Judas Priest|grinder": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|halls of valhalla": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|hell patrol": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|living after midnight": {
+   "artigo": "Living After Midnight",
+   "visitas": 16190
+  },
+  "Judas Priest|locked in": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|metal gods": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|night crawler": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|nightcrawler": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|reckless": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|sentinel": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|ripper": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Judas Priest|touch of evil": {
+   "artigo": "A Touch of Evil",
+   "visitas": 7779
+  },
+  "Judas Priest|turbo lover": {
+   "artigo": "Turbo Lover",
+   "visitas": 14625
+  },
+  "Judas Priest|victim of changes": {
+   "artigo": "Victim of Changes",
+   "visitas": 6969
+  },
+  "Judas Priest|youve got another thing comin": {
+   "artigo": "You've Got Another Thing Comin'",
+   "visitas": 28105
+  },
+  "Jun Ishikawa, Dan Miyakawa|kirby rainbow resort piano arranged in 4 4 times": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Kiss|beth": {
+   "artigo": "Beth (song)",
+   "visitas": 85595
+  },
+  "Kiss|detroit rock city": {
+   "artigo": "Detroit Rock City",
+   "visitas": 44210
+  },
+  "Kiss|shout it out loud": {
+   "artigo": "Shout It Out Loud (Kiss song)",
+   "visitas": 18593
+  },
+  "Led Zeppelin|all my love": {
+   "artigo": "All My Love (Led Zeppelin song)",
+   "visitas": 63647
+  },
+  "Led Zeppelin|immigrant song": {
+   "artigo": "Immigrant Song",
+   "visitas": 119396
+  },
+  "Led Zeppelin|kashmir": {
+   "artigo": "Kashmir (song)",
+   "visitas": 120212
+  },
+  "Led Zeppelin|song remains same": {
+   "artigo": "The Song Remains the Same (song)",
+   "visitas": 14999
+  },
+  "Led Zeppelin|when levee breaks": {
+   "artigo": "When the Levee Breaks",
+   "visitas": 102952
+  },
+  "Led Zeppelin|whole lotta love": {
+   "artigo": "Whole Lotta Love",
+   "visitas": 104623
+  },
+  "Led Zeppelin|four tops": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|houses of holy": {
+   "artigo": "Houses of the Holy (song)",
+   "visitas": 13571
+  },
+  "Led Zeppelin|stairway to heaven": {
+   "artigo": "Stairway to Heaven",
+   "visitas": 355742
+  },
+  "Led Zeppelin|achilles last stand": {
+   "artigo": "Achilles Last Stand",
+   "visitas": 39924
+  },
+  "Led Zeppelin|babe im gonna leave you": {
+   "artigo": "Babe I'm Gonna Leave You",
+   "visitas": 41205
+  },
+  "Led Zeppelin|battle of evermore": {
+   "artigo": "The Battle of Evermore",
+   "visitas": 61652
+  },
+  "Led Zeppelin|black country woman": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|black dog": {
+   "artigo": "Black Dog (Led Zeppelin song)",
+   "visitas": 60672
+  },
+  "Led Zeppelin|black mountain side": {
+   "artigo": "Black Mountain Side",
+   "visitas": 13648
+  },
+  "Led Zeppelin|black mountain": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|bonzos montreux": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|boogie with stu": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|bring it on home": {
+   "artigo": "Bring It On Home (Sonny Boy Williamson II song)",
+   "visitas": 16400
+  },
+  "Led Zeppelin|bron y aur stomp": {
+   "artigo": "Bron-Y-Aur Stomp",
+   "visitas": 20363
+  },
+  "Led Zeppelin|bron yr aur": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|candy store rock": {
+   "artigo": "Candy Store Rock",
+   "visitas": 9131
+  },
+  "Led Zeppelin|carouselambra": {
+   "artigo": "Carouselambra",
+   "visitas": 12735
+  },
+  "Led Zeppelin|celebration day": {
+   "artigo": "Celebration Day",
+   "visitas": 8929
+  },
+  "Led Zeppelin|communication breakdown": {
+   "artigo": "Communication Breakdown",
+   "visitas": 20921
+  },
+  "Led Zeppelin|custard pie": {
+   "artigo": "Custard Pie",
+   "visitas": 10551
+  },
+  "Led Zeppelin|dyer maker": {
+   "artigo": "D'yer Mak'er",
+   "visitas": 53776
+  },
+  "Led Zeppelin|dancing days ii": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|dancing days": {
+   "artigo": "Dancing Days",
+   "visitas": 13260
+  },
+  "Led Zeppelin|darlene": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|dazed and confused": {
+   "artigo": "Dazed and Confused (Jake Holmes song)",
+   "visitas": 54819
+  },
+  "Led Zeppelin|down by seaside": {
+   "artigo": "Down by the Seaside",
+   "visitas": 8451
+  },
+  "Led Zeppelin|fool in rain": {
+   "artigo": "Fool in the Rain",
+   "visitas": 34192
+  },
+  "Led Zeppelin|for your life": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|four sticks": {
+   "artigo": "Four Sticks",
+   "visitas": 16978
+  },
+  "Led Zeppelin|friends": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|gallows pole": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|going to california": {
+   "artigo": "Going to California",
+   "visitas": 33809
+  },
+  "Led Zeppelin|good times bad times": {
+   "artigo": "Good Times Bad Times",
+   "visitas": 35885
+  },
+  "Led Zeppelin|hats off to roy harper": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|heartbreaker": {
+   "artigo": "Heartbreaker (Led Zeppelin song)",
+   "visitas": 18516
+  },
+  "Led Zeppelin|hot dog": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|hots on for nowhere": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|how many more times": {
+   "artigo": "How Many More Times",
+   "visitas": 17519
+  },
+  "Led Zeppelin|i cant quit you baby": {
+   "artigo": "I Can't Quit You Baby",
+   "visitas": 17265
+  },
+  "Led Zeppelin|i cant quit you baby2": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|im gonna crawl": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|in my time of dying": {
+   "artigo": "In My Time of Dying",
+   "visitas": 41980
+  },
+  "Led Zeppelin|in evening": {
+   "artigo": "In the Evening",
+   "visitas": 11744
+  },
+  "Led Zeppelin|in light": {
+   "artigo": "In the Light",
+   "visitas": 14563
+  },
+  "Led Zeppelin|living loving maid": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|misty mountain hop": {
+   "artigo": "Misty Mountain Hop",
+   "visitas": 28098
+  },
+  "Led Zeppelin|moby dick": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|night flight": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|no quarter": {
+   "artigo": "No Quarter (song)",
+   "visitas": 48368
+  },
+  "Led Zeppelin|nobodys fault but mine": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|out on tiles": {
+   "artigo": "Out on the Tiles",
+   "visitas": 6907
+  },
+  "Led Zeppelin|over hills and far away": {
+   "artigo": "Over the Hills and Far Away (Led Zeppelin song)",
+   "visitas": 36185
+  },
+  "Led Zeppelin|ozone baby": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|poor tom": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|ramble on": {
+   "artigo": "Ramble On",
+   "visitas": 50229
+  },
+  "Led Zeppelin|rock and roll": {
+   "artigo": "Rock and Roll (Led Zeppelin song)",
+   "visitas": 36458
+  },
+  "Led Zeppelin|royal orleans": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|sick again": {
+   "artigo": "Sick Again",
+   "visitas": 11823
+  },
+  "Led Zeppelin|since ive been loving you": {
+   "artigo": "Since I've Been Loving You",
+   "visitas": 30381
+  },
+  "Led Zeppelin|south bound saurez": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|south bound suarez": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|tangerine": {
+   "artigo": "Tangerine (Led Zeppelin song)",
+   "visitas": 24953
+  },
+  "Led Zeppelin|tea for one": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|ten years gone": {
+   "artigo": "Ten Years Gone",
+   "visitas": 18491
+  },
+  "Led Zeppelin|thank you": {
+   "artigo": "Thank You (Led Zeppelin song)",
+   "visitas": 20348
+  },
+  "Led Zeppelin|thats way": {
+   "artigo": "That's the Way (Led Zeppelin song)",
+   "visitas": 14955
+  },
+  "Led Zeppelin|crunge": {
+   "artigo": "The Crunge",
+   "visitas": 17181
+  },
+  "Led Zeppelin|lemon song": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|ocean": {
+   "artigo": "The Ocean (Led Zeppelin song)",
+   "visitas": 18877
+  },
+  "Led Zeppelin|rain song": {
+   "artigo": "The Rain Song",
+   "visitas": 36675
+  },
+  "Led Zeppelin|rover": {
+   "artigo": "The Rover (Led Zeppelin song)",
+   "visitas": 12895
+  },
+  "Led Zeppelin|wanton song": {
+   "artigo": "The Wanton Song",
+   "visitas": 9873
+  },
+  "Led Zeppelin|trampled under foot": {
+   "artigo": "Trampled Under Foot",
+   "visitas": 30539
+  },
+  "Led Zeppelin|walters walk": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Led Zeppelin|were gonna groove": {
+   "artigo": "We're Gonna Groove",
+   "visitas": 4665
+  },
+  "Led Zeppelin|wearing and tearing": {
+   "artigo": "Wearing and Tearing",
+   "visitas": 5311
+  },
+  "Led Zeppelin|what is and what should never be": {
+   "artigo": "What Is and What Should Never Be",
+   "visitas": 16732
+  },
+  "Led Zeppelin|you shook me": {
+   "artigo": "You Shook Me",
+   "visitas": 15845
+  },
+  "Led Zeppelin|your time is gonna come": {
+   "artigo": "Your Time Is Gonna Come",
+   "visitas": 12161
+  },
+  "Manhattans|kiss and say goodbye": {
+   "artigo": "Kiss and Say Goodbye",
+   "visitas": 25469
+  },
+  "Megadeth|tout le monde": {
+   "artigo": "A Tout le Monde",
+   "visitas": 42159
+  },
+  "Megadeth|hangar 18": {
+   "artigo": "Hangar 18 (song)",
+   "visitas": 26232
+  },
+  "Megadeth|symphony of destruction": {
+   "artigo": "Symphony of Destruction",
+   "visitas": 39432
+  },
+  "Megadeth|99 ways to die": {
+   "artigo": "99 Ways to Die (song)",
+   "visitas": 7922
+  },
+  "Megadeth|secret place": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|addicted to chaos": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|almost honest": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|angry again": {
+   "artigo": "Angry Again",
+   "visitas": 21176
+  },
+  "Megadeth|architecture of aggression": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|ashes in your mouth": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|black curtains": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|blood of heroes": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|captive honour": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|countdown to extinction": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|dawn patrol": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|dread and fugitive mind": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|family tree": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|five magics": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|foreclosure of dream": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|go to hell": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|high speed dirt": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|holy wars punishment due": {
+   "artigo": "Holy Wars... The Punishment Due",
+   "visitas": 45940
+  },
+  "Megadeth|i thought i knew it all": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|ill get even": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|in my darkest hour": {
+   "artigo": "In My Darkest Hour",
+   "visitas": 18602
+  },
+  "Megadeth|killing road": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|lucretia": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|peace sells": {
+   "artigo": "Peace Sells",
+   "visitas": 18441
+  },
+  "Megadeth|poison was cure": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|psychotron": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|reckoning day": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|rust in peace polaris": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|she wolf": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|skin my teeth": {
+   "artigo": "Skin o' My Teeth",
+   "visitas": 7570
+  },
+  "Megadeth|sweating bullets": {
+   "artigo": "Sweating Bullets (song)",
+   "visitas": 14188
+  },
+  "Megadeth|take no prisoners": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|doctor is calling": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|this was my life": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|tornado of souls": {
+   "artigo": "Tornado of Souls",
+   "visitas": 19806
+  },
+  "Megadeth|train of consequences": {
+   "artigo": "Train of Consequences",
+   "visitas": 6459
+  },
+  "Megadeth|trust": {
+   "artigo": "Trust (Megadeth song)",
+   "visitas": 10065
+  },
+  "Megadeth|use man": {
+   "artigo": "Use the Man",
+   "visitas": 3819
+  },
+  "Megadeth|vortex": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Megadeth|wake up dead": {
+   "artigo": "Wake Up Dead",
+   "visitas": 11890
+  },
+  "Megadeth|youthanasia": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|and justice for all": {
+   "artigo": "...And Justice for All (song)",
+   "visitas": 16728
+  },
+  "Metallica|battery": {
+   "artigo": "Battery (song)",
+   "visitas": 22330
+  },
+  "Metallica|creeping death": {
+   "artigo": "Creeping Death",
+   "visitas": 69386
+  },
+  "Metallica|damage inc": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|fade to black": {
+   "artigo": "Fade to Black (Metallica song)",
+   "visitas": 47891
+  },
+  "Metallica|fuel": {
+   "artigo": "Fuel (Metallica song)",
+   "visitas": 32429
+  },
+  "Metallica|harvester of sorrow": {
+   "artigo": "Harvester of Sorrow",
+   "visitas": 26797
+  },
+  "Metallica|leper messiah": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|motorbreath": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|my friend of misery": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|orion": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|sad but true": {
+   "artigo": "Sad but True",
+   "visitas": 38326
+  },
+  "Metallica|seek and destroy": {
+   "artigo": "Seek & Destroy",
+   "visitas": 31779
+  },
+  "Metallica|st anger": {
+   "artigo": "St. Anger (song)",
+   "visitas": 23084
+  },
+  "Metallica|four horsemen": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|memory remains": {
+   "artigo": "The Memory Remains",
+   "visitas": 45178
+  },
+  "Metallica|unforgiven": {
+   "artigo": "The Unforgiven (song)",
+   "visitas": 64011
+  },
+  "Metallica|through never": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|trapped under ice": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|turn page": {
+   "artigo": "Turn the Page",
+   "visitas": 68739
+  },
+  "Metallica|until it sleeps": {
+   "artigo": "Until It Sleeps",
+   "visitas": 31660
+  },
+  "Metallica|wherever i may roam": {
+   "artigo": "Wherever I May Roam",
+   "visitas": 33206
+  },
+  "Metallica|blackened": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|for whom bell tolls": {
+   "artigo": "For Whom the Bell Tolls (Metallica song)",
+   "visitas": 67386
+  },
+  "Metallica|of wolf and man": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|one": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|ride lightning": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|thing that should not be": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|2 x 4": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|aint my bitch": {
+   "artigo": "Ain't My Bitch",
+   "visitas": 8123
+  },
+  "Metallica|bleeding me": {
+   "artigo": "Bleeding Me",
+   "visitas": 12362
+  },
+  "Metallica|blitzkrieg": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|cure": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|diposable heros": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|disposable heroes": {
+   "artigo": "Disposable Heroes",
+   "visitas": 12906
+  },
+  "Metallica|dont tread on me": {
+   "artigo": "Don't Tread on Me (Metallica song)",
+   "visitas": 25933
+  },
+  "Metallica|dyers eve": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|escape": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|eye of beholder": {
+   "artigo": "Eye of the Beholder (song)",
+   "visitas": 18714
+  },
+  "Metallica|fight fire with fire": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|frantic": {
+   "artigo": "Frantic (Metallica song)",
+   "visitas": 12609
+  },
+  "Metallica|god that failed": {
+   "artigo": "The God That Failed (song)",
+   "visitas": 15435
+  },
+  "Metallica|hero of day": {
+   "artigo": "Hero of the Day",
+   "visitas": 22734
+  },
+  "Metallica|hit lights": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|holier than thou": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|human": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|king nothing": {
+   "artigo": "King Nothing",
+   "visitas": 22944
+  },
+  "Metallica|mama said": {
+   "artigo": "Mama Said (Metallica song)",
+   "visitas": 18857
+  },
+  "Metallica|metal militia": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|no leaf clover": {
+   "artigo": "No Leaf Clover",
+   "visitas": 22157
+  },
+  "Metallica|no remorse": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|phantom lord": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|poor twisted me": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|ronnie": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|sanitarium": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|struggle within": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|call of ktulu": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|frayed ends of sanity": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|house jack built": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|outlaw torn": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|shortest straw": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|thorn within": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|to is to die": {
+   "artigo": "To Live Is to Die",
+   "visitas": 28906
+  },
+  "Metallica|wasting my hate": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Metallica|whiplash": {
+   "artigo": "Whiplash (Metallica song)",
+   "visitas": 26069
+  },
+  "Michael Jackson|rockin robin": {
+   "artigo": "Rockin' Robin (song)",
+   "visitas": 78489
+  },
+  "Michael Jackson|rock with you": {
+   "artigo": "Rock with You",
+   "visitas": 148465
+  },
+  "Movie Themes|wizard of oz over rainbow": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nightwish|kinslayer": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nintendo|kirby and amazing mirror area 1 rainbow route piano cover play 2 times": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nintendo|kirby and amazing mirror area 1 rainbow route piano cover play 50 times": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|blew": {
+   "artigo": "Blew",
+   "visitas": 85848
+  },
+  "Nirvana|come you are": {
+   "artigo": "Come as You Are (Nirvana song)",
+   "visitas": 122647
+  },
+  "Nirvana|in bloom": {
+   "artigo": "In Bloom",
+   "visitas": 67278
+  },
+  "Nirvana|lithium": {
+   "artigo": "Lithium (Nirvana song)",
+   "visitas": 78974
+  },
+  "Nirvana|polly": {
+   "artigo": "Polly (Nirvana song)",
+   "visitas": 88774
+  },
+  "Nirvana|rape me": {
+   "artigo": "Rape Me",
+   "visitas": 100885
+  },
+  "Nirvana|something in way": {
+   "artigo": "Something in the Way",
+   "visitas": 75015
+  },
+  "Nirvana|smells like teen spirit": {
+   "artigo": "Smells Like Teen Spirit",
+   "visitas": 376613
+  },
+  "Nirvana|about girl": {
+   "artigo": "About a Girl (Nirvana song)",
+   "visitas": 62660
+  },
+  "Nirvana|aero zeppelin": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|all apologies": {
+   "artigo": "All Apologies",
+   "visitas": 55662
+  },
+  "Nirvana|aneurysm": {
+   "artigo": "Aneurysm (song)",
+   "visitas": 29914
+  },
+  "Nirvana|been son": {
+   "artigo": "Been a Son",
+   "visitas": 13614
+  },
+  "Nirvana|beeswax": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|big cheese": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|big long now": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|breed": {
+   "artigo": "Breed (song)",
+   "visitas": 21169
+  },
+  "Nirvana|dive": {
+   "artigo": "Dive (Nirvana song)",
+   "visitas": 11577
+  },
+  "Nirvana|downer": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|dumb": {
+   "artigo": "Dumb (Nirvana song)",
+   "visitas": 18434
+  },
+  "Nirvana|floyd barber": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|frances farmer will have her revenge on seattle": {
+   "artigo": "Frances Farmer Will Have Her Revenge on Seattle",
+   "visitas": 37624
+  },
+  "Nirvana|hairspray queen": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|lounge act": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|love buzz": {
+   "artigo": "Love Buzz",
+   "visitas": 42581
+  },
+  "Nirvana|mollys lips": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|negative creep": {
+   "artigo": "Negative Creep",
+   "visitas": 16364
+  },
+  "Nirvana|on plain": {
+   "artigo": "On a Plain",
+   "visitas": 19866
+  },
+  "Nirvana|paper cuts": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|pennyroyal tea": {
+   "artigo": "Pennyroyal Tea",
+   "visitas": 43571
+  },
+  "Nirvana|scentless apprentice": {
+   "artigo": "Scentless Apprentice",
+   "visitas": 17768
+  },
+  "Nirvana|school": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|scoff": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|serve servants": {
+   "artigo": "Serve the Servants",
+   "visitas": 13902
+  },
+  "Nirvana|sifting": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|sliver": {
+   "artigo": "Sliver (song)",
+   "visitas": 43549
+  },
+  "Nirvana|son of gun": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|stay away": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|swap meet": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|territorial pissings": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|tourettes": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|turnaround": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Nirvana|very ape": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|bark at moon": {
+   "artigo": "Bark at the Moon (song)",
+   "visitas": 20869
+  },
+  "Ozzy Osbourne|mr crowley": {
+   "artigo": "Mr. Crowley",
+   "visitas": 69111
+  },
+  "Ozzy Osbourne|close my eyes forever": {
+   "artigo": "Close My Eyes Forever",
+   "visitas": 29047
+  },
+  "Ozzy Osbourne|dee": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|diary of madman": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|flying high again": {
+   "artigo": "Flying High Again",
+   "visitas": 13766
+  },
+  "Ozzy Osbourne|goodbye to romance": {
+   "artigo": "Goodbye to Romance (song)",
+   "visitas": 9109
+  },
+  "Ozzy Osbourne|i dont know": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|i just want you": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|miracle man": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|miracleman": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|my jakyl doesnt hyde": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|no more tears": {
+   "artigo": "No More Tears (Ozzy Osbourne song)",
+   "visitas": 39914
+  },
+  "Ozzy Osbourne|old la tonight": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|over moutain": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|perry mason": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|revolution": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|sato": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|shot in dark": {
+   "artigo": "Shot in the Dark (Ozzy Osbourne song)",
+   "visitas": 33039
+  },
+  "Ozzy Osbourne|steal away night": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|steal away": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Ozzy Osbourne|suicide solution": {
+   "artigo": "Suicide Solution",
+   "visitas": 29481
+  },
+  "Pantera|walk": {
+   "artigo": "Walk (Pantera song)",
+   "visitas": 30591
+  },
+  "Pantera|becoming": {
+   "artigo": "Becoming (song)",
+   "visitas": 5041
+  },
+  "Pantera|cemetary gates": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Pantera|hollow": {
+   "artigo": "Hollow (Pantera song)",
+   "visitas": 9974
+  },
+  "Pantera|im broken": {
+   "artigo": "I'm Broken",
+   "visitas": 11549
+  },
+  "Pantera|mouth for war": {
+   "artigo": "Mouth for War",
+   "visitas": 9918
+  },
+  "Pantera|planet caravan": {
+   "artigo": "Planet Caravan",
+   "visitas": 38340
+  },
+  "Paul Simon|loves me like rock": {
+   "artigo": "Loves Me Like a Rock",
+   "visitas": 14691
+  },
+  "Paula Abdul|blowing kisses in wind": {
+   "artigo": "Blowing Kisses in the Wind",
+   "visitas": 7136
+  },
+  "Pearl Jam|last kiss": {
+   "artigo": "Last Kiss",
+   "visitas": 109771
+  },
+  "Phil Collins|sussudio": {
+   "artigo": "Sussudio",
+   "visitas": 96786
+  },
+  "Pink Floyd|have cigar": {
+   "artigo": "Have a Cigar",
+   "visitas": 71541
+  },
+  "Pink Floyd|money": {
+   "artigo": "Money (Pink Floyd song)",
+   "visitas": 99013
+  },
+  "Pink Floyd|time": {
+   "artigo": "Time (Pink Floyd song)",
+   "visitas": 88169
+  },
+  "Pink Floyd|wish you were here": {
+   "artigo": "Wish You Were Here (Pink Floyd song)",
+   "visitas": 120498
+  },
+  "Pink Floyd|another brick in wall": {
+   "artigo": "Another Brick in the Wall",
+   "visitas": 200403
+  },
+  "Pink Floyd|comfortably numb": {
+   "artigo": "Comfortably Numb",
+   "visitas": 218129
+  },
+  "Pink Floyd|great gig in sky": {
+   "artigo": "The Great Gig in the Sky",
+   "visitas": 173193
+  },
+  "Pink Floyd|shine on you crazy diamond": {
+   "artigo": "Shine On You Crazy Diamond",
+   "visitas": 222089
+  },
+  "Pink Floyd|brain damage": {
+   "artigo": "Brain Damage (Pink Floyd song)",
+   "visitas": 41372
+  },
+  "Pink Floyd|hey you": {
+   "artigo": "Hey You (Pink Floyd song)",
+   "visitas": 37246
+  },
+  "Pink Floyd|welcome to machine": {
+   "artigo": "Welcome to the Machine",
+   "visitas": 45467
+  },
+  "Powerwolf|all we need is blood": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|all you can bleed": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|amen and attack": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|armata strigoi": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|army of night": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|blessed and possessed": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|dancing with dead": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|demons are girls best friend": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|die die crucified": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|fire and forgive": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|higher than heaven": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|ira sancti": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|let there be night": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|nightside of siberia": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|raise your fist evangelist": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|sacred and wild": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|sanctified with dynamite": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|we came to take your souls": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|we drink your blood": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Powerwolf|werewolves of armenia": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Presidents Of The USA|video killed radio star": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Purcell Henry|funeral of queen mary": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Queen|crazy little thing called love": {
+   "artigo": "Crazy Little Thing Called Love",
+   "visitas": 110553
+  },
+  "Queen|i want to break free": {
+   "artigo": "I Want to Break Free",
+   "visitas": 112216
+  },
+  "Queen|killer queen": {
+   "artigo": "Killer Queen",
+   "visitas": 94320
+  },
+  "Queen|princes of universe": {
+   "artigo": "Princes of the Universe",
+   "visitas": 83407
+  },
+  "Queen|radio ga ga": {
+   "artigo": "Radio Ga Ga",
+   "visitas": 108493
+  },
+  "Queen|another one bites dust": {
+   "artigo": "Another One Bites the Dust",
+   "visitas": 232159
+  },
+  "Queen|bohemian rhapsody": {
+   "artigo": "Bohemian Rhapsody",
+   "visitas": 705110
+  },
+  "Queen|under pressure": {
+   "artigo": "Under Pressure",
+   "visitas": 271224
+  },
+  "Queen|we are champions": {
+   "artigo": "We Are the Champions",
+   "visitas": 141399
+  },
+  "Queen|bicycle race": {
+   "artigo": "Bicycle Race",
+   "visitas": 63163
+  },
+  "Queen|fat bottom girls": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Queen|father to son": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Queen|keep yourself alive": {
+   "artigo": "Keep Yourself Alive",
+   "visitas": 30214
+  },
+  "Queen|play game": {
+   "artigo": "Play the Game (song)",
+   "visitas": 21477
+  },
+  "Queen|too much love will kill you": {
+   "artigo": "Too Much Love Will Kill You",
+   "visitas": 36831
+  },
+  "Queen|youre my best friend": {
+   "artigo": "You're My Best Friend",
+   "visitas": 32055
+  },
+  "Queensryche|jet city woman": {
+   "artigo": "Jet City Woman",
+   "visitas": 9062
+  },
+  "Queensryche|silent lucidity": {
+   "artigo": "Silent Lucidity",
+   "visitas": 40829
+  },
+  "Radiohead|exit music for film": {
+   "artigo": "Exit Music (For a Film)",
+   "visitas": 82801
+  },
+  "Radiohead|fake plastic trees": {
+   "artigo": "Fake Plastic Trees",
+   "visitas": 76647
+  },
+  "Radiohead|karma police": {
+   "artigo": "Karma Police",
+   "visitas": 78708
+  },
+  "Radiohead|no surprises": {
+   "artigo": "No Surprises",
+   "visitas": 91629
+  },
+  "Radiohead|paranoid android": {
+   "artigo": "Paranoid Android",
+   "visitas": 87115
+  },
+  "Radiohead|creep": {
+   "artigo": "Creep (Radiohead song)",
+   "visitas": 344759
+  },
+  "Radiohead|airbag": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Radiohead|climbing up walls": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Radiohead|high and dry": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Radiohead|just": {
+   "artigo": "Just (song)",
+   "visitas": 31773
+  },
+  "Radiohead|lucky": {
+   "artigo": "Lucky (Radiohead song)",
+   "visitas": 27514
+  },
+  "Radiohead|planet telex": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Radiohead|polyethylene pt 1 and 2": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Radiohead|street spirit": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Radiohead|subterranean homesick alien": {
+   "artigo": "Subterranean Homesick Alien",
+   "visitas": 14363
+  },
+  "Rage Against the Machine|guerilla radio": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Rainbow|street of dreams": {
+   "artigo": "Street of Dreams (Rainbow song)",
+   "visitas": 16479
+  },
+  "Raydio|you cant change that": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Robbie Williams|rock dj": {
+   "artigo": "Rock DJ",
+   "visitas": 41157
+  },
+  "Rush|spirit of radio": {
+   "artigo": "The Spirit of Radio",
+   "visitas": 36850
+  },
+  "Scorpions|blackout": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|in trance": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|rock you like hurricane": {
+   "artigo": "Rock You Like a Hurricane",
+   "visitas": 68014
+  },
+  "Scorpions|321": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|bad boys running wild": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|believe in love": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|big city nights": {
+   "artigo": "Big City Nights (song)",
+   "visitas": 9117
+  },
+  "Scorpions|catch your train": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|coming home": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|holiday": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|hour 1": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|humanity": {
+   "artigo": "Humanity (Scorpions song)",
+   "visitas": 4053
+  },
+  "Scorpions|lorelei": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|love will keep us alive": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|maybe i maybe you": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|no one like you": {
+   "artigo": "No One Like You",
+   "visitas": 19386
+  },
+  "Scorpions|passion rules game": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|send me angel": {
+   "artigo": "Send Me an Angel (Scorpions song)",
+   "visitas": 27527
+  },
+  "Scorpions|still in love with you": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|sting in tail": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|tease me please me": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|cross": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|future never dies": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|game of life": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|we were born to fly": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|we will rise again": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|white dove": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Scorpions|you re loving me to death": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Sepultura|arise": {
+   "artigo": "Arise (Sepultura song)",
+   "visitas": 4253
+  },
+  "Sepultura|roots": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Sepultura|attitude": {
+   "artigo": "Attitude (Sepultura song)",
+   "visitas": 5607
+  },
+  "Sepultura|dead embryonic cells": {
+   "artigo": "Dead Embryonic Cells",
+   "visitas": 9745
+  },
+  "Sepultura|inner self": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Sepultura|kaiowas": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Sepultura|policia": {
+   "artigo": "Polícia (song)",
+   "visitas": 2552
+  },
+  "Sepultura|refuse resist": {
+   "artigo": "Refuse/Resist",
+   "visitas": 11108
+  },
+  "Sepultura|roots bloody roots": {
+   "artigo": "Roots Bloody Roots",
+   "visitas": 24355
+  },
+  "Sepultura|slave new world": {
+   "artigo": "Slave New World",
+   "visitas": 4445
+  },
+  "Simon & Garfunkel|i am rock": {
+   "artigo": "I Am a Rock",
+   "visitas": 27649
+  },
+  "Sixpence None The Richer|kiss me": {
+   "artigo": "Kiss Me (Sixpence None the Richer song)",
+   "visitas": 223257
+  },
+  "Slayer|divine intervention": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|show no mercy": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|south of heaven": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|angel of death": {
+   "artigo": "Angel of Death (Slayer song)",
+   "visitas": 61837
+  },
+  "Slayer|bitter peace": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|black magic": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|dead skin mask": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|dittohead": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|mandatory suicide": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|piece by piece": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|raining blood": {
+   "artigo": "Raining Blood",
+   "visitas": 29789
+  },
+  "Slayer|spirit in black": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|verbal abuse": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Slayer|war ensemble": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Spice Girls|wannabe metal remix": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Steam|kiss him goodbye": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "TV Themes|buffy vampire slayer": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "The Babys|midnight rendezvous": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "The Band|night they drove old": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "The Corrs|queen of hollywood": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "The Corrs|radio": {
+   "artigo": "Radio (The Corrs song)",
+   "visitas": 4069
+  },
+  "The Crystals|and then he kissed me": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "U2|hold me thrill me kiss me kill me": {
+   "artigo": "Hold Me, Thrill Me, Kiss Me, Kill Me",
+   "visitas": 34434
+  },
+  "Van Halen|jump": {
+   "artigo": "Jump (Van Halen song)",
+   "visitas": 121654
+  },
+  "Van Halen|you really got me": {
+   "artigo": "You Really Got Me",
+   "visitas": 119194
+  },
+  "Van Halen|aint talkin bout love": {
+   "artigo": "Ain't Talkin' 'bout Love",
+   "visitas": 31643
+  },
+  "Van Halen|dance night away": {
+   "artigo": "Dance the Night Away (Van Halen song)",
+   "visitas": 28110
+  },
+  "Van Halen|dreams": {
+   "artigo": "Dreams (Van Halen song)",
+   "visitas": 26700
+  },
+  "Van Halen|ill wait": {
+   "artigo": "I'll Wait",
+   "visitas": 27949
+  },
+  "Van Halen|love walks in": {
+   "artigo": "Love Walks In",
+   "visitas": 16134
+  },
+  "Van Halen|panama": {
+   "artigo": "Panama (song)",
+   "visitas": 52441
+  },
+  "Van Halen|pretty woman": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "Van Halen|right now": {
+   "artigo": "Right Now (Van Halen song)",
+   "visitas": 33104
+  },
+  "Van Halen|runnin with devil": {
+   "artigo": "Runnin' with the Devil",
+   "visitas": 30845
+  },
+  "Van Halen|when its love": {
+   "artigo": "When It's Love",
+   "visitas": 15125
+  },
+  "Van Halen|why cant this be love": {
+   "artigo": "Why Can't This Be Love",
+   "visitas": 33739
+  },
+  "White Zombie|thunderkiss 65": {
+   "artigo": null,
+   "visitas": 0
+  }
+ },
+ "categorias": {
+  "Dreadlock Holiday": true,
+  "The Things We Do for Love (song)": true,
+  "Simon Says (1910 Fruitgum Company song)": true,
+  "Caught Up in You": true,
+  "Fantasy Girl": true,
+  "The Day We Find Love": true,
+  "Take On Me": true,
+  "Hunting High and Low (song)": true,
+  "Dancing Queen": true,
+  "Poison Arrow": true,
+  "The Look of Love (ABC song)": true,
+  "Highway to Hell": false,
+  "Highway to Hell (song)": true,
+  "Tell It Like It Is (song)": true,
+  "How Long (Ace song)": true,
+  "Dude (Looks Like a Lady)": true,
+  "Janie's Got a Gun": true,
+  "Dream On (Aerosmith song)": true,
+  "Walk This Way": true,
+  "Blind Man (Aerosmith song)": true,
+  "Crazy (Aerosmith song)": true,
+  "Cryin'": true,
+  "Hole in My Soul": true,
+  "Kings and Queens (Aerosmith song)": true,
+  "Living on the Edge": false,
+  "Pink (Aerosmith song)": true,
+  "Seasons of Wither": true,
+  "The Other Side (Aerosmith song)": true,
+  "What It Takes (Aerosmith song)": true,
+  "Time Passages (song)": true,
+  "Year of the Cat (song)": true,
+  "Show and Tell (song)": true,
+  "Eye in the Sky (song)": true,
+  "The Turn of a Friendly Card": false,
+  "Ammonia Avenue": false,
+  "Damned If I Do (The Alan Parsons Project song)": true,
+  "Eve (Alan Parsons Project album)": false,
+  "Games People Play (The Alan Parsons Project song)": true,
+  "Prime Time (The Alan Parsons Project song)": true,
+  "Time (The Alan Parsons Project song)": true,
+  "Tighter, Tighter": true,
+  "I Swear (John Michael Montgomery song)": true,
+  "Ventura Highway": true,
+  "Daisy Jane": true,
+  "I Need You (America song)": true,
+  "Lonely People": true,
+  "Sister Golden Hair": true,
+  "Tin Man (America song)": true,
+  "Lonely Boy (Andrew Gold song)": true,
+  "Baby, I Love You": true,
+  "Rock Me Gently (Andy Kim song)": true,
+  "Obsession (Michael Des Barres & Holly Knight song)": true,
+  "Sweet Love (Anita Baker song)": true,
+  "Ring My Bell": true,
+  "No More \"I Love You's\"": true,
+  "Sugar, Sugar": true,
+  "City of New Orleans (song)": true,
+  "Heat of the Moment (Asia song)": true,
+  "Only Time Will Tell (song)": true,
+  "Imaginary Lover": true,
+  "So in to You": true,
+  "Always (Atlantic Starr song)": true,
+  "My Maria": true,
+  "When I See You Smile": true,
+  "Baby Blue (Badfinger song)": true,
+  "Come and Get It (Badfinger song)": true,
+  "Day After Day (Badfinger song)": true,
+  "No Matter What (Badfinger song)": true,
+  "Cruel Summer (Bananarama song)": true,
+  "Venus (Shocking Blue song)": true,
+  "I Only Want to Be with You": true,
+  "Laugh, Laugh": true,
+  "Take My Breath Away": true,
+  "The Metro (song)": true,
+  "Rock Around the Clock": true,
+  "Kiss the Rain": true,
+  "Dancing with Myself": true,
+  "Mony Mony": true,
+  "Eyes Without a Face (song)": true,
+  "Catch My Fall": true,
+  "Flesh for Fantasy": true,
+  "Hot in the City": true,
+  "It's Still Rock and Roll to Me": true,
+  "Black Sabbath (song)": true,
+  "Heaven and Hell (Black Sabbath album)": false,
+  "Heaven and Hell (Black Sabbath song)": true,
+  "N.I.B.": true,
+  "Planet Caravan": true,
+  "Sabbath Bloody Sabbath": false,
+  "Sabbath Bloody Sabbath (song)": true,
+  "War Pigs": true,
+  "Iron Man (song)": true,
+  "Paranoid (Black Sabbath song)": true,
+  "Behind the Wall of Sleep": false,
+  "Changes (Black Sabbath song)": true,
+  "Children of the Grave": true,
+  "Neon Knights": true,
+  "Snowblind": false,
+  "Supernaut (song)": true,
+  "Sweet Leaf": true,
+  "Symptom of the Universe": true,
+  "Tomorrow's Dream": false,
+  "Sealed with a Kiss (Bobby Vinton album)": false,
+  "Sealed with a Kiss": true,
+  "Because You Loved Me": true,
+  "Falling into You": false,
+  "Falling into You (song)": true,
+  "That's the Way It Is (Celine Dion song)": true,
+  "All by Myself": true,
+  "The Power of Love (Jennifer Rush song)": true,
+  "I'm Your Angel": true,
+  "Immortality (Celine Dion song)": true,
+  "Tell Him (Barbra Streisand and Celine Dion song)": true,
+  "The Colour of My Love": false,
+  "To Love You More": true,
+  "Child in Time": true,
+  "Smoke on the Water": true,
+  "Fireball (Deep Purple song)": true,
+  "Hallelujah (Deep Purple song)": true,
+  "Highway Star (song)": true,
+  "Hush (Billy Joe Royal song)": true,
+  "Lazy (Deep Purple song)": true,
+  "Mistreated (song)": true,
+  "Soldier of Fortune (Deep Purple song)": true,
+  "Woman from Tokyo": true,
+  "I Say a Little Prayer": true,
+  "That's What Friends Are For": true,
+  "Do You Know the Way to San Jose": true,
+  "Heartbreaker (Dionne Warwick song)": true,
+  "I'll Never Fall in Love Again": true,
+  "I'll Never Love This Way Again": true,
+  "Walk On By": true,
+  "The Sound of Silence": true,
+  "On the Radio (Donna Summer song)": true,
+  "Kiss You All Over": true,
+  "Don't Cry": true,
+  "Paradise City": true,
+  "Rocket Queen": true,
+  "Knockin' on Heaven's Door": true,
+  "Live and Let Die (song)": true,
+  "November Rain": true,
+  "Sweet Child o' Mine": true,
+  "Welcome to the Jungle": true,
+  "Nightrain": true,
+  "Patience (Guns N' Roses song)": true,
+  "You Could Be Mine": true,
+  "Kiss on My List": true,
+  "Aces High (song)": true,
+  "Hallowed Be Thy Name (song)": true,
+  "The Phantom of the Opera": false,
+  "Powerslave": false,
+  "Run to the Hills": true,
+  "Wasted Years": true,
+  "Be Quick or Be Dead": true,
+  "Blood Brothers": false,
+  "Can I Play with Madness": true,
+  "Children of the Damned": false,
+  "Die with your boots on": false,
+  "Doctor Doctor (UFO song)": true,
+  "Flight of Icarus": true,
+  "Fortunes of War": false,
+  "Futureal": true,
+  "Genghis Khan": false,
+  "Heaven Can Wait": false,
+  "Holy Smoke (song)": true,
+  "Infinite Dreams": true,
+  "Killers (Iron Maiden album)": false,
+  "Lord of the Flies (song)": true,
+  "Man on the Edge": true,
+  "Moonchild": false,
+  "The Murders in the Rue Morgue": false,
+  "No Prayer for the Dying": false,
+  "Only the good die young": false,
+  "Prowler": false,
+  "Purgatory (song)": true,
+  "Quest for Fire": false,
+  "Running Free": true,
+  "Sea of Madness": false,
+  "Strange World": false,
+  "Stranger in a Strange Land (Iron Maiden song)": true,
+  "Sun and Steel": false,
+  "Aftermath": false,
+  "The Angel and the Gambler": true,
+  "The Book of Souls": false,
+  "The Clairvoyant (song)": true,
+  "The Evil That Men Do (song)": true,
+  "Ides of March": false,
+  "The Loneliness of the Long-Distance Runner": false,
+  "Total Eclipse": false,
+  "Wasting Love": true,
+  "Diamonds & Rust (song)": true,
+  "Painkiller (Judas Priest album)": false,
+  "Painkiller (Judas Priest song)": true,
+  "Beyond the Realms of Death": true,
+  "Breaking the Law": true,
+  "Electric Eye (song)": true,
+  "Hell Patrol": false,
+  "Living After Midnight": true,
+  "Nightcrawler": false,
+  "Reckless": false,
+  "A Touch of Evil": true,
+  "Turbo Lover": true,
+  "Victim of Changes": true,
+  "You've Got Another Thing Comin'": true,
+  "Beth (song)": true,
+  "Detroit Rock City": true,
+  "Shout It Out Loud (Kiss song)": true,
+  "All My Love (Led Zeppelin song)": true,
+  "Immigrant Song": true,
+  "Kashmir (song)": true,
+  "The Song Remains the Same (song)": true,
+  "When the Levee Breaks": true,
+  "Whole Lotta Love": true,
+  "Four Tops": false,
+  "Houses of the Holy": false,
+  "Houses of the Holy (song)": true,
+  "Stairway to Heaven": true,
+  "Achilles Last Stand": true,
+  "Babe I'm Gonna Leave You": true,
+  "The Battle of Evermore": true,
+  "Black Dog (Led Zeppelin song)": true,
+  "Black Mountain Side": true,
+  "Bring It On Home (Sonny Boy Williamson II song)": true,
+  "Bron-Y-Aur Stomp": true,
+  "Bron-Yr-Aur": false,
+  "Candy Store Rock": true,
+  "Carouselambra": true,
+  "Celebration Day": true,
+  "Communication Breakdown": true,
+  "Custard Pie": true,
+  "D'yer Mak'er": true,
+  "Dancing Days": true,
+  "Darlene": false,
+  "Dazed and Confused (Jake Holmes song)": true,
+  "Down by the Seaside": true,
+  "Fool in the Rain": true,
+  "Four Sticks": true,
+  "Going to California": true,
+  "Good Times Bad Times": true,
+  "Heartbreaker (Led Zeppelin song)": true,
+  "How Many More Times": true,
+  "I Can't Quit You Baby": true,
+  "In My Time of Dying": true,
+  "In the Evening": true,
+  "In the Light": true,
+  "Misty Mountain Hop": true,
+  "Night Flight": false,
+  "No Quarter (song)": true,
+  "Out on the Tiles": true,
+  "Over the Hills and Far Away (Led Zeppelin song)": true,
+  "Ramble On": true,
+  "Rock and Roll (Led Zeppelin song)": true,
+  "Sick Again": true,
+  "Since I've Been Loving You": true,
+  "Tangerine (Led Zeppelin song)": true,
+  "Ten Years Gone": true,
+  "Thank You (Led Zeppelin song)": true,
+  "That's the Way (Led Zeppelin song)": true,
+  "The Crunge": true,
+  "The Ocean (Led Zeppelin song)": true,
+  "The Rain Song": true,
+  "The Rover (Led Zeppelin song)": true,
+  "The Wanton Song": true,
+  "Trampled Under Foot": true,
+  "We're Gonna Groove": true,
+  "Wearing and Tearing": true,
+  "What Is and What Should Never Be": true,
+  "You Shook Me": true,
+  "Your Time Is Gonna Come": true,
+  "Kiss and Say Goodbye": true,
+  "A Tout le Monde": true,
+  "Hangar 18 (song)": true,
+  "Symphony of Destruction": true,
+  "99 Ways to Die (song)": true,
+  "Secret Place": false,
+  "Angry Again": true,
+  "Blood of Heroes": false,
+  "Countdown to Extinction": false,
+  "Dawn patrol": false,
+  "Go to Hell": false,
+  "Holy Wars... The Punishment Due": true,
+  "In My Darkest Hour": true,
+  "Lucretia": false,
+  "Peace Sells": true,
+  "She-wolf": false,
+  "Skin o' My Teeth": true,
+  "Sweating Bullets (song)": true,
+  "Tornado of Souls": true,
+  "Train of Consequences": true,
+  "Trust (Megadeth song)": true,
+  "Use the Man": true,
+  "Wake Up Dead": true,
+  "Youthanasia": false,
+  "...And Justice for All (song)": true,
+  "Battery (song)": true,
+  "Creeping Death": true,
+  "Fade to Black (Metallica song)": true,
+  "Fuel (Metallica song)": true,
+  "Harvester of Sorrow": true,
+  "Sad but True": true,
+  "Seek & Destroy": true,
+  "St. Anger": false,
+  "St. Anger (song)": true,
+  "The Memory Remains": true,
+  "The Unforgiven (song)": true,
+  "Turn the Page": true,
+  "Until It Sleeps": true,
+  "Wherever I May Roam": true,
+  "For Whom the Bell Tolls (Metallica song)": true,
+  "Ride the Lightning": false,
+  "Ain't My Bitch": true,
+  "Bleeding Me": true,
+  "Disposable Heroes": true,
+  "Don't Tread on Me (Metallica song)": true,
+  "Eye of the Beholder (song)": true,
+  "Fight Fire with Fire": false,
+  "Frantic (Metallica song)": true,
+  "The God That Failed (song)": true,
+  "Hero of the Day": true,
+  "Hit the Lights": false,
+  "Holier-than-thou": false,
+  "King Nothing": true,
+  "Mama Said (Metallica song)": true,
+  "Metal Militia": false,
+  "No Leaf Clover": true,
+  "No Remorse": false,
+  "Ronnie": false,
+  "To Live Is to Die": true,
+  "Whiplash (Metallica song)": true,
+  "Rockin' Robin (song)": true,
+  "Rock with You": true,
+  "Kinslayer": false,
+  "Blew": true,
+  "Come as You Are (Nirvana song)": true,
+  "In Bloom": true,
+  "Lithium (Nirvana song)": true,
+  "Polly (Nirvana song)": true,
+  "Rape Me": true,
+  "Something in the Way": true,
+  "Smells Like Teen Spirit": true,
+  "About a Girl (Nirvana song)": true,
+  "All Apologies": true,
+  "Aneurysm (song)": true,
+  "Been a Son": true,
+  "Big Cheese": false,
+  "Breed (song)": true,
+  "Dive (Nirvana song)": true,
+  "Dumb (Nirvana song)": true,
+  "Frances Farmer Will Have Her Revenge on Seattle": true,
+  "Love Buzz": true,
+  "Negative Creep": true,
+  "On a Plain": true,
+  "Pennyroyal Tea": true,
+  "Scentless Apprentice": true,
+  "Scoff": false,
+  "Serve the Servants": true,
+  "Sliver (song)": true,
+  "Turnaround": false,
+  "Bark at the Moon": false,
+  "Bark at the Moon (song)": true,
+  "Mr. Crowley": true,
+  "Close My Eyes Forever": true,
+  "Flying High Again": true,
+  "Goodbye to Romance (song)": true,
+  "No More Tears": false,
+  "No More Tears (Ozzy Osbourne song)": true,
+  "Shot in the Dark (Ozzy Osbourne song)": true,
+  "Suicide Solution": true,
+  "Walk (Pantera song)": true,
+  "Becoming (song)": true,
+  "Hollow (Pantera song)": true,
+  "I'm Broken": true,
+  "Mouth for War": true,
+  "Loves Me Like a Rock": true,
+  "Blowing Kisses in the Wind": true,
+  "Last Kiss": true,
+  "Sussudio": true,
+  "Have a Cigar": true,
+  "Money (Pink Floyd song)": true,
+  "Time (Pink Floyd song)": true,
+  "Wish You Were Here (Pink Floyd song)": true,
+  "Another Brick in the Wall": true,
+  "Comfortably Numb": true,
+  "The Great Gig in the Sky": true,
+  "Shine On You Crazy Diamond": true,
+  "Brain Damage (Pink Floyd song)": true,
+  "Hey You (Pink Floyd song)": true,
+  "Welcome to the Machine": true,
+  "Blessed & Possessed": false,
+  "Demons Are a Girl's Best Friend": false,
+  "Crazy Little Thing Called Love": true,
+  "I Want to Break Free": true,
+  "Killer Queen": true,
+  "Princes of the Universe": true,
+  "Radio Ga Ga": true,
+  "Another One Bites the Dust": true,
+  "Bohemian Rhapsody": true,
+  "Under Pressure": true,
+  "We Are the Champions": true,
+  "Bicycle Race": true,
+  "Keep Yourself Alive": true,
+  "Play the Game (song)": true,
+  "Too Much Love Will Kill You": true,
+  "You're My Best Friend": true,
+  "Jet City Woman": true,
+  "Silent Lucidity": true,
+  "Exit Music (For a Film)": true,
+  "Fake Plastic Trees": true,
+  "Karma Police": true,
+  "No Surprises": true,
+  "Paranoid Android": true,
+  "Creep (Radiohead song)": true,
+  "Just (song)": true,
+  "Lucky (Radiohead song)": true,
+  "Subterranean Homesick Alien": true,
+  "Street of Dreams (Rainbow song)": true,
+  "Rock DJ": true,
+  "The Spirit of Radio": true,
+  "Blackout (Scorpions album)": false,
+  "In Trance": false,
+  "Rock You Like a Hurricane": true,
+  "Believe in Love": false,
+  "Big City Nights (Scorpions album)": false,
+  "Big City Nights (song)": true,
+  "Humanity (Scorpions song)": true,
+  "No One Like You": true,
+  "Send Me an Angel (Scorpions song)": true,
+  "Sting in the Tail": false,
+  "White dove": false,
+  "Arise (Sepultura album)": false,
+  "Arise (Sepultura song)": true,
+  "Roots (Sepultura album)": false,
+  "Attitude (Sepultura song)": true,
+  "Dead Embryonic Cells": true,
+  "Polícia (song)": true,
+  "Refuse/Resist": true,
+  "Roots Bloody Roots": true,
+  "Slave New World": true,
+  "I Am a Rock": true,
+  "Kiss Me (Sixpence None the Richer song)": true,
+  "Divine Intervention (Slayer album)": false,
+  "Divine Intervention": false,
+  "Show No Mercy": false,
+  "South of Heaven": false,
+  "Angel of Death (Slayer song)": true,
+  "Piece by Piece": false,
+  "Raining Blood": true,
+  "Buffy the Vampire Slayer": false,
+  "Radio (The Corrs song)": true,
+  "Hold Me, Thrill Me, Kiss Me, Kill Me": true,
+  "Jump (Van Halen song)": true,
+  "You Really Got Me": true,
+  "Ain't Talkin' 'bout Love": true,
+  "Dance the Night Away (Van Halen song)": true,
+  "Dreams (Van Halen song)": true,
+  "I'll Wait": true,
+  "Love Walks In": true,
+  "Panama (song)": true,
+  "Right Now (Van Halen song)": true,
+  "Runnin' with the Devil": true,
+  "When It's Love": true,
+  "Why Can't This Be Love": true
+ }
+}

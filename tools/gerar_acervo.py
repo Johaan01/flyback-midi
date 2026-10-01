@@ -11,7 +11,11 @@ Regras:
   - um .json com o mesmo nome da música é a configuração pronta dela
     (roteamento e canais), baixada pelo botão "Baixar configuração" do site
   - um creditos.json numa pasta dá autor, licença e fonte dos arquivos dela,
-    com caminhos relativos a essa pasta; o site mostra ao abrir a música
+    com caminhos relativos a essa pasta; o site mostra ao abrir a música.
+    Os campos copiados para o índice estão em CAMPOS: além de autor e licença,
+    'artista' e 'transcricao' (quem compôs e quem transcreveu, que é o que as
+    transcrições de banda precisam declarar) e 'popularidade' (de onde saiu a
+    ordem do acervo de bandas)
   - musicas/pastas.txt, se existir, dá a ordem das pastas de primeiro nível
     (uma por linha); as que não estiverem lá vêm depois, em ordem alfabética
   - arquivos e pastas começados por ponto são ignorados
@@ -29,7 +33,8 @@ TIPOS = {
     '.gp': 'GP', '.gp3': 'GP', '.gp4': 'GP', '.gp5': 'GP', '.gpx': 'GP',
     '.musicxml': 'XML', '.mxl': 'XML',
 }
-CAMPOS = ('autor', 'instrumentos', 'licenca', 'credito', 'fonte')
+CAMPOS = ('autor', 'artista', 'instrumentos', 'estilo', 'licenca', 'credito',
+          'transcricao', 'popularidade', 'fonte')
 
 
 def sem_acento(s):

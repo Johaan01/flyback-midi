@@ -925,6 +925,36 @@ def quinta():
     return m, config(['Guitarra base', 'Cordas'], ['Guitarra solo'], m.faixas, oitava_esq=1, acorde_esq='agudo')
 
 
+def korobeiniki():
+    """Коробейники, canção popular russa de 1861 sobre poema de N. Nekrasov, em domínio
+    público — o tema que o Tetris de 1989 espalhou pelo mundo. Em mi menor, bem rápida."""
+    m = Musica('Korobeiniki (metal)', 150)
+    f = banda(m)
+    B = m.barra
+    tema = ('E5/4 B4/8 C5/8 D5/4 C5/8 B4/8 | A4/4 A4/8 C5/8 E5/4 D5/8 C5/8 | '
+            'B4/4. C5/8 D5/4 E5/4 | C5/4 A4/4 A4/2 | '
+            'r/8 D5/4 F5/8 A5/4 G5/8 F5/8 | E5/4. C5/8 E5/4 D5/8 C5/8 | '
+            'B4/4 B4/8 C5/8 D5/4 E5/4 | C5/4 A4/4 A4/2')
+    ponte = ('E5/2 C5/2 | D5/2 B4/2 | C5/2 A4/2 | G#4/2 B4/2 | '
+             'E5/2 C5/2 | D5/2 B4/2 | C5/4 E5/4 A5/2 | G#5/1')
+    h_tema = ['Em', 'Am', 'B', 'Em', 'Dm', 'Am', 'B', 'Em']
+    h_ponte = ['Em', 'Em', 'Am', 'B', 'Em', 'Em', 'Am', 'B']
+
+    def base(har, ritmo='8m 8m 8m 8m 8m 8m 8 8'):
+        return {f['gb']: riff(har, ritmo, B), f['bx']: riff(har, '8 8 8 8 8 8 8 8', B, 28, False)}
+
+    m.secao(4, {**base(h_tema[:4]), f['bat']: ('rock', 'c')})
+    m.secao(8, {**base(h_tema), f['mel']: tema, f['bat']: ('rock', 'cf')})
+    m.secao(8, {**base(h_ponte, '4 4 4 4'), f['mel']: ponte, f['bat']: ('pratos', 'cf')})
+    m.secao(8, {**base(h_tema, '8 8 8 8 8 8 8 8'), f['mel']: tema, f['bat']: ('galope', 'cf')})
+    m.secao(8, {**base(h_tema), f['bat']: ('ride', 'cf'),
+                f['gs']: improviso(escala('E', 'harm'), h_tema, B, 31)})
+    m.secao(8, {**base(h_ponte, '4 4 4 4'), f['gs']: ponte, f['bat']: ('duplo', 'cf')})
+    m.secao(8, {**base(h_tema, '8 8 8 8 8 8 8 8'), f['mel']: tema, f['bat']: ('duplo', 'cf')}, bpm=166)
+    m.secao(1, {f['gb']: 'E2*/1', f['bx']: 'E1/1', f['bat']: ('pratos', 'c')}, bpm=110)
+    return m, config(['Guitarra base', 'Baixo'], ['Melodia', 'Guitarra solo'], m.faixas)
+
+
 MUSICAS = [
     (arco_voltaico, 'composição original, hard rock'),
     (alta_tensao, 'composição original, thrash metal'),
@@ -942,6 +972,7 @@ MUSICAS = [
     (greensleeves, 'arranjo metal da canção tradicional inglesa'),
     (canone, 'arranjo rock de J. Pachelbel'),
     (quinta, 'arranjo metal de L. van Beethoven, Sinfonia nº 5'),
+    (korobeiniki, 'arranjo metal de Korobeiniki, canção popular russa de 1861 (tema do Tetris)'),
 ]
 
 
