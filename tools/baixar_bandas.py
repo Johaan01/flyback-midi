@@ -6,7 +6,7 @@
     python tools/baixar_bandas.py --fonte zeppelin --baixar
     python tools/baixar_bandas.py --fonte midiworld --busca "ac dc" metallica --baixar
 
-Quatro fontes, todas de acesso livre e sem cadastro:
+Cinco fontes, todas de acesso livre e sem cadastro:
 
   midiworld    https://www.midiworld.com/search/?q=...   busca paginada; cada resultado é
                "Título (Artista) - download". Não há página por artista — as que parecem
@@ -15,6 +15,13 @@ Quatro fontes, todas de acesso livre e sem cadastro:
                links para midi/*.mid. Tudo é Led Zeppelin.
   maiden       https://maidenmidi.com/                   mesma forma, em im-midis/*.mid.
                Tudo é Iron Maiden.
+  lakh         https://rawl.rocks/lakh-index.json        o acervo Lakh, 2.203 artistas e
+               17.266 faixas, servido em /lakh-data/<artista>/<arquivo>. É a fonte com mais
+               versões por música: "Back In Black.mid", "Back In Black.1.mid" e assim por
+               diante. Elas diferem muito — uma traz a linha de canto, outra só o
+               acompanhamento —, então todas são baixadas com sufixo "(vN)" e quem escolhe é
+               o organizar_bandas.py, que pontua a presença de canto.
+
   folkrusso    https://www.freesheetmusic.net/russian.html   uma página só, com o acervo de
                folk russo e soviético: Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika.
                Fica fora de `--fonte todas` porque tem destino próprio:
@@ -42,6 +49,7 @@ import html
 import json
 import re
 import sys
+import unicodedata
 import time
 import urllib.error
 import urllib.parse
@@ -217,6 +225,52 @@ def de_pagina_unica(url, prefixo, artista, pausa, nomes=None):
     return achados
 
 
+LAKH_INDEX = 'https://rawl.rocks/lakh-index.json'
+LAKH_DADOS = 'https://rawl.rocks/lakh-data'
+RX_VERSAO = re.compile(r'^(.*)\.(\d+)$')
+
+
+def _norm(s):
+    s = unicodedata.normalize('NFD', s)
+    s = ''.join(c for c in s if not unicodedata.combining(c)).casefold()
+    return re.sub(r'[^a-z0-9]+', ' ', s).strip()
+
+
+def de_lakh(termos, pausa):
+    """O acervo Lakh servido pelo rawl.rocks, que é a fonte com mais versões por música.
+
+    O catálogo é um arquivo só, `/lakh-index.json`, com 2.203 artistas e 17.266 faixas. A mesma
+    música costuma aparecer várias vezes: "Back In Black.mid", "Back In Black.1.mid", e por aí.
+    As versões diferem muito — uma traz a linha de canto, outra só o acompanhamento —, então
+    todas são baixadas com o sufixo "(vN)" no nome, e quem decide qual fica é o
+    `organizar_bandas.py`, que pontua a presença de linha de canto e guarda a melhor.
+    """
+    try:
+        cat = json.loads(abrir(LAKH_INDEX))
+    except Exception as e:
+        print(f'  ! catálogo do Lakh: {e}', file=sys.stderr)
+        return []
+    alvo = [_norm(t) for t in termos] if termos else None
+    achados = []
+    for a in cat.get('artists', []):
+        na = _norm(a['name'])
+        if alvo and not any(t == na or (len(t) > 3 and t in na) for t in alvo):
+            continue
+        for arq in a['tracks']:
+            base = re.sub(r'\.midi?$', '', arq, flags=re.I)
+            m = RX_VERSAO.match(base)
+            titulo, v = (m.group(1), m.group(2)) if m else (base, '')
+            nome = titulo_bonito(re.sub(r'\s{2,}', ' ', titulo.replace('_', ' ')).strip())
+            achados.append({
+                'artista': normalizar_banda(a['name']),
+                'titulo': nome + (f' (v{v})' if v else ''),
+                'url': f"{LAKH_DADOS}/{urllib.parse.quote(a['name'])}/{urllib.parse.quote(arq)}",
+            })
+        print(f"  lakh {a['name']}: {len(a['tracks'])}")
+    time.sleep(pausa)
+    return achados
+
+
 def de_site_por_disco(base, pasta_midi, artista, pausa):
     """zeppelinmidi e maidenmidi: a home lista as páginas de disco, cada uma lista os .mid."""
     try:
@@ -262,6 +316,7 @@ FONTES = {
     'folkrusso': lambda a: de_pagina_unica('https://www.freesheetmusic.net/russian.html',
                                            '/music/worldfolk/russian/', 'Tradicional russo',
                                            a.pausa, FOLK_RUSSO),
+    'lakh': lambda a: de_lakh(a.busca, a.pausa),
 }
 # 'todas' é o que se quer para encher a pasta de bandas; o folk russo tem destino próprio e por
 # isso fica de fora, rodado à parte com --fonte folkrusso --destino "musicas/folk russo (…)".

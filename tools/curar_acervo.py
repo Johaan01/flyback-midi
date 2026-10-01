@@ -327,6 +327,100 @@ def _monofonia(f):
     return 1 - sobre / len(f.notas)
 
 
+def polifonia(notas):
+    """(notas soando ao mesmo tempo em média, tempo total soando).
+
+    1,0 é uma linha de uma voz só; 3,0 é naipe de acordes. Substitui a contagem de notas em
+    sobreposição, que estava errada para este fim: linha gravada em legato — que é como se
+    grava canto — tem cada nota começando antes de a anterior soltar, e pontuava quase zero.
+    Na transcrição de Back In Black a faixa chamada "vocal" tirava 0,21 por isso.
+    """
+    if not notas:
+        return 0.0, 0.0
+    ev = []
+    for t0, t1, _ in notas:
+        ev.append((t0, 1))
+        ev.append((t1, -1))
+    ev.sort()
+    vivos, soando, antes = 0, 0.0, None
+    for t, d in ev:
+        if vivos > 0 and antes is not None:
+            soando += t - antes
+        vivos += d
+        antes = t
+    return (sum(b - a for a, b, _ in notas) / soando if soando else 0.0), soando
+
+
+# ---------------------------------------------------------------- achar a linha de canto
+# Nome que anuncia canto de verdade. "lead" sozinho ficou de fora de propósito: "lead guitar"
+# é o nome mais comum de faixa de guitarra solista, e dar bônus de voz a ela fazia o detector
+# preferir a guitarra à voz. Só "lead voc"/"lead vox" conta.
+RX_CANTO = re.compile(r'voc|vox|voice|vocal|\bsing|canto|\bvoz\b|melod|lyric|\blead\s*v', re.I)
+# "voc -bu", "bck vox", "choir": apoio é harmonia, não a melodia principal.
+RX_APOIO = re.compile(r'\b(bu|bv|bg|back|bck|harm|chorus|choir|coro)\b|backing|-bu', re.I)
+# faixa que se anuncia como instrumento não é a voz, por mais aguda e monofônica que seja
+RX_INSTRUM = re.compile(r'guit|gtr|piano|sax|organ|org[aã]o|string|synth|horn|trumpet|trompete'
+                        r'|flute|flauta|violin|cello|harp|pad|brass|bell|banjo|accord', re.I)
+# programas de voz e de lead sintetizado do General MIDI, mais os sopros que fazem o papel
+PROG_VOZ = frozenset({40, 52, 53, 54, 56, 57, 64, 65, 66, 67, 71, 72, 73,
+                      80, 81, 82, 83, 84, 85, 86, 87})
+COBRE_MIN = .12     # linha de canto soa pelo menos isto da música; abaixo é ornamento
+
+
+def medir_faixa(f, dur):
+    poli, soando = polifonia(f.notas)
+    media = sum(n[2] for n in f.notas) / len(f.notas) if f.notas else 0
+    return {
+        'nome': f.nome, 'prog': f.prog, 'n': len(f.notas), 'media': media,
+        'poli': poli, 'cobre': min(1.0, soando / dur) if dur else 0.0,
+        'bateria': f.chan == 9 or (not f.gm and bool(GM_BATERIA.search(f.nome))),
+        # no acervo Lakh a faixa quase sempre se chama "Track 7", então o nome não basta para
+        # achar o baixo: 32-39 são os programas de baixo, e média abaixo de F2 não é voz
+        'baixo': (bool(RX_BAIXO.search(f.nome)) and not RX_NAO_BAIXO.search(f.nome))
+                 or 32 <= f.prog <= 39 or media < 46,
+    }
+
+
+def nota_lead(m):
+    """0 a ~9: o quanto esta faixa parece a linha de canto principal da música.
+
+    A cobertura é porteira, não bônus: um "choir" de 39 notas em 4% da música é ornamento, e
+    pontuá-lo alto fazia o detector dizer que havia voz onde não há.
+    """
+    if m['bateria'] or m['baixo'] or m['n'] < 25 or m['cobre'] < COBRE_MIN:
+        return 0.0
+    s = 2.2 * max(0.0, min(1.0, 2.0 - m['poli']))                 # uma voz só
+    s += 1.2 * max(0.0, min(1.0, 1 - abs(m['media'] - 66) / 18))  # registro de canto
+    s += 2.4 * min(1.0, m['cobre'] / .5)                          # presente ao longo da música
+    if RX_CANTO.search(m['nome']):
+        s += 0.4 if RX_APOIO.search(m['nome']) else 3.0
+    if m['prog'] in PROG_VOZ:
+        s += 0.6
+    if RX_INSTRUM.search(m['nome']):
+        s -= 0.6
+    return max(0.0, s)
+
+
+TEM_LEAD, TALVEZ_LEAD = 5.0, 3.8
+
+
+def veredito_lead(nota):
+    return 'sim' if nota >= TEM_LEAD else ('talvez' if nota >= TALVEZ_LEAD else 'nao')
+
+
+def achar_lead(faixas, dur):
+    """(medida da melhor candidata, nota). Acima de 6 é linha de canto; abaixo de 4,5 não há."""
+    melhor, nota = None, 0.0
+    for f in faixas:
+        if not f.notas:
+            continue
+        m = medir_faixa(f, dur)
+        v = nota_lead(m)
+        if v > nota:
+            melhor, nota = m, v
+    return melhor, nota
+
+
 def _linha(faixas, atrib, pr, lado, dur):
     """Reduz o canal a uma linha monofônica: prioridade primeiro, depois a nota mais aguda."""
     ev = []
@@ -375,17 +469,12 @@ def aproveitamento(faixas, dur):
         soa, tn = _linha(faixas, atrib, [0] * len(faixas), 'L', dur)
         return .5 * (soa / tn if tn else 0) + .5 * min(1.0, soa / dur)
 
-    def escolhe(i):
-        f = faixas[i]
-        agudo = max(0.0, min(1.0, (sum(n[2] for n in f.notas) / len(f.notas) - 48) / 36))
-        s = 2.2 * _monofonia(f) + 1.1 * agudo + .6 * (sum(occ[i]) / nb if nb else 0)
-        if RX_VOZ.search(f.nome):
-            s += 2
-        if RX_BAIXO.search(f.nome) and not RX_NAO_BAIXO.search(f.nome):
-            s -= 2.5
-        return s
-
-    li = max(cand, key=escolhe)
+    # mesmo critério do preset "melodia inteira" do site, para a medida bater com o que se ouve
+    li = max(cand, key=lambda i: nota_lead(medir_faixa(faixas[i], dur)))
+    # instrumental, ou transcrição só de acompanhamento: a porteira zera todas as faixas, e aí
+    # vale a que mais ocupa o tempo, para não cair na primeira por acaso
+    if not nota_lead(medir_faixa(faixas[li], dur)):
+        li = max(cand, key=lambda i: tam[i])
     resto = sorted([i for i in cand if i != li], key=lambda i: -tam[i])
     atrib = ['O'] * len(faixas)
     pr = [0] * len(faixas)

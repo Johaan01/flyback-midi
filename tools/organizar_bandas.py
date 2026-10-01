@@ -50,7 +50,8 @@ from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from curar_acervo import ler_midi, aproveitamento, remover_vazias   # noqa: E402  (mesmo leitor do acervo)
+from curar_acervo import (ler_midi, aproveitamento, remover_vazias,   # noqa: E402
+                           achar_lead, veredito_lead)       # mesmo leitor e mesma deteccao do site
 
 RAIZ = Path(__file__).resolve().parent.parent
 ORIGEM = RAIZ / 'musicas' / 'rock e metal (unsorted)'
@@ -166,11 +167,22 @@ def titulo_bonito(s):
     return ' '.join(saida)
 
 
+NOME_MAX = 80
+
+
 def seguro(s):
     """Nome que pode virar pasta ou arquivo. A barra de 'AC/DC' vira hífen — a pasta fica
-    'AC-DC', e o nome de verdade continua no campo 'artista' do creditos.json."""
+    'AC-DC', e o nome de verdade continua no campo 'artista' do creditos.json.
+
+    O corte em NOME_MAX não é capricho: o acervo Lakh tem títulos como o do 'Cygnus X-1, Book
+    II' do Rush, com os seis movimentos listados, que passa de 250 caracteres e estoura o
+    limite de caminho do Windows — o arquivo é criado mas nem o Git consegue removê-lo depois.
+    """
     s = re.sub(r'[\\/:*?"<>|]', '-', s).strip(' .')
-    return re.sub(r'\s{2,}', ' ', s) or 'sem nome'
+    s = re.sub(r'\s{2,}', ' ', s)
+    if len(s) > NOME_MAX:
+        s = s[:NOME_MAX].rsplit(' ', 1)[0].strip(' ,-.') or s[:NOME_MAX]
+    return s or 'sem nome'
 
 
 def normalizar_banda(nome):
@@ -399,13 +411,23 @@ def medir(caminho):
     if dur < 12 or notas < 60:   # 12 s ainda pega interlúdio curto de disco, que é faixa de verdade
         return None
     nomeadas = sum(1 for f in faixas if f.nome and not f.gm)
+    cantor, lead = achar_lead(faixas, dur)
     return {'faixas': len(faixas), 'nomeadas': nomeadas, 'notas': notas, 'dur': dur,
-            'score': aproveitamento(faixas, dur + .3)}
+            'score': aproveitamento(faixas, dur + .3),
+            'lead': lead, 'cantor': (cantor or {}).get('nome', '')}
 
 
 def qualidade(m):
-    """Mais faixas separadas vale mais: é o que permite mandar instrumento para cada lado."""
-    return (min(m['faixas'], 12) * .22 + min(m['nomeadas'], 12) * .06
+    """Qual transcrição da mesma música fica.
+
+    A linha de canto pesa quase metade: sem ela a música sai pobre no flyback — toca só
+    acompanhamento, e quem ouve sente que falta alguma coisa. O acervo Lakh costuma ter três
+    ou quatro versões da mesma música, e normalmente só uma traz o vocal, então é justamente
+    aqui que se escolhe certo. Depois vale ter faixas separadas, que é o que permite mandar
+    instrumento para cada lado.
+    """
+    return (m['lead'] * .55
+            + min(m['faixas'], 12) * .22 + min(m['nomeadas'], 12) * .06
             + m['score'] + min(m['notas'], 6000) / 12000)
 
 
@@ -471,12 +493,29 @@ def organizar(args):
         except ValueError:
             pass
 
+    def ja_arrumado(p):
+        """Artista de um arquivo que já está em <destino>/<artista>/<título>.mid.
+
+        Sem isto o artista sairia de `partir(p.name)`, que lê o nome do arquivo — e o nome de
+        um arquivo já arrumado é só o título, sem o artista. Todos caíam em "(sem banda)" e
+        músicas homônimas de bandas diferentes se fundiam na hora de tirar repetidas.
+        """
+        try:
+            rel = p.relative_to(DESTINO)
+        except ValueError:
+            return None
+        return rel.parts[0] if len(rel.parts) == 2 else ''
+
     itens, ilegiveis = [], 0
     for p in arquivos:
         org = origens.get(p.name.casefold()) or {}
+        dono = ja_arrumado(p)
         # o manifesto tem o nome como a fonte escreveu, que é melhor do que o do arquivo:
         # o nome do arquivo já passou por uma normalização que perde maiúscula e pontuação
-        if org.get('artista') and org.get('titulo'):
+        if dono is not None:
+            banda = normalizar_banda(dono) if dono else '(sem banda)'
+            titulo = titulo_bonito(limpar_titulo(p.stem))
+        elif org.get('artista') and org.get('titulo'):
             banda, titulo = normalizar_banda(org['artista']), titulo_bonito(limpar_titulo(org['titulo']))
         else:
             banda, titulo = partir(p.name)
@@ -502,6 +541,12 @@ def organizar(args):
         repetidas += g[1:]
 
     bandas = sorted({i['banda'] for i in ficam})
+    # música sem artista não pode ser muita: todas caem no mesmo balde e, ao tirar repetidas,
+    # duas músicas homônimas de bandas diferentes viram uma só
+    anonimas = sum(1 for i in ficam if i['banda'] == '(sem banda)')
+    if anonimas > max(5, len(ficam) * .02):
+        print(f'\n!! {anonimas} de {len(ficam)} músicas sem artista identificado — confira o nome '
+              f'dos arquivos de entrada ("Artista - Título.mid")', file=sys.stderr)
     print(f'{len(bandas)} bandas: {", ".join(bandas)}')
     print(f'{len(ficam)} músicas distintas, {len(repetidas)} repetidas descartadas\n')
 
@@ -598,6 +643,7 @@ def organizar(args):
             pass
     antigos = {k: v for k, v in creditos.items()}
     creditos = {}
+    tomados, guardados = set(), set()
     for i in ficam:
         nivel = nivel_de[id(i)]
         # A pasta é o artista, não o nível de popularidade: artista é coisa estável, e o nível
@@ -605,11 +651,22 @@ def organizar(args):
         # link dela. A popularidade continua gravada, em 'posicao', e vira filtro no site.
         rel = (seguro(i['titulo']) + '.mid') if args.plano else \
               f'{seguro(i["banda"])}/{seguro(i["titulo"])}.mid'
+        # dois títulos distintos podem virar o mesmo nome de arquivo depois de limpos
+        # ("Verse Chorus Verse (outtake, 1991)" e "Verse Chorus Verse (outtake,"): sem
+        # desempatar, o segundo sobrescreveria o primeiro e a música sumiria
+        if rel.casefold() in tomados:
+            raiz, ext = rel[:-4], rel[-4:]
+            k = 2
+            while f'{raiz} ({k}){ext}'.casefold() in tomados:
+                k += 1
+            rel = f'{raiz} ({k}){ext}'
+        tomados.add(rel.casefold())
         destino = DESTINO / rel
         destino.parent.mkdir(parents=True, exist_ok=True)
         if i['arq'].resolve() != destino.resolve():
             destino.unlink(missing_ok=True)
             shutil.move(str(i['arq']), str(destino))
+        guardados.add(destino.resolve())
         # o que já estava escrito sobre esta música é preservado — inclusive o nome do
         # transcritor, se alguém tiver preenchido à mão — e só a posição é recalculada
         try:
@@ -643,12 +700,23 @@ def organizar(args):
         if (i.get('origem') or {}).get('url'):
             entrada['fonte'] = i['origem']['url']
         entrada.update({k: v for k, v in antes.items() if v})
+        # o que o site usa para o filtro 'só com vocal', e o que responde a pergunta que
+        # ninguém consegue responder ouvindo 718 arquivos um a um
+        entrada['vocal'] = veredito_lead(i['lead'])
+        if i['cantor'] and i['lead'] >= 3.8:
+            entrada['vocal'] += f' · faixa "{i["cantor"]}"'
         if not args.plano:     # sem medição, não há posição nem nível para registrar
             entrada['posicao'] = i['posicao']
             entrada['nivel'] = nivel
             entrada['popularidade'] = ' · '.join(fontes) or 'sem medição'
         creditos[rel] = entrada
+    # Apagar as repetidas é por caminho, e o caminho de uma repetida pode ser exatamente onde a
+    # vencedora acabou de ser gravada: quando a versão nova ganha de uma que já estava no
+    # acervo, ela é movida POR CIMA do arquivo antigo. Apagar aí destruiria a vencedora — foi
+    # assim que 272 músicas sumiram numa rodada, entre elas Back In Black e Highway to Hell.
     for i in repetidas:
+        if i['arq'].resolve() in guardados:
+            continue
         i['arq'].unlink(missing_ok=True)
     # entrada de música que não está mais na pasta não serve para nada
     existentes = {p.relative_to(DESTINO).as_posix() for p in DESTINO.rglob('*.mid')}
@@ -657,6 +725,10 @@ def organizar(args):
     # já aconteceu de passar despercebido — o sistema de arquivos do Windows não diferencia
     # maiúsculas, então renomear "a-ha" para "A-Ha" não mexe no disco e deixa o crédito órfão,
     # que o filtro acima descartava calado. Reclame alto em vez de publicar sem atribuição.
+    # a conta tem de fechar: tudo que foi escolhido tem de estar no disco no fim
+    if len(existentes) != len(ficam):
+        print(f'\n!! escolhi {len(ficam)} músicas mas o acervo tem {len(existentes)} arquivos — '
+              f'{len(ficam) - len(existentes)} se perderam na gravação', file=sys.stderr)
     orfaos = sorted(existentes - set(creditos))
     if orfaos:
         print(f'\n!! {len(orfaos)} arquivo(s) sem crédito — ATRIBUIÇÃO INCOMPLETA:', file=sys.stderr)

@@ -9,5 +9,6 @@ __pycache__/
 _site/
 # gerado a cada publicação por tools/gerar_acervo.py
 musicas/index.json
-# pasta de entrada do baixador de bandas: o conteúdo é movido para musicas/bandas
-musicas/rock e metal (unsorted)/
+# pastas de entrada dos baixadores: o conteúdo é movido para o acervo pelo organizar_bandas
+musicas/*(unsorted)/
+musicas/unsorted/
