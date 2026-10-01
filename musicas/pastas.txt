@@ -1,5 +1,5 @@
 # Ordem das pastas no acervo do site. Pastas que não estiverem aqui vêm depois, em ordem alfabética.
 bandas
-rock e metal
-exemplos
 classicos
+folk russo
+exemplos

@@ -63,22 +63,26 @@ Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `to
 
 ## O que já vem no acervo
 
+1.363 músicas em quatro acervos:
+
 | Pasta | Conteúdo |
 |---|---|
-| `bandas` | 711 transcrições de rock, metal e pop, em três níveis pelo quanto a música é conhecida: `mais ouvidas` (50), `conhecidas` (107) e `para fãs` (554). Obras protegidas — leia `USO-EDUCACIONAL.md` |
-| `rock e metal` | 17 músicas prontas para os dois flybacks: 10 composições próprias (hard rock, thrash, heavy metal com guitarras gêmeas, punk, doom, prog em 7/8, death metal, power ballad, synthwave, chiptune) e 7 arranjos de temas em domínio público (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki) |
-| `exemplos` | Korobeiniki (MIDI formato 0), Ode à Alegria (banda de 7 faixas) e um riff em Guitar Pro |
+| `bandas` | 718 transcrições de rock, metal e pop, **uma pasta por artista** — 110 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
 | `classicos` | 590 peças do [Mutopia Project](https://www.mutopiaproject.org), em domínio público ou Creative Commons, por região de origem do compositor: Alemanha e Áustria (217), Itália (82), França (74), Rússia e Leste Europeu (67), Américas (41), Tradicional e anônimo (31), Ibéria e América Latina (31), Nórdicos e Países Baixos (24) e Ilhas Britânicas (23) |
+| `folk russo` | 45 canções tradicionais e soviéticas — Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika, Kamarinskaya, Kazachok, Podmoskovnye Vechera. Quase todas em domínio público; as de autor conhecido e ainda protegido estão marcadas uma a uma |
+| `exemplos` | 10 arranjos de temas em domínio público feitos para os dois flybacks (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki), mais Ode à Alegria e um riff em Guitar Pro |
 
-No site, o acervo tem filtro por pasta em dois níveis — dá para escolher só os russos, ou só as
-mais ouvidas —, busca por título, compositor, instrumento ou estilo, e um botão para sortear uma
-música. O crédito exigido pelas licenças aparece ao abrir cada peça.
+A navegação no site é em duas peças: **botões** escolhem o acervo e um **seletor** mostra o que
+há dentro dele — o artista, ou o compositor agrupado por região. Chegar no AC/DC são dois
+toques. Há ainda busca por título, artista, compositor, instrumento ou estilo, um botão
+**só as mais ouvidas** que reduz o acervo às 60 músicas mais conhecidas, e um para sortear.
+O crédito exigido pelas licenças aparece ao abrir cada peça.
 
 ### As ferramentas que mantêm o acervo
 
 | Ferramenta | O que faz |
 |---|---|
-| `tools/compor_rock.py` | Gera `musicas/rock e metal` |
+| `tools/compor_rock.py` | Gera os arranjos de `musicas/exemplos` |
 | `tools/baixar_mutopia.py` | Baixa os clássicos do Mutopia; rodado de novo, traz só as peças novas |
 | `tools/curar_acervo.py` | Enxuga e reorganiza `classicos` por região e compositor. O download bruto traz 4.867 arquivos, a maior parte método, estudo e parte de instrumento solta; a ferramenta mede quanto de cada peça sobrevive à redução a dois canais monofônicos e deixa o repertório que se reconhece |
 | `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi e maidenmidi para a pasta de entrada |
@@ -90,16 +94,28 @@ O caminho completo para acrescentar músicas de banda é:
     python tools/organizar_bandas.py --aplicar
     python tools/gerar_acervo.py
 
-As duas primeiras não mexem em nada sem `--baixar` / `--aplicar`: sem a opção, só mostram o que
-fariam. `musicas/pastas.txt` define a ordem das pastas.
+Para largar arquivos à mão em vez de baixar, aponte a origem:
+
+    python tools/organizar_bandas.py --origem "musicas/unsorted" --aplicar
+
+E o acervo de folk russo, que é plano e sem artista:
+
+    python tools/baixar_bandas.py --fonte folkrusso --destino "musicas/folk russo (unsorted)" --baixar
+    python tools/organizar_bandas.py --origem "musicas/folk russo (unsorted)" \
+        --destino "musicas/folk russo" --plano --artista "Tradicional russo" --aplicar
+
+Nenhuma delas mexe em nada sem `--baixar` / `--aplicar`: sem a opção, só mostram o que fariam.
+`musicas/pastas.txt` define a ordem das pastas.
 
 ### Direito autoral
 
-`classicos` e `rock e metal` são domínio público, licença livre ou composição do próprio projeto:
-use à vontade, mantida a atribuição.
+`classicos`, `exemplos` e quase todo o `folk russo` são domínio público, licença livre ou arranjo
+do próprio projeto: use à vontade, mantida a atribuição.
 
 `bandas` é diferente — são transcrições de obras ainda protegidas, mantidas aqui com atribuição ao
 artista e ao transcritor, para estudo e demonstração do princípio físico, sem fins lucrativos.
+Algumas poucas do `folk russo` também são (Katyusha, de Blanter, é de 1938), e estão marcadas
+individualmente no `creditos.json` da pasta.
 **Leia [`USO-EDUCACIONAL.md`](USO-EDUCACIONAL.md)** antes de reaproveitar essa pasta: ele explica a
 finalidade, o que a atribuição cobre e o que ela não cobre, e como pedir a remoção de uma obra.
 

@@ -20,11 +20,11 @@ Arquivos de apoio, fora das páginas:
 | `manifest.webmanifest`, `icones/` | Instalação na tela inicial do celular |
 | `musicas/` | Acervo. Tudo que estiver aqui aparece no site |
 | `tools/gerar_acervo.py` | Gera `musicas/index.json`, a lista do acervo, juntando `creditos.json` e `pastas.txt`. Só biblioteca padrão |
-| `tools/compor_rock.py` | Compõe `musicas/rock e metal` numa notação de texto própria, com configuração pronta para cada música |
+| `tools/compor_rock.py` | Compõe os arranjos de `musicas/exemplos` numa notação de texto própria, com configuração pronta para cada um |
 | `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um |
 | `tools/curar_acervo.py` | Enxuga `classicos` e o rearruma em `<região>/<compositor>/`. Lê cada MIDI e mede o aproveitamento em dois canais monofônicos |
-| `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi e maidenmidi para a pasta de entrada do acervo |
-| `tools/organizar_bandas.py` | Identifica, tira repetidas e ordena `musicas/bandas` por quanto a música é conhecida (Wikipedia e ListenBrainz) |
+| `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi e do acervo de folk russo do FreeSheetMusic |
+| `tools/organizar_bandas.py` | Identifica, tira repetidas e arruma `musicas/bandas` por artista, medindo o quanto cada música é conhecida (Wikipedia e ListenBrainz). Com `--plano` serve a acervo sem artista, como o folk russo |
 | `tools/popularidade.json` | O que as duas APIs responderam, guardado. Faz as rodadas seguintes não precisarem de internet e darem o mesmo resultado |
 | `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
@@ -73,7 +73,7 @@ Presets de roteamento implementados:
 3. À esquerda vai a faixa de maior cobertura como base, com prioridade 2.
 4. As demais entram à esquerda com prioridade 1, e só se trouxerem brecha de verdade: pelo menos 6% da duração da música em tempo que a base não ocupa, e pelo menos 30% do material próprio.
 
-Quem decide no choque é a prioridade, não a altura: `buildSegs()` monta a chave de cada nota como `(altura << 4) | prioridade` e, no instante em que mais de uma nota está soando, escolhe primeiro pela prioridade e só depois pela altura. Assim a base nunca perde uma nota para quem está preenchendo as brechas — medido sobre os MIDIs de `rock e metal` e `exemplos`, a linha da base é idêntica tocando sozinha ou dentro do canal.
+Quem decide no choque é a prioridade, não a altura: `buildSegs()` monta a chave de cada nota como `(altura << 4) | prioridade` e, no instante em que mais de uma nota está soando, escolhe primeiro pela prioridade e só depois pela altura. Assim a base nunca perde uma nota para quem está preenchendo as brechas — medido sobre os MIDIs de `exemplos`, `bandas` e uma amostra de `classicos`, a linha da base é idêntica tocando sozinha ou dentro do canal.
 
 Com todas as faixas em prioridade 0 — que é como os outros presets ficam — `buildSegs()` se comporta exatamente como antes. A prioridade vai junto na configuração salva, como campo opcional `prioridade` de cada faixa.
 
@@ -89,28 +89,48 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
-O acervo tem 1.321 músicas em quatro pastas de primeiro nível, e o índice ficou em 632 KB:
+O acervo tem 1.363 músicas em quatro pastas de primeiro nível:
 
 | Pasta | Quantas | O que é |
 |---|---|---|
-| `bandas` | 711 | transcrições de fã, em três níveis: `mais ouvidas` (50), `conhecidas` (107), `para fãs` (554) |
+| `bandas` | 718 | transcrições de fã, **uma pasta por artista** (110 deles) |
 | `classicos` | 590 | Mutopia, em `<região>/<compositor>/` |
-| `rock e metal` | 17 | composições e arranjos do próprio projeto |
-| `exemplos` | 3 | casos de teste |
+| `folk russo` | 45 | tradicional e soviético, pasta plana |
+| `exemplos` | 10 | arranjos do projeto para dois flybacks, mais casos de teste |
 
 Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o filtro inútil: a lista era um balaio só. `tools/curar_acervo.py` resolveu as duas coisas ao mesmo tempo.
 
+**Por que artista, e não nível de popularidade.** As bandas já estiveram em `mais ouvidas` / `conhecidas` / `para fãs`, e foi pior: 554 caíam no último nível, que virava uma parede, e não havia como pedir "me mostra o AC/DC". Pior ainda, o nível de uma música **muda quando o número de escutas muda** — ela trocaria de pasta sozinha, e o link dela (`?m=caminho`) quebraria. Artista é coisa estável. A popularidade continua medida e gravada em `posicao`, e virou filtro na interface.
+
 **A descoberta que guia a curadoria:** o sufixo " - NN" do título do Mutopia **não é número de movimento**. Em `Air (BWV 1068)` os cinco arquivos têm a mesma duração e são a partitura inteira (4 faixas, 516 notas) mais cada parte de instrumento sozinha; já em `French Suite no. 3` os 14 arquivos são 7 movimentos, cada um gravado duas vezes. O que separa um caso do outro é a **duração**. Por isso a ferramenta agrupa pela chave `mutopia` do `creditos.json`, separa movimentos pela duração (com folga de 1,5 s ou 2%), e de cada movimento fica com o arquivo de mais faixas — a partitura inteira, a única que serve para repartir entre dois canais. Só isso tirou 1.722 arquivos.
 
-A busca cobre título, pasta, autor, artista, instrumentos e estilo. O filtro de pasta mostra **dois níveis**, com as subpastas recuadas, e é o segundo nível que o torna útil — "classicos" sozinho continuaria sendo o balaio de antes. Um primeiro nível com mais de `SUB_MAX` (25) subpastas não se desdobra, para o seletor não virar uma lista imensa. Continuam valendo: filtro lembrado no aparelho, no máximo `LIMITE` (200) botões por vez, "Sortear uma" e "Guardar para usar sem internet" dentro do filtro atual.
+### Navegação do acervo
 
-`creditos.json` numa pasta dá os campos de `CAMPOS` em `gerar_acervo.py` — `autor`, `artista`, `instrumentos`, `estilo`, `licenca`, `credito`, `transcricao`, `popularidade` e `fonte` — dos arquivos dela; o gerador copia para o índice e o site mostra o crédito abaixo de "Faixas encontradas". É o que cumpre a atribuição pedida pelas licenças CC BY e CC BY-SA do Mutopia, e é também onde a pasta `bandas` declara quem compôs e quem transcreveu.
+Um seletor só, com todas as pastas numa lista, não dá conta de 1.363 músicas. São **duas peças**:
+
+- `montarAcervos()` desenha um **botão por pasta de primeiro nível**, mais "tudo". Escolher um deles define `acervo`.
+- `montarFiltro()` desenha o **seletor do que há dentro** do acervo escolhido. O grupo é sempre a **pasta mais funda**, e a de cima, quando existe, vira cabeçalho de `<optgroup>`: em `bandas` saem 107 artistas numa lista rasa, em `classicos` saem 139 compositores agrupados pelas 9 regiões. Pasta plana (`folk russo`, `exemplos`) não tem o que desdobrar, e o seletor se esconde.
+
+`prefixo()` devolve o que está de fato selecionado — o grupo quando há um, senão o acervo inteiro — e é o que `filtrar()` e `renderLib()` usam. O botão **só as mais ouvidas** filtra por `posicao <= TOPO` (60) e só aparece se o acervo carregado tiver esse campo.
+
+A busca cobre título, pasta, autor, artista, instrumentos e estilo. Continuam valendo: acervo lembrado no aparelho, no máximo `LIMITE` (200) botões por vez, "Sortear uma" e "Guardar para usar sem internet" dentro do filtro atual.
+
+`creditos.json` numa pasta dá os campos de `CAMPOS` em `gerar_acervo.py` — `autor`, `artista`, `instrumentos`, `estilo`, `licenca`, `credito`, `transcricao`, `popularidade`, `posicao` e `fonte` — dos arquivos dela; o gerador copia para o índice e o site mostra o crédito abaixo de "Faixas encontradas". É o que cumpre a atribuição pedida pelas licenças CC BY e CC BY-SA do Mutopia, e é também onde a pasta `bandas` declara quem compôs e quem transcreveu.
 
 ### Bandas, e a mudança de política
 
 **A regra anterior era não aceitar transcrição de banda no repositório.** O dono do projeto reviu isso e decidiu mantê-las, com atribuição ao artista e ao transcritor e uma declaração de finalidade educacional na raiz. `USO-EDUCACIONAL.md` é esse documento: explica a finalidade, diz com todas as letras que **atribuir não substitui licença** (a Lei 9.610/98 não tem cláusula geral de *fair use*; o art. 46 cobre trecho curto para uso privado de quem copia), e abre um canal de remoção sem burocracia.
 
 Quem for mexer aqui: essa é uma decisão do dono do projeto, registrada, não um descuido. Não reverta sozinho — e, ao acrescentar música nova, preencha a atribuição.
+
+### Folk russo
+
+`musicas/folk russo` veio do acervo de folk do FreeSheetMusic, que o `baixar_bandas.py` varre como fonte `folkrusso`. Duas coisas que ele resolve e que não são óbvias:
+
+- **A mesma canção aparece transliterada de vários jeitos.** "two guitars", "dve gitari" e "dwje gitary" são a mesma peça, assim como "moscow evenings", "pod moskovniye vechera", "padmoskownye vjetsjera" e "midnight in moscow". A tabela `FOLK_RUSSO` mapeia nome de arquivo para o título canônico, e sem ela o acervo ficaria com a mesma música três vezes, sob nomes que ninguém procura. Das 71 entradas da página saem 45 peças.
+- **Nem tudo é tradicional.** A tabela `AUTORIA_CONHECIDA` em `organizar_bandas.py` dá autoria e situação de direito autoral peça a peça: Kalinka é de Ivan Larionov (1860) e está em domínio público, mas Katyusha é de Matvey Blanter (1938) e **continua protegida**, como Podmoskovnye Vechera (1955) e Pust Vsegda Budet Solntse (1962). Chamar tudo de "tradicional, domínio público" seria cômodo e errado.
+
+A pasta é plana e roda com `--plano`, que também desliga a medição de popularidade: ordenar Kalinka contra Troika por visita de artigo não diz nada e gastaria centenas de chamadas para produzir um número sem sentido.
 
 `tools/organizar_bandas.py` ordena a pasta pelo quanto a música é conhecida, que é o que importa para demonstrar o aparelho — arco elétrico tocando algo que ninguém reconhece não demonstra nada. Duas fontes abertas:
 
@@ -189,7 +209,7 @@ Barra de reprodução fixa no rodapé, alvos de toque de 40 px ou mais (`pointer
 - Não usar `localStorage` sem `try/catch` e sem funcionar quando vazio (`store` em `index.html`).
 - Qualquer biblioteca externa só via `<script>` de CDN, com versão fixada.
 - Arquivo novo que o site precise servir tem de entrar no passo "Montar o site" do workflow e, se for do núcleo, em `BASE` no `sw.js`. Mudou `sw.js` de forma incompatível: troque o nome de `SITE`.
-- Testar com MIDI real antes de considerar pronto: um arquivo de música de videogame (3 a 4 faixas) e um arranjo de banda (6 a 8 faixas) cobrem os dois extremos. `musicas/exemplos` tem os dois casos e um Guitar Pro; `musicas/rock e metal` cobre compassos 7/8, 6/8 e 3/8, andamento acelerando e ritardando.
+- Testar com MIDI real antes de considerar pronto: um arquivo de música de videogame (3 a 4 faixas) e um arranjo de banda (6 a 8 faixas) cobrem os dois extremos. `musicas/exemplos` tem os dois casos, um Guitar Pro e os arranjos do projeto, que cobrem 6/8 e 3/8, andamento acelerando e ritardando; `musicas/bandas` tem arranjo de banda de verdade, com 8 a 16 faixas.
 - Ferramenta que mexe no acervo **não altera nada sem `--aplicar`** (ou `--baixar`, no download). Sem a opção, só imprime o que faria. Mantenha assim.
 - **Pasta no Windows vem com o atributo ReadOnly**, e aí `Path.rmdir()` falha com "Acesso negado" mesmo estando vazia. `remover_vazias()` em `curar_acervo.py` tira o atributo e tenta de novo, e engole a falha se ainda assim não for. Use essa função em vez de `rmdir()` direto. Pelo mesmo motivo, **grave o `creditos.json` antes da faxina de pastas**: é ele que guarda a atribuição exigida pelas licenças, e já se perdeu uma vez porque uma pasta vazia resistiu a sumir e abortou o resto.
 - Rodar script com `2>/dev/null | tail` esconde o traceback e devolve o código de saída do `tail`, que é sempre 0. Foi assim que a falha acima passou despercebida.
