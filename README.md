@@ -78,6 +78,21 @@ toques. Há ainda busca por título, artista, compositor, instrumento ou estilo,
 **só as mais ouvidas** que reduz o acervo às 60 músicas mais conhecidas, e um para sortear.
 O crédito exigido pelas licenças aparece ao abrir cada peça.
 
+### A linha de canto
+
+Transcrição de rock sem vocal soa pobre no flyback: toca só o acompanhamento, e falta o que a
+pessoa reconhece. Como não dá para ouvir centenas de arquivos um a um, o acervo mede isso
+sozinho — `tools/curar_acervo.py` acha a faixa que se comporta como linha de canto (uma voz só,
+registro de voz, presente ao longo da música, nome e instrumento compatíveis) e grava o veredito
+no `creditos.json`.
+
+No site, cada linha da lista ganha o marcador **· vocal**, e o botão **só com vocal** reduz o
+acervo ao que tem canto. Ao abrir a música, o crédito diz qual faixa é a voz.
+
+Isso também decide qual transcrição fica: o acervo Lakh costuma ter três ou quatro versões da
+mesma música e normalmente só uma traz o vocal. Em *Highway to Hell*, por exemplo, a versão de
+13 faixas parece mais completa mas não tem canto nenhum, e perde para a de 5 faixas que tem.
+
 ### As ferramentas que mantêm o acervo
 
 | Ferramenta | O que faz |
@@ -85,8 +100,8 @@ O crédito exigido pelas licenças aparece ao abrir cada peça.
 | `tools/compor_rock.py` | Gera os arranjos de `musicas/exemplos` |
 | `tools/baixar_mutopia.py` | Baixa os clássicos do Mutopia; rodado de novo, traz só as peças novas |
 | `tools/curar_acervo.py` | Enxuga e reorganiza `classicos` por região e compositor. O download bruto traz 4.867 arquivos, a maior parte método, estudo e parte de instrumento solta; a ferramenta mede quanto de cada peça sobrevive à redução a dois canais monofônicos e deixa o repertório que se reconhece |
-| `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi e maidenmidi para a pasta de entrada |
-| `tools/organizar_bandas.py` | Identifica, tira repetidas e ordena `bandas` pelo quanto a música é conhecida, com Wikipedia e ListenBrainz |
+| `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi, do acervo Lakh (via rawl.rocks) e do folk russo do FreeSheetMusic |
+| `tools/organizar_bandas.py` | Identifica, tira repetidas, mede a linha de canto e ordena `bandas` pelo quanto a música é conhecida, com Wikipedia e ListenBrainz |
 
 O caminho completo para acrescentar músicas de banda é:
 
@@ -97,6 +112,15 @@ O caminho completo para acrescentar músicas de banda é:
 Para largar arquivos à mão em vez de baixar, aponte a origem:
 
     python tools/organizar_bandas.py --origem "musicas/unsorted" --aplicar
+
+Para buscar versões melhores — com vocal — de artistas específicos no acervo Lakh:
+
+    python tools/baixar_bandas.py --fonte lakh --destino "musicas/lakh (unsorted)" \
+        --busca journey "bon jovi" eagles --baixar
+    python tools/organizar_bandas.py --origem "musicas/lakh (unsorted)" --aplicar
+
+Todas as versões de cada música são baixadas com sufixo `(vN)`; o organizador junta as versões,
+pontua a linha de canto e guarda só a melhor.
 
 E o acervo de folk russo, que é plano e sem artista:
 

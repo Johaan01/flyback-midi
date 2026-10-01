@@ -23,7 +23,7 @@ Arquivos de apoio, fora das páginas:
 | `tools/compor_rock.py` | Compõe os arranjos de `musicas/exemplos` numa notação de texto própria, com configuração pronta para cada um |
 | `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um |
 | `tools/curar_acervo.py` | Enxuga `classicos` e o rearruma em `<região>/<compositor>/`. Lê cada MIDI e mede o aproveitamento em dois canais monofônicos |
-| `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi e do acervo de folk russo do FreeSheetMusic |
+| `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi, do acervo Lakh via rawl.rocks e do folk russo do FreeSheetMusic |
 | `tools/organizar_bandas.py` | Identifica, tira repetidas e arruma `musicas/bandas` por artista, medindo o quanto cada música é conhecida (Wikipedia e ListenBrainz). Com `--plano` serve a acervo sem artista, como o folk russo |
 | `tools/popularidade.json` | O que as duas APIs responderam, guardado. Faz as rodadas seguintes não precisarem de internet e darem o mesmo resultado |
 | `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
@@ -76,6 +76,24 @@ Presets de roteamento implementados:
 Quem decide no choque é a prioridade, não a altura: `buildSegs()` monta a chave de cada nota como `(altura << 4) | prioridade` e, no instante em que mais de uma nota está soando, escolhe primeiro pela prioridade e só depois pela altura. Assim a base nunca perde uma nota para quem está preenchendo as brechas — medido sobre os MIDIs de `exemplos`, `bandas` e uma amostra de `classicos`, a linha da base é idêntica tocando sozinha ou dentro do canal.
 
 Com todas as faixas em prioridade 0 — que é como os outros presets ficam — `buildSegs()` se comporta exatamente como antes. A prioridade vai junto na configuração salva, como campo opcional `prioridade` de cada faixa.
+
+### Achar a linha de canto
+
+Este é o ponto que mais muda como a música soa no arco, e levou duas correções.
+
+**Polifonia, não monofonia.** `scoreVoz()` media "uma voz só" contando quantas notas entravam enquanto outra ainda soava. Está errado para este fim: linha gravada em *legato* — que é como se grava canto — tem cada nota começando antes de a anterior soltar, e pontuava quase zero. Na transcrição de *Back In Black* a faixa literalmente chamada `vocal` tirava **0,21**, e o preset mandava a guitarra solo (465 notas, 38% do tempo) para o canal principal no lugar da voz (1.184 notas). A medida certa é `polifonia()`: quantas notas soam ao mesmo tempo, em média, enquanto a faixa soa. 1,0 é uma linha; 3,0 é naipe de acordes.
+
+**Cobertura é porteira, não bônus.** Com a cobertura valendo pouco, um `choir` de 39 notas em 4% da música ganhava do resto e o detector dizia que havia voz onde não há. Agora abaixo de `COBRE_MIN` (12% do tempo) a faixa nem concorre.
+
+Outras armadilhas que a pontuação trata, todas encontradas em arquivo real:
+
+- **`lead` sozinho não é voz.** "lead guitar" é o nome mais comum de faixa de guitarra solista; dar-lhe bônus de voz fazia o detector preferir a guitarra ao vocal. `RX_CANTO` exige `lead voc`/`lead vox`, e `RX_INSTRUM` desconta quem se anuncia como instrumento.
+- **Vocal de apoio não é a melodia.** `voc -bu`, `bck vox`, `choir` são harmonia; `RX_APOIO` reduz o bônus de 3,0 para 0,4.
+- **Baixo sem nome.** No acervo Lakh a faixa quase sempre se chama "Track 7", então o nome não acha o baixo — entram os programas 32-39 do General MIDI e o registro (média abaixo de F2 não é voz humana).
+
+`achar_lead()` devolve `(faixa, nota)` e `veredito_lead()` reduz a `sim` / `talvez` / `nao` (limiares 5,0 e 3,8). Os extremos são confiáveis — *Stairway to Heaven* 8,0, *Highway to Hell* 2,3 —, e o meio é honestamente incerto, por isso são três respostas e não duas. A mesma pontuação vive em `tools/curar_acervo.py` e em `index.html`: se mexer numa, mexa na outra.
+
+**Para que serve na prática.** O acervo Lakh costuma ter três ou quatro transcrições da mesma música e normalmente só uma traz o vocal, então `qualidade()` em `organizar_bandas.py` dá à linha de canto quase metade do peso ao escolher qual versão fica. E o veredito vai para o `creditos.json` no campo `vocal`, de onde o site tira o marcador "· vocal" em cada linha e o botão **só com vocal** — que é a única forma de responder "quais das minhas 718 têm canto?" sem ouvir uma a uma.
 
 Métricas mostradas ao usuário: **toca X% das notas** (fração das notas atribuídas que realmente soa) e **ativo X% do tempo**. Servem para julgar rapidamente se uma música cabe em dois canais.
 
