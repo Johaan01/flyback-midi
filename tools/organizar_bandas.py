@@ -666,7 +666,9 @@ def organizar(args):
     arq_cred.write_text(
         json.dumps(dict(sorted(creditos.items())), ensure_ascii=False, indent=1) + '\n',
         encoding='utf-8')
+    # o destino também: reorganizar deixa para trás a pasta do esquema anterior, vazia
     remover_vazias(origem)
+    remover_vazias(DESTINO)
     if origem.is_dir() and not any(origem.iterdir()):
         try:
             origem.rmdir()
