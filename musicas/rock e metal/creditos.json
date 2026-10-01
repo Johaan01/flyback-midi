@@ -78,5 +78,10 @@
   "autor": "arranjo metal de L. van Beethoven, Sinfonia nº 5",
   "licenca": "deste projeto",
   "fonte": "tools/compor_rock.py"
+ },
+ "Korobeiniki (metal).mid": {
+  "autor": "arranjo metal de Korobeiniki, canção popular russa de 1861 (tema do Tetris)",
+  "licenca": "deste projeto",
+  "fonte": "tools/compor_rock.py"
  }
 }

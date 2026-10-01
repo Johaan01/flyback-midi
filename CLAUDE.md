@@ -4,12 +4,13 @@ Contexto do projeto para quem for continuar o desenvolvimento.
 
 ## O que é
 
-Duas páginas web que geram áudio para alimentar **alto-falantes de plasma** — arcos elétricos de transformadores flyback que reproduzem som. O hardware é um projeto de eletrônica de potência separado; estas páginas são apenas a fonte de áudio.
+Três páginas web que geram áudio para alimentar **alto-falantes de plasma** — arcos elétricos de transformadores flyback que reproduzem som. O hardware é um projeto de eletrônica de potência separado; estas páginas são apenas a fonte de áudio.
 
 - `index.html` — abre MIDI ou Guitar Pro (do acervo ou do aparelho), roteia cada faixa de instrumento para o canal esquerdo ou direito, e sintetiza onda quadrada.
 - `stems.html` — carrega dois arquivos de áudio já separados (stems) e toca um em cada canal.
+- `tom.html` — gerador de tom contínuo, um por canal: frequência livre no slider, forma de onda à escolha e varredura.
 
-Ambas são **arquivo único, sem build, sem dependência de pacote**. Fontes do Google Fonts via CDN; o leitor de Guitar Pro vem do jsDelivr, carregado só quando um arquivo que não é MIDI é aberto. Devem funcionar abertas direto do disco e servidas pelo GitHub Pages.
+As três são **arquivo único, sem build, sem dependência de pacote**. Fontes do Google Fonts via CDN; o leitor de Guitar Pro vem do jsDelivr, carregado só quando um arquivo que não é MIDI é aberto. Devem funcionar abertas direto do disco e servidas pelo GitHub Pages.
 
 Arquivos de apoio, fora das páginas:
 
@@ -21,6 +22,11 @@ Arquivos de apoio, fora das páginas:
 | `tools/gerar_acervo.py` | Gera `musicas/index.json`, a lista do acervo, juntando `creditos.json` e `pastas.txt`. Só biblioteca padrão |
 | `tools/compor_rock.py` | Compõe `musicas/rock e metal` numa notação de texto própria, com configuração pronta para cada música |
 | `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um |
+| `tools/curar_acervo.py` | Enxuga `classicos` e o rearruma em `<região>/<compositor>/`. Lê cada MIDI e mede o aproveitamento em dois canais monofônicos |
+| `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi e maidenmidi para a pasta de entrada do acervo |
+| `tools/organizar_bandas.py` | Identifica, tira repetidas e ordena `musicas/bandas` por quanto a música é conhecida (Wikipedia e ListenBrainz) |
+| `tools/popularidade.json` | O que as duas APIs responderam, guardado. Faz as rodadas seguintes não precisarem de internet e darem o mesmo resultado |
+| `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
 | `tools/publicar.ps1`, `tools/publicar.cmd` | Cria o repositório, envia e liga o GitHub Pages via GitHub CLI |
 | `.github/workflows/pages.yml` | A cada push na `main`: gera o índice do acervo e publica |
@@ -57,10 +63,19 @@ Presets de roteamento implementados:
 | Baixo e melodia | faixa de nota média mais grave à esquerda, mais aguda à direita |
 | Guitarras somadas | faixas com nome de guitarra somadas à direita, baixo à esquerda |
 | Principal e acompanhamento | faixa com mais notas sozinha à direita, resto somado à esquerda |
-| Faixas que não se atropelam | força bruta sobre 3^n atribuições, minimizando sobreposição temporal |
+| Melodia inteira, resto sem atropelo | a melodia sai inteira à direita; à esquerda, a base e o que couber nas brechas dela |
 | Grave e agudo | ordena por nota média e divide ao meio |
 
-O preset de faixas complementares fatia o tempo em janelas de 100 ms, monta ocupação por faixa, calcula sobreposição entre pares, e testa todas as combinações de `{desligada, esquerda, direita}`. Limitado a 10 faixas (as com mais notas) para manter o tempo de execução baixo.
+**O preset "Melodia inteira, resto sem atropelo".** Era força bruta sobre 3^n atribuições minimizando sobreposição, o que tratava todas as faixas por igual e com frequência partia a melodia ao meio. Agora é dirigido:
+
+1. `scoreVoz()` escolhe a faixa principal, de preferência a voz. Pontua monofonia (`monofonia()`, fração de notas que entram sem nada mais soando na faixa — linha de canto fica perto de 1, naipe de acordes perto de 0), altura média, cobertura do tempo, mais um bônus para nome de voz ou melodia (`RX_VOZ`, que pega tanto nome de faixa quanto programa General MIDI: Choir Aahs, Voice Oohs, Lead 1…) e uma penalidade para baixo.
+2. Essa faixa vai **sozinha** para a direita, com prioridade 3, e sai inteira.
+3. À esquerda vai a faixa de maior cobertura como base, com prioridade 2.
+4. As demais entram à esquerda com prioridade 1, e só se trouxerem brecha de verdade: pelo menos 6% da duração da música em tempo que a base não ocupa, e pelo menos 30% do material próprio.
+
+Quem decide no choque é a prioridade, não a altura: `buildSegs()` monta a chave de cada nota como `(altura << 4) | prioridade` e, no instante em que mais de uma nota está soando, escolhe primeiro pela prioridade e só depois pela altura. Assim a base nunca perde uma nota para quem está preenchendo as brechas — medido sobre os MIDIs de `rock e metal` e `exemplos`, a linha da base é idêntica tocando sozinha ou dentro do canal.
+
+Com todas as faixas em prioridade 0 — que é como os outros presets ficam — `buildSegs()` se comporta exatamente como antes. A prioridade vai junto na configuração salva, como campo opcional `prioridade` de cada faixa.
 
 Métricas mostradas ao usuário: **toca X% das notas** (fração das notas atribuídas que realmente soa) e **ativo X% do tempo**. Servem para julgar rapidamente se uma música cabe em dois canais.
 
@@ -74,11 +89,39 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
-O acervo tem perto de 4.900 músicas, então a interface foi feita para isso: filtro pela pasta de primeiro nível (lembrado no aparelho), busca por palavras em título, pasta, autor e instrumentos (sem acento, todas as palavras precisam aparecer), no máximo `LIMITE` (200) botões desenhados de cada vez, "Sortear uma" dentro do filtro atual, e "Guardar para usar sem internet" aplicado ao filtro atual, com quatro downloads em paralelo. O índice tem cerca de 1,9 MB e 100 KB comprimido.
+O acervo tem 1.321 músicas em quatro pastas de primeiro nível, e o índice ficou em 632 KB:
 
-`creditos.json` numa pasta dá `autor`, `instrumentos`, `licenca`, `credito` e `fonte` dos arquivos dela; o gerador copia esses campos para o índice e o site mostra o crédito abaixo de "Faixas encontradas". É o que cumpre a atribuição pedida pelas licenças CC BY e CC BY-SA do Mutopia.
+| Pasta | Quantas | O que é |
+|---|---|---|
+| `bandas` | 711 | transcrições de fã, em três níveis: `mais ouvidas` (50), `conhecidas` (107), `para fãs` (554) |
+| `classicos` | 590 | Mutopia, em `<região>/<compositor>/` |
+| `rock e metal` | 17 | composições e arranjos do próprio projeto |
+| `exemplos` | 3 | casos de teste |
 
-**Direito autoral.** O repositório é público. Só entra no acervo o que for domínio público, licença livre ou composição do próprio projeto. MIDIs de músicas de bandas, mesmo transcritos por fãs, ficam de fora; quem quiser tocá-los abre o arquivo do aparelho.
+Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o filtro inútil: a lista era um balaio só. `tools/curar_acervo.py` resolveu as duas coisas ao mesmo tempo.
+
+**A descoberta que guia a curadoria:** o sufixo " - NN" do título do Mutopia **não é número de movimento**. Em `Air (BWV 1068)` os cinco arquivos têm a mesma duração e são a partitura inteira (4 faixas, 516 notas) mais cada parte de instrumento sozinha; já em `French Suite no. 3` os 14 arquivos são 7 movimentos, cada um gravado duas vezes. O que separa um caso do outro é a **duração**. Por isso a ferramenta agrupa pela chave `mutopia` do `creditos.json`, separa movimentos pela duração (com folga de 1,5 s ou 2%), e de cada movimento fica com o arquivo de mais faixas — a partitura inteira, a única que serve para repartir entre dois canais. Só isso tirou 1.722 arquivos.
+
+A busca cobre título, pasta, autor, artista, instrumentos e estilo. O filtro de pasta mostra **dois níveis**, com as subpastas recuadas, e é o segundo nível que o torna útil — "classicos" sozinho continuaria sendo o balaio de antes. Um primeiro nível com mais de `SUB_MAX` (25) subpastas não se desdobra, para o seletor não virar uma lista imensa. Continuam valendo: filtro lembrado no aparelho, no máximo `LIMITE` (200) botões por vez, "Sortear uma" e "Guardar para usar sem internet" dentro do filtro atual.
+
+`creditos.json` numa pasta dá os campos de `CAMPOS` em `gerar_acervo.py` — `autor`, `artista`, `instrumentos`, `estilo`, `licenca`, `credito`, `transcricao`, `popularidade` e `fonte` — dos arquivos dela; o gerador copia para o índice e o site mostra o crédito abaixo de "Faixas encontradas". É o que cumpre a atribuição pedida pelas licenças CC BY e CC BY-SA do Mutopia, e é também onde a pasta `bandas` declara quem compôs e quem transcreveu.
+
+### Bandas, e a mudança de política
+
+**A regra anterior era não aceitar transcrição de banda no repositório.** O dono do projeto reviu isso e decidiu mantê-las, com atribuição ao artista e ao transcritor e uma declaração de finalidade educacional na raiz. `USO-EDUCACIONAL.md` é esse documento: explica a finalidade, diz com todas as letras que **atribuir não substitui licença** (a Lei 9.610/98 não tem cláusula geral de *fair use*; o art. 46 cobre trecho curto para uso privado de quem copia), e abre um canal de remoção sem burocracia.
+
+Quem for mexer aqui: essa é uma decisão do dono do projeto, registrada, não um descuido. Não reverta sozinho — e, ao acrescentar música nova, preencha a atribuição.
+
+`tools/organizar_bandas.py` ordena a pasta pelo quanto a música é conhecida, que é o que importa para demonstrar o aparelho — arco elétrico tocando algo que ninguém reconhece não demonstra nada. Duas fontes abertas:
+
+- **Wikipedia**, visitas ao artigo da música nos últimos doze meses. É a fonte principal porque não pede chave e cobre todas as bandas por igual. O casamento do artigo é **estrito** de propósito: aceitar o primeiro resultado da busca dava número errado — "Revolution (Mother Earth)" pegava o artigo *Revolution*, com 1,4 milhão de visitas, e quatro músicas do Scorpions pegavam todas a mesma página. Só serve o artigo cujo nome é o da música, descontado o desambiguador "(… song)", e música que se chama como a banda ("Black Sabbath") é recusada, porque o artigo achado seria o da banda.
+- **ListenBrainz**, total de escutas por gravação (dados CC0). Mede audição de verdade e por isso pesa mais (`PESO`), mas desde 2025 o endpoint de popularidade exige token — sem ele, a ordem sai só pela Wikipedia, o que já funciona. **Não contorne isso**: o serviço pede token por causa de scraping, e o jeito certo é pegar um de graça em listenbrainz.org/settings.
+
+As duas escalas são incomparáveis (milhões de escutas contra dezenas de milhares de visitas), então cada uma vira **percentil dentro da própria fonte** antes de se combinarem.
+
+A ferramenta classifica sempre o acervo inteiro — os arquivos novos da pasta de entrada **mais** os que já estão arrumados —, porque ordenar só os novos entre si jogava uma faixa qualquer para o topo só por ser a única da rodada. E ela **mescla** o `creditos.json` existente em vez de sobrescrever, preservando campo preenchido à mão (nome do transcritor, por exemplo).
+
+**De onde veio cada arquivo.** `baixar_bandas.py` grava `_origem.json` na pasta de entrada, com o endereço de origem de cada arquivo; `organizar_bandas.py` lê esse manifesto e copia o endereço para o campo `fonte` do `creditos.json`, além de citar o site no `credito` e em `transcricao`. Sem isso a atribuição morreria junto com a pasta de entrada, que é apagada quando tudo dela é arrumado — e a atribuição é justamente o que sustenta a pasta. Música que entrou à mão, sem passar pelo baixador, fica sem `fonte`, o que é honesto: não se sabe de onde veio.
 
 ### Rock e metal (`tools/compor_rock.py`)
 
@@ -103,6 +146,16 @@ Formato (o mesmo no `localStorage` e no `.json` ao lado da música):
 ### Saída serial
 
 Web Serial, texto por linha, eventos com carimbo em ms enviados 100 ms antes. Contrato completo em `docs/protocolo-serial.md`. Testado com porta simulada; ainda não há firmware.
+
+### tom.html — gerador de tom
+
+Dois osciladores, um por canal, criados uma vez e deixados ligados: quem dá e tira voz é o ganho, com rampa de 8 ms, e assim não há clique. Separação dura pelo mesmo `ChannelMergerNode`. A frequência vai por `setTargetAtTime` com constante de 6 ms, que é o que deixa arrastar o slider sem degrau e sem atraso perceptível.
+
+Slider logarítmico de 20 Hz a 20 kHz em 2.000 passos (`freqOf`/`sliderOf`), campo numérico, ×½ e ×2, passo de 1 Hz e seletor de nota de E0 a B9. Formas: quadrada (padrão, que é o timbre real do arco), senoide, triangular e dente de serra. Mais varredura logarítmica entre dois limites, com ida e volta, e intervalos prontos entre os dois canais — uníssono, oitava, quinta, terça e batimento de 1 Hz, que é como se ouve se os dois arcos estão casados.
+
+O traço do osciloscópio desenha uma janela de três ciclos da frequência atual, em vez do buffer inteiro: sem isso a forma vira um borrão em frequência alta. O desenho para quando nada toca.
+
+Estado no endereço (`?f=…&o=…&g=…&l=…&v=…`) e no `localStorage`. A gravação é adiada 400 ms, porque a varredura mexe na frequência a cada quadro e gravar a cada quadro seria absurdo.
 
 ### stems.html — player de áudio
 
@@ -137,3 +190,6 @@ Barra de reprodução fixa no rodapé, alvos de toque de 40 px ou mais (`pointer
 - Qualquer biblioteca externa só via `<script>` de CDN, com versão fixada.
 - Arquivo novo que o site precise servir tem de entrar no passo "Montar o site" do workflow e, se for do núcleo, em `BASE` no `sw.js`. Mudou `sw.js` de forma incompatível: troque o nome de `SITE`.
 - Testar com MIDI real antes de considerar pronto: um arquivo de música de videogame (3 a 4 faixas) e um arranjo de banda (6 a 8 faixas) cobrem os dois extremos. `musicas/exemplos` tem os dois casos e um Guitar Pro; `musicas/rock e metal` cobre compassos 7/8, 6/8 e 3/8, andamento acelerando e ritardando.
+- Ferramenta que mexe no acervo **não altera nada sem `--aplicar`** (ou `--baixar`, no download). Sem a opção, só imprime o que faria. Mantenha assim.
+- **Pasta no Windows vem com o atributo ReadOnly**, e aí `Path.rmdir()` falha com "Acesso negado" mesmo estando vazia. `remover_vazias()` em `curar_acervo.py` tira o atributo e tenta de novo, e engole a falha se ainda assim não for. Use essa função em vez de `rmdir()` direto. Pelo mesmo motivo, **grave o `creditos.json` antes da faxina de pastas**: é ele que guarda a atribuição exigida pelas licenças, e já se perdeu uma vez porque uma pasta vazia resistiu a sumir e abortou o resto.
+- Rodar script com `2>/dev/null | tail` esconde o traceback e devolve o código de saída do `tail`, que é sempre 0. Foi assim que a falha acima passou despercebida.
