@@ -95,6 +95,23 @@ APELIDOS = {
 # continuar sendo um punhado de músicas que qualquer um reconhece, e não uma lista de rolar.
 NIVEIS = [('mais ouvidas', 45, .07), ('conhecidas', 85, .15), ('para fãs', None, None)]
 
+# O acervo de folk russo é quase todo tradicional e em domínio público, mas algumas peças têm
+# autor conhecido — e duas delas ainda estão protegidas. Chamar tudo de "tradicional" seria
+# cômodo e errado: título -> (autoria, já em domínio público?).
+AUTORIA_CONHECIDA = {
+    'Katyusha': ('Matvey Blanter, letra de Mikhail Isakovsky (1938)', False),
+    'Podmoskovnye Vechera': ('Vasily Solovyov-Sedoi, letra de Mikhail Matusovsky (1955)', False),
+    'Pust Vsegda Budet Solntse': ('Arkady Ostrovsky, letra de Lev Oshanin (1962)', False),
+    'Uralskaya Ryabinushka': ('Yevgeny Rodygin, letra de Mikhail Pilipenko (1953)', False),
+    'Odinokaya Garmon': ('Boris Mokrousov, letra de Mikhail Isakovsky (1946)', False),
+    'Dorogoi Dlinnoyu': ('Boris Fomin, letra de Konstantin Podrevsky (1924)', False),
+    'Ochi Chornye': ('melodia de Florian Hermann, letra de Yevhen Hrebinka (1879)', True),
+    'Otsveli Hrizantemy': ('Nikolai Kharito, letra de Vasily Shumsky (1910)', True),
+    'Kalinka': ('Ivan Larionov (1860)', True),
+    'Korobeiniki': ('melodia tradicional sobre poema de Nikolai Nekrasov (1861)', True),
+    'Na Sopkah Manchzhurii': ('Ilya Shatrov (1906)', True),
+}
+
 ARTIGO = re.compile(r'\b(the|a|an|o|os|as)\b')
 PARENTESES = re.compile(r'\(.*?\)|\[.*?\]')
 SUFIXO = re.compile(r'\b(live|remaster(ed)?|demo|acoustic|edit|version|mix|single|mono|stereo)\b')
@@ -147,6 +164,13 @@ def titulo_bonito(s):
         b = p.lower()
         saida.append(b if k and b in MIUDAS else b[:1].upper() + b[1:])
     return ' '.join(saida)
+
+
+def seguro(s):
+    """Nome que pode virar pasta ou arquivo. A barra de 'AC/DC' vira hífen — a pasta fica
+    'AC-DC', e o nome de verdade continua no campo 'artista' do creditos.json."""
+    s = re.sub(r'[\\/:*?"<>|]', '-', s).strip(' .')
+    return re.sub(r'\s{2,}', ' ', s) or 'sem nome'
 
 
 def normalizar_banda(nome):
@@ -408,6 +432,10 @@ def percentis(valores):
 
 # ---------------------------------------------------------------- principal
 def organizar(args):
+    global DESTINO
+    if args.destino:
+        d = Path(args.destino)
+        DESTINO = d if d.is_absolute() else (RAIZ / d)
     origem = Path(args.origem) if args.origem else ORIGEM
     # a pasta de entrada some quando tudo dela já foi arrumado; sem ela a ferramenta ainda
     # serve, para reclassificar o que está em musicas/bandas
@@ -452,6 +480,8 @@ def organizar(args):
             banda, titulo = normalizar_banda(org['artista']), titulo_bonito(limpar_titulo(org['titulo']))
         else:
             banda, titulo = partir(p.name)
+        if args.artista:                     # acervo de autoria coletiva: o artista é fixo
+            banda = args.artista
         m = medir(p)
         if m is None:
             ilegiveis += 1
@@ -477,21 +507,28 @@ def organizar(args):
 
     cache = carregar_cache()
     janela = janela_de_meses()
-    if not args.offline:
-        print(f'medindo popularidade (Wikipedia{", ListenBrainz" if token else ""})…')
-    for b in bandas:
-        lb = None if args.offline else lb_da_banda(b, cache, token)
-        if lb is None:
-            lb = (cache['listenbrainz'].get(b) or {}).get('musicas')
+    if args.plano:
+        # Acervo de folk tradicional: ordenar Kalinka contra Troika por visita de artigo não
+        # diz nada útil, e gastaria centenas de chamadas para produzir um número sem sentido.
         for i in ficam:
-            if i['banda'] != b:
-                continue
-            i['escutas'] = casar(i['titulo'], lb) if lb else 0
-            if args.offline:
-                i['visitas'] = (cache['wikipedia'].get(f'{b}|{i["chave"]}') or {}).get('visitas', 0)
-            else:
-                i['visitas'] = wp_da_musica(b, i['titulo'], cache, janela) or 0
-    if not args.offline:
+            i['escutas'] = i['visitas'] = 0
+        print('acervo plano: sem medição de popularidade')
+    if not args.plano:
+        if not args.offline:
+            print(f'medindo popularidade (Wikipedia{", ListenBrainz" if token else ""})…')
+        for b in bandas:
+            lb = None if args.offline else lb_da_banda(b, cache, token)
+            if lb is None:
+                lb = (cache['listenbrainz'].get(b) or {}).get('musicas')
+            for i in ficam:
+                if i['banda'] != b:
+                    continue
+                i['escutas'] = casar(i['titulo'], lb) if lb else 0
+                if args.offline:
+                    i['visitas'] = (cache['wikipedia'].get(f'{b}|{i["chave"]}') or {}).get('visitas', 0)
+                else:
+                    i['visitas'] = wp_da_musica(b, i['titulo'], cache, janela) or 0
+    if not args.plano and not args.offline:
         CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
 
     # as duas fontes vivem em escalas diferentes: compara pelo percentil dentro de cada uma
@@ -523,7 +560,7 @@ def organizar(args):
     sem_nada = [i for i in ficam if not i['nota']]
     print(f'\nmedidas: {com_wp} pela Wikipedia, {com_lb} pelo ListenBrainz, '
           f'{len(sem_nada)} sem nenhuma das duas')
-    if not token:
+    if not token and not args.plano:
         print('(sem token do ListenBrainz: a ordem saiu só pela Wikipedia — veja --token)')
     print()
     for nome, _, _ in NIVEIS:
@@ -563,8 +600,12 @@ def organizar(args):
     creditos = {}
     for i in ficam:
         nivel = nivel_de[id(i)]
-        nome = re.sub(r'[\\/:*?"<>|]', '-', f'{i["banda"]} - {i["titulo"]}') + '.mid'
-        destino = DESTINO / nivel / nome
+        # A pasta é o artista, não o nível de popularidade: artista é coisa estável, e o nível
+        # muda quando o número de escutas muda — o que trocaria a música de pasta e quebraria o
+        # link dela. A popularidade continua gravada, em 'posicao', e vira filtro no site.
+        rel = (seguro(i['titulo']) + '.mid') if args.plano else \
+              f'{seguro(i["banda"])}/{seguro(i["titulo"])}.mid'
+        destino = DESTINO / rel
         destino.parent.mkdir(parents=True, exist_ok=True)
         if i['arq'].resolve() != destino.resolve():
             destino.unlink(missing_ok=True)
@@ -581,20 +622,32 @@ def organizar(args):
         if i['escutas']:
             fontes.append(f'{i["escutas"]} escutas no ListenBrainz')
         site = (i.get('origem') or {}).get('site') or ''
+        transcrito = ('transcrição MIDI de autor não identificado'
+                      + (f', publicada em {site}' if site else ''))
+        autoria, dominio = AUTORIA_CONHECIDA.get(i['titulo'], (None, None))
+        if autoria:
+            composto, licenca = autoria, ('Domínio público' if dominio else
+                                          'obra protegida · uso educacional sem fins lucrativos')
+        elif args.plano:
+            composto, licenca = 'tradicional, autoria não atribuída', 'Domínio público'
+        else:
+            composto, licenca = f'composição de {i["banda"]}', \
+                                'obra protegida · uso educacional sem fins lucrativos'
         entrada = {
             'autor': i['banda'],
             'artista': i['banda'],
-            'licenca': 'obra protegida · uso educacional sem fins lucrativos',
-            'credito': f'composição de {i["banda"]}; transcrição MIDI de autor não identificado'
-                       + (f', publicada em {site}' if site else ''),
+            'licenca': licenca,
+            'credito': f'{composto}; {transcrito}',
             'transcricao': f'autor não identificado · {site}' if site else 'autor não identificado',
         }
         if (i.get('origem') or {}).get('url'):
             entrada['fonte'] = i['origem']['url']
         entrada.update({k: v for k, v in antes.items() if v})
-        entrada['posicao'] = i['posicao']
-        entrada['popularidade'] = ' · '.join(fontes) or 'sem medição'
-        creditos[f'{nivel}/{nome}'] = entrada
+        if not args.plano:     # sem medição, não há posição nem nível para registrar
+            entrada['posicao'] = i['posicao']
+            entrada['nivel'] = nivel
+            entrada['popularidade'] = ' · '.join(fontes) or 'sem medição'
+        creditos[rel] = entrada
     for i in repetidas:
         i['arq'].unlink(missing_ok=True)
     # entrada de música que não está mais na pasta não serve para nada
@@ -619,8 +672,12 @@ def organizar(args):
             origem.rmdir()
         except OSError:
             pass
-    print(f'\npronto: {len(ficam)} músicas em musicas/bandas/<nível>/')
-    print('Confira a atribuição em musicas/bandas/creditos.json e em USO-EDUCACIONAL.md,')
+    try:
+        onde = DESTINO.relative_to(RAIZ).as_posix()
+    except ValueError:
+        onde = str(DESTINO)
+    print(f'\npronto: {len(ficam)} músicas em {onde}/' + ('' if args.plano else '<artista>/'))
+    print(f'Confira a atribuição em {onde}/creditos.json e em USO-EDUCACIONAL.md,')
     print('e rode tools/gerar_acervo.py para refazer o índice.')
 
 
@@ -628,6 +685,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     p.add_argument('--aplicar', action='store_true', help='move e apaga de verdade')
     p.add_argument('--origem', help='pasta com os arquivos soltos')
+    p.add_argument('--destino', help='pasta do acervo (padrão: musicas/bandas)')
+    p.add_argument('--plano', action='store_true', help='sem subpasta por artista (folk tradicional)')
+    p.add_argument('--artista', help='artista fixo, para acervo sem autor identificado')
     p.add_argument('--token', help='token do ListenBrainz (ou a variável LISTENBRAINZ_TOKEN)')
     p.add_argument('--offline', action='store_true', help='usa só o que já está em popularidade.json')
     p.add_argument('-v', '--verbose', action='store_true', help='mostra as repetidas uma a uma')

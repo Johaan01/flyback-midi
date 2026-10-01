@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Compõe as músicas de musicas/rock e metal.
+"""Compõe os arranjos de musicas/exemplos.
 
     python tools/compor_rock.py
 
-Composições próprias e arranjos de temas em domínio público (Grieg, Bach,
-Beethoven, Pachelbel, Greensleeves, Dies Irae), escritos numa notação curta de
-texto e gravados como MIDI formato 1 com faixas nomeadas. Cada música sai com
+Arranjos de temas em domínio público (Grieg, Bach, Beethoven, Pachelbel,
+Greensleeves, Korobeiniki), escritos numa notação curta de texto e gravados
+como MIDI formato 1 com faixas nomeadas. Servem de exemplo de arranjo de banda
+para dois flybacks: a melodia e o solo nunca soam ao mesmo tempo. Cada música sai com
 um .json de configuração: guitarra base no canal esquerdo, melodia e solo no
 direito, que não se sobrepõem no tempo e por isso cabem num flyback só.
 
@@ -25,7 +26,7 @@ import struct
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-DESTINO = RAIZ / 'musicas' / 'rock e metal'
+DESTINO = RAIZ / 'musicas' / 'exemplos'
 DIV = 480
 NOMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 PC = {n: i for i, n in enumerate(NOMES)}
@@ -454,293 +455,6 @@ def banda(m, extra=()):
 
 
 # ================================================================ as músicas
-def arco_voltaico():
-    m = Musica('Arco Voltaico', 126)
-    f = banda(m)
-    B = m.barra
-    riff_g = 'A2*/4 A2*m/8 C3*/8 D3*/4 A2*m/8 A2*m/8 | G2*/8 A2*/8 r/8 C3*/8 D3*/8 E3*/8 D3*/8 C3*/8'
-    riff_b = 'A1/4 A1/8 C2/8 D2/4 A1/8 A1/8 | G1/8 A1/8 r/8 C2/8 D2/8 E2/8 D2/8 C2/8'
-    verso = ['A', 'A', 'G', 'G', 'D', 'D', 'A', 'A']
-    refrao = ['D', 'D', 'A', 'A', 'G', 'G', 'E', 'E']
-    mel_v = ('r/8 E4/8 E4/8 G4/8 A4/4 G4/8 E4/8 | A4/2 r/2 | r/8 D4/8 D4/8 E4/8 G4/4 E4/8 D4/8 | B3/2 r/2 | '
-             'r/8 D4/8 F#4/8 A4/8 A4/4 G4/8 F#4/8 | E4/4 D4/4 r/2 | r/8 C4/8 D4/8 E4/8 G4/4 A4/8 E4/8 | A4/2. r/4')
-    mel_r = ('A4/4. A4/8 B4/4 A4/8 F#4/8 | A4/2 r/2 | A4/4. A4/8 C#5/4 B4/8 A4/8 | E4/2 r/2 | '
-             'G4/4. G4/8 B4/4 A4/8 G4/8 | D4/2 r/4 D4/8 E4/8 | E4/4. G#4/8 B4/4 A4/8 G#4/8 | E4/1')
-    s_verso = {f['gb']: riff(verso, '8m 8m 8m 8m 8m 8m 8 8', B), f['bx']: riff(verso, '8 8 8 8 8 8 8 8', B, 28, False),
-               f['bat']: ('rock', 'f'), f['mel']: mel_v}
-    s_refrao = {f['gb']: riff(refrao, '4 4 4 8 8', B), f['bx']: riff(refrao, '4 4 4 8 8', B, 28, False),
-                f['bat']: ('pratos', 'cf'), f['mel']: mel_r}
-    s_riff = {f['gb']: riff_g, f['bx']: riff_b, f['bat']: ('rock', 'c')}
-    m.secao(4, s_riff)
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(4, s_riff)
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, {**s_riff, f['bat']: ('ride', 'cf'),
-                f['gs']: improviso(escala('A', 'pentam'), ['A', 'G'] * 4, B, 11)})
-    m.secao(8, s_refrao)
-    m.secao(4, {**s_riff, f['bat']: ('rock', 'f')})
-    m.secao(1, {f['gb']: 'A2*/1', f['bx']: 'A1/1', f['bat']: ('chimbal', 'c')})
-    return m, config(['Guitarra base'], ['Melodia', 'Guitarra solo'], m.faixas, oitava_esq=1)
-
-
-def alta_tensao():
-    m = Musica('Alta Tensão', 196)
-    f = banda(m)
-    B = m.barra
-    ra = 'E2m/16 E2m E2m E2m G2*/8 E2m/16 E2m F2*/8 E2m/16 E2m A#2*/8 A2*/8'
-    rb = 'E2m/16 E2m E2m E2m E2m E2m E2m E2m D3*/8 C3* B2* A#2*'
-    rc = 'C3*/2 D3*/2 | E3*/1 | C3*/2 D3*/2 | B2*/1'
-    ba = 'E1/16 E1 E1 E1 G1/8 E1/16 E1 F1/8 E1/16 E1 A#1/8 A1/8'
-    bb = 'E1/16 E1 E1 E1 E1 E1 E1 E1 D2/8 C2 B1 A#1'
-    bc = 'C2/2 D2 | E2/1 | C2/2 D2 | B1/1'
-    mel_v = 'r/4 E4/8 E4/8 G4/8 E4/8 r/4 | r/4 E4/8 E4/8 A4/8 G4/8 E4/4 | r/4 E4/8 E4/8 G4/8 E4/8 r/4 | B4/4 A4/4 G4/4 F#4/4'
-    mel_r = 'G4/2 A4/2 | B4/1 | G4/2 A4/2 | F#4/1 | G4/2 A4/2 | B4/2 E5/2 | D5/2 C5/2 | B4/1'
-    queb = 'E2*m/8 E2*m/8 r/8 E2*m/8 r/8 E2*m/8 F2*/4 | E2*m/8 E2*m/8 r/8 E2*m/8 r/8 E2*m/8 A#2*/4'
-    queb_b = 'E1/8 E1/8 r/8 E1/8 r/8 E1/8 F1/4 | E1/8 E1/8 r/8 E1/8 r/8 E1/8 A#1/4'
-    s_verso = {f['gb']: [ra, ra, ra, rb], f['bx']: [ba, ba, ba, bb], f['bat']: ('thrash', 'f'), f['mel']: mel_v}
-    s_refrao = {f['gb']: rc, f['bx']: bc, f['bat']: ('duplo', 'cf'), f['mel']: mel_r}
-    hm = escala('E', 'harm')
-    m.secao(2, {f['gb']: rb, f['bx']: bb, f['bat']: ('chimbal', '')})
-    m.secao(2, {f['gb']: ra, f['bx']: ba, f['bat']: ('thrash', 'cf')})
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, {f['gb']: ra, f['bx']: ba, f['bat']: ('thrash', 'cf'), f['gs']: improviso(hm, ['Em'] * 8, B, 21, 3)})
-    m.secao(8, {f['gb']: [ra, ra, ra, rb], f['bx']: [ba, ba, ba, bb], f['bat']: ('duplo', 'cf'),
-                f['gs']: improviso(hm, ['Em', 'Em', 'Em', 'D', 'C', 'C', 'B', 'B'], B, 22, 3)})
-    m.secao(4, {f['gb']: queb, f['bx']: queb_b, f['bat']: ('metade', 'cf')})
-    m.secao(8, s_refrao)
-    m.secao(1, {f['gb']: rb, f['bx']: bb, f['bat']: ('duplo', 'f')})
-    m.secao(1, {f['gb']: 'E2*/1', f['bx']: 'E1/1', f['bat']: ('chimbal', 'c')})
-    return m, config(['Guitarra base'], ['Melodia', 'Guitarra solo'], m.faixas, oitava_esq=1)
-
-
-def galope_do_plasma():
-    m = Musica('Galope do Plasma', 168)
-    f = banda(m, [('gs2', 'Guitarra solo 2', 'over', {'vel': 100, 'gate': .95})])
-    B = m.barra
-    galope = '8m 16m 16m 8m 16m 16m 8m 16m 16m 8m 16m 16m'
-    gemeas = ['Em', 'Em', 'C', 'D', 'Em', 'C', 'D', 'Em']
-    l1 = ('B4/8 E5/8 F#5/8 G5/8 F#5/4 E5/8 D5/8 | E5/2 B4/4 G4/4 | C5/8 E5/8 G5/8 A5/8 G5/4 F#5/8 E5/8 | D5/2 F#5/2 | '
-          'B4/8 E5/8 F#5/8 G5/8 A5/4 G5/8 F#5/8 | G5/2 E5/4 C5/4 | D5/8 F#5/8 A5/8 B5/8 A5/4 G5/8 F#5/8 | E5/1')
-    l2 = harmonizar(l1, escala('E', 'menor'), -2)
-    verso = ['Em', 'C', 'D', 'Em'] * 2
-    refrao = ['C', 'D', 'B', 'Em'] * 2
-    mel_v = ('E4/4. E4/8 G4/4 A4/4 | G4/4. E4/8 C4/2 | D4/4. D4/8 F#4/4 A4/4 | B4/1 | '
-             'E4/4. E4/8 G4/4 A4/4 | B4/4. A4/8 G4/4 E4/4 | D4/4 E4/8 F#4/8 G4/4 A4/4 | E4/1')
-    mel_r = ('C5/2 B4/4 A4/4 | A4/2 G4/4 F#4/4 | F#4/2 D#4/4 B3/4 | E4/1 | '
-             'C5/2 B4/4 A4/4 | D5/2 C5/4 B4/4 | B4/2 A4/4 F#4/4 | E4/1')
-    s_gemeas = {f['gb']: riff(gemeas, galope, B), f['bx']: riff(gemeas, galope, B, 28, False),
-                f['bat']: ('galope', 'cf'), f['gs']: l1, f['gs2']: l2}
-    s_verso = {f['gb']: riff(verso, galope, B), f['bx']: riff(verso, galope, B, 28, False),
-               f['bat']: ('galope', 'f'), f['mel']: mel_v}
-    s_refrao = {f['gb']: riff(refrao, '4 4 4 8 8', B), f['bx']: riff(refrao, '8 8 8 8 8 8 8 8', B, 28, False),
-                f['bat']: ('pratos', 'cf'), f['mel']: mel_r}
-    m.secao(8, s_gemeas)
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, s_gemeas)
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, {f['gb']: riff(verso, galope, B), f['bx']: riff(verso, galope, B, 28, False), f['bat']: ('duplo', 'cf'),
-                f['gs']: improviso(escala('E', 'menor'), verso, B, 31, 3)})
-    m.secao(8, s_gemeas)
-    m.secao(2, {f['gb']: 'E2*/1 | E2*/1', f['bx']: 'E1/1 | E1/1', f['gs']: 'E5/1 | E5/1', f['gs2']: 'B4/1 | B4/1',
-                f['bat']: ('chimbal', 'c')})
-    return m, config(['Guitarra base', 'Guitarra solo 2'], ['Melodia', 'Guitarra solo'], m.faixas, acorde_esq='agudo')
-
-
-def descarga():
-    m = Musica('Descarga', 192)
-    f = banda(m)
-    B = m.barra
-    verso = ['D', 'A', 'Bm', 'G'] * 2
-    refrao = ['G', 'A', 'D', 'D'] * 2
-    mel_v = ('F#4/4 F#4/4 E4/4 D4/4 | E4/4 E4/4 C#4/2 | D4/4 D4/4 F#4/4 A4/4 | B4/2 A4/2 | '
-             'F#4/4 F#4/4 E4/4 D4/4 | E4/4 E4/4 C#4/2 | D4/4 F#4/4 B4/4 A4/4 | G4/2 F#4/4 E4/4')
-    mel_r = ('B4/2 B4/4 A4/4 | C#5/2 A4/2 | D5/4 C#5/4 D5/4 A4/4 | F#4/1 | '
-             'B4/2 B4/4 A4/4 | C#5/2 E5/2 | D5/4 C#5/4 B4/4 A4/4 | D5/1')
-    oito = '8 8 8 8 8 8 8 8'
-    s_verso = {f['gb']: riff(verso, oito, B), f['bx']: riff(verso, oito, B, 28, False), f['bat']: ('punk', 'f'), f['mel']: mel_v}
-    s_refrao = {f['gb']: riff(refrao, oito, B), f['bx']: riff(refrao, oito, B, 28, False), f['bat']: ('pratos', 'cf'), f['mel']: mel_r}
-    m.secao(2, {f['gb']: riff(['D', 'A'], oito, B)})
-    m.secao(2, {f['gb']: riff(['Bm', 'G'], oito, B), f['bx']: riff(['Bm', 'G'], oito, B, 28, False), f['bat']: ('punk', 'f')})
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, {f['gb']: riff(verso, oito, B), f['bx']: riff(verso, oito, B, 28, False), f['bat']: ('punk', 'cf'),
-                f['gs']: improviso(escala('D', 'pentaM'), verso, B, 41, 2)})
-    m.secao(8, s_refrao)
-    m.secao(8, s_refrao)
-    m.secao(1, {f['gb']: 'D3*/4 r/4 D3*/4 r/4', f['bx']: 'D2/4 r/4 D2/4 r/4', f['bat']: ('chimbal', 'c')})
-    m.secao(1, {f['gb']: 'D3*/1', f['bx']: 'D2/1', f['bat']: ('chimbal', 'c')})
-    return m, config(['Guitarra base'], ['Melodia', 'Guitarra solo'], m.faixas)
-
-
-def ferrite():
-    m = Musica('Ferrite', 64)
-    f = banda(m, [('org', 'Órgão', 'orgao', {'vel': 70})])
-    B = m.barra
-    rg = 'D2*/2 D2*/4 F2*/4 | G#2*/2 G2*/4 F2*/4 | D2*/1 | C2*/2 C#2*/2'
-    rb = 'D1/2 D1/4 F1/4 | G#1/2 G1/4 F1/4 | D1/1 | C1/2 C#1/2'
-    org = '[D3,F3,A3]/1 | [G#2,D3,F3]/1 | [D3,F3,A3]/1 | [C3,E3,G3]/2 [C#3,E3,G3]/2'
-    # Dies Irae, sequência gregoriana (domínio público)
-    mel = ('F4/2 E4/2 | F4/2 D4/2 | E4/2 C4/2 | D4/1 | '
-           'F4/4 F4/4 G4/2 | F4/4 E4/4 D4/2 | C4/4 E4/4 F4/4 E4/4 | D4/1')
-    harm = ['Dm', 'G#dim', 'Dm', 'C C#dim']
-    s_riff = {f['gb']: rg, f['bx']: rb, f['org']: org, f['bat']: ('doom', 'f')}
-    m.secao(4, {f['org']: org})
-    m.secao(4, {**s_riff, f['bat']: ('doom', 'cf')})
-    m.secao(8, {**s_riff, f['mel']: mel})
-    m.secao(4, s_riff)
-    m.secao(8, {**s_riff, f['mel']: mel, f['bat']: ('doom', 'cf')})
-    m.secao(8, {**s_riff, f['bat']: ('ride', 'cf'), f['gs']: improviso(escala('D', 'pentam'), harm * 2, B, 51, 1, 62, 86)})
-    m.secao(4, s_riff)
-    m.secao(2, {f['gb']: 'D2*/1 | D2*/1', f['bx']: 'D1/1 | D1/1', f['org']: '[D3,F3,A3]/1 | [D3,F3,A3]/1',
-                f['bat']: ('chimbal', 'c')}, bpm=56)
-    return m, config(['Guitarra base'], ['Melodia', 'Guitarra solo'], m.faixas, oitava_esq=1)
-
-
-def faisca_7_8():
-    m = Musica('Faísca em 7 por 8', 150, (7, 8))
-    f = banda(m, [('syn', 'Sintetizador', 'serra', {'vel': 100, 'gate': .95})])
-    B78 = 3.5
-    r1 = 'B1*m/8 B1*m/8 D2*/8 B1*m/8 C#2*/8 B1*m/8 A1*/8'
-    r2 = 'B1*m/16 B1*m/16 B1*/8 F#2*/8 G2*/8 B1*m/16 B1*m/16 A2*/8 F#2*/8'
-    b1 = 'B1/8 B1 D2 B1 C#2 B1 A1'
-    b2 = 'B1/16 B1 B1/8 F#2 G2 B1/16 B1 A2/8 F#2'
-    syn = ('F#4/8 B4/8 C#5/8 D5/4 C#5/8 B4/8 | A4/4 F#4/8 E4/4. r/8 | F#4/8 B4/8 D5/8 E5/4 D5/8 C#5/8 | B4/2 F#4/4. | '
-           'F#4/8 B4/8 C#5/8 D5/4 C#5/8 B4/8 | A4/4 F#4/8 E4/4. r/8 | F#4/8 B4/8 D5/8 F#5/4 E5/8 D5/8 | C#5/2 A#4/4.')
-    refrao = ['Bm', 'G', 'D', 'A'] * 2
-    mel_r = ('D5/2 C#5/4 B4/4 | B4/2 A4/4 G4/4 | F#4/2. A4/4 | A4/1 | '
-             'D5/2 C#5/4 B4/4 | B4/2 D5/4 E5/4 | F#5/2 E5/4 D5/4 | C#5/1')
-    s_verso = {f['gb']: r2, f['bx']: b2, f['bat']: ('prog78', 'f'), f['syn']: syn}
-    s_refrao = {f['gb']: riff(refrao, '4 8 8 4 4', 4), f['bx']: riff(refrao, '4 8 8 4 4', 4, 28, False),
-                f['bat']: ('pratos', 'cf'), f['mel']: mel_r}
-    m.secao(4, {f['gb']: r1, f['bx']: b1, f['bat']: ('prog78', 'cf')})
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao, compasso=(4, 4))
-    m.secao(4, {f['gb']: r1, f['bx']: b1, f['bat']: ('prog78', 'cf')}, compasso=(7, 8))
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao, compasso=(4, 4))
-    m.secao(8, {f['gb']: r1, f['bx']: b1, f['bat']: ('prog78', 'cf'),
-                f['gs']: improviso(escala('B', 'menor'), ['Bm'] * 8, B78, 61, 3)}, compasso=(7, 8))
-    m.secao(8, s_refrao, compasso=(4, 4))
-    m.secao(2, {f['gb']: r2, f['bx']: b2, f['bat']: ('prog78', 'f')}, compasso=(7, 8))
-    m.secao(1, {f['gb']: 'B1*/1', f['bx']: 'B1/1', f['bat']: ('chimbal', 'c')}, compasso=(4, 4))
-    return m, config(['Guitarra base'], ['Melodia', 'Guitarra solo', 'Sintetizador'], m.faixas, oitava_esq=1)
-
-
-def blindagem():
-    m = Musica('Blindagem', 210)
-    f = banda(m)
-    B = m.barra
-    ta = tremolo('D3 C#3 D3 F3') + ' | ' + tremolo('E3 D3 C3 A#2')
-    tb = tremolo('A2 A#2 A2 G2') + ' | ' + tremolo('A2 A#2 C3 C#3')
-    ba, bb = 'D2/4 C#2 D2 F2 | E2 D2 C2 A#1', 'A1/4 A#1 A1 G1 | A1 A#1 C2 C#2'
-    grv = 'D2*m/16 D2*m D2*m/8 r/8 D2*m/16 D2*m G#2*/4 F2*/4 | D2*m/16 D2*m D2*m/8 r/8 D2*m/16 D2*m A#2*/4 A2*/4'
-    grv_b = 'D1/16 D1 D1/8 r/8 D1/16 D1 G#1/4 F1/4 | D1/16 D1 D1/8 r/8 D1/16 D1 A#1/4 A1/4'
-    hm = escala('D', 'harm')
-    m.secao(4, {f['gb']: grv, f['bx']: grv_b, f['bat']: ('metade', 'f')})
-    m.secao(8, {f['gb']: ta, f['bx']: ba, f['bat']: ('blast', 'c')})
-    m.secao(4, {f['gb']: tb, f['bx']: bb, f['bat']: ('blast', 'f')})
-    m.secao(8, {f['gb']: grv, f['bx']: grv_b, f['bat']: ('duplo', 'cf')})
-    m.secao(8, {f['gb']: ta, f['bx']: ba, f['bat']: ('blast', 'c')})
-    m.secao(8, {f['gb']: grv, f['bx']: grv_b, f['bat']: ('duplo', 'cf'),
-                f['gs']: improviso(hm, ['Dm', 'G#dim', 'Dm', 'A#'] * 2, B, 71, 3)})
-    m.secao(4, {f['gb']: tb, f['bx']: bb, f['bat']: ('blast', 'c')})
-    m.secao(4, {f['gb']: ta, f['bx']: ba, f['bat']: ('blast', 'f')})
-    m.secao(1, {f['gb']: 'D2*/1', f['bx']: 'D1/1', f['bat']: ('chimbal', 'c')})
-    return m, config(['Guitarra base'], ['Guitarra solo'], m.faixas, oitava_esq=0, acorde_esq='agudo')
-
-
-def bobina_de_tesla():
-    m = Musica('Bobina de Tesla', 72)
-    f = banda(m, [('gl', 'Guitarra limpa', 'limpa', {'vel': 84, 'gate': 1.4})])
-    B = m.barra
-    verso = ['G', 'D', 'Em', 'C'] * 2
-    refrao = ['C', 'G', 'D', 'Em', 'C', 'G', 'D', 'D']
-    final = ['C', 'G', 'D', 'Em', 'C', 'G', 'D', 'G']
-    fig = [0, 2, 3, 4, 5, 4, 3, 2]
-    mel_v = ('r/8 D4/8 G4/8 A4/8 B4/4. A4/8 | A4/4 G4/8 F#4/8 D4/2 | r/8 E4/8 G4/8 A4/8 B4/4 D5/4 | C5/4 B4/8 A4/8 G4/2 | '
-             'r/8 D4/8 G4/8 A4/8 B4/4. A4/8 | A4/4 G4/8 A4/8 B4/2 | r/8 E4/8 G4/8 B4/8 C5/4 B4/8 A4/8 | A4/1')
-    mel_r = ('E5/4. D5/8 C5/4 B4/4 | D5/4. C5/8 B4/4 G4/4 | A4/4 B4/8 C5/8 D5/4 B4/4 | B4/2 A4/4 G4/4 | '
-             'E5/4. D5/8 C5/4 B4/4 | D5/4. C5/8 B4/4 G4/4 | A4/4 B4/8 C5/8 B4/4 A4/4 | A4/1')
-    mel_f = mel_r.rsplit('|', 1)[0] + '| G4/1'
-    dist = '4. 8 4 4'
-    s_verso = {f['gl']: arpejo(verso, fig, B), f['bx']: riff(verso, '2 2', B, 28, False), f['bat']: ('leve', 'f'), f['mel']: mel_v}
-
-    def refr(acs, mel):
-        return {f['gb']: riff(acs, dist, B), f['bx']: riff(acs, '4. 8 4 4', B, 28, False), f['bat']: ('balada', 'cf'), f['mel']: mel}
-    m.secao(4, {f['gl']: arpejo(['G', 'D', 'Em', 'C'], fig, B)})
-    m.secao(8, s_verso)
-    m.secao(8, refr(refrao, mel_r))
-    m.secao(8, s_verso)
-    m.secao(8, refr(refrao, mel_r))
-    m.secao(8, {f['gb']: riff(refrao, dist, B), f['bx']: riff(refrao, '4. 8 4 4', B, 28, False), f['bat']: ('balada', 'cf'),
-                f['gs']: improviso(escala('G', 'pentaM'), refrao, B, 81, 1, 62, 86)})
-    m.secao(8, refr(final, mel_f))
-    m.secao(4, {f['gl']: arpejo(['G', 'D', 'Em', 'C'], fig, B)}, bpm=72, ate=60)
-    m.secao(1, {f['gl']: '[G2,D3,G3,B3,D4,G4]/1', f['bx']: 'G1/1'}, bpm=56)
-    return m, config(['Guitarra base', 'Guitarra limpa'], ['Melodia', 'Guitarra solo'], m.faixas)
-
-
-def curto_circuito():
-    m = Musica('Curto-Circuito', 112)
-    f = banda(m, [('arp', 'Arpejo', 'serra', {'vel': 70, 'gate': .7})])
-    f['bx'].programa = PROG['synbaixo']
-    B = m.barra
-    prog = ['Am', 'F', 'C', 'G'] * 2
-    refrao = ['F', 'G', 'Am', 'Am', 'F', 'G', 'C', 'E']
-    arp = lambda acs: arpejo(acs, [0, 1, 2, 3, 2, 1, 2, 3], B, '16', 57)
-    mel_v = ('E5/4. D5/8 C5/4 B4/4 | C5/2 A4/2 | G4/4. A4/8 C5/4 E5/4 | D5/1 | '
-             'E5/4. D5/8 C5/4 E5/4 | F5/2 E5/4 C5/4 | E5/4. D5/8 C5/4 A4/4 | B4/2 G4/2')
-    mel_r = ('A5/2 G5/4 E5/4 | D5/2 B4/2 | C5/4 D5/4 E5/4 A4/4 | A4/1 | '
-             'A5/2 G5/4 E5/4 | D5/2 G5/2 | E5/2 C5/4 E5/4 | G#5/1')
-    pulso = '8 8o 8 8o 8 8o 8 8o'
-    s_verso = {f['arp']: arp(prog), f['bx']: riff(prog, pulso, B, 28, False), f['bat']: ('synth', 'f'), f['mel']: mel_v}
-    s_refrao = {f['arp']: arp(refrao), f['bx']: riff(refrao, pulso, B, 28, False), f['gb']: riff(refrao, '2 2', B),
-                f['bat']: ('pratos', 'cf'), f['mel']: mel_r}
-    m.secao(4, {f['arp']: arp(['Am', 'F', 'C', 'G']), f['bx']: riff(['Am', 'F', 'C', 'G'], pulso, B, 28, False)})
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, s_verso)
-    m.secao(8, s_refrao)
-    m.secao(8, {f['arp']: arp(prog), f['bx']: riff(prog, pulso, B, 28, False), f['gb']: riff(prog, '2 2', B),
-                f['bat']: ('synth', 'cf'), f['gs']: improviso(escala('A', 'menor'), prog, B, 91, 2)})
-    m.secao(8, s_refrao)
-    m.secao(4, {f['arp']: arp(['Am', 'F', 'C', 'G']), f['bx']: riff(['Am', 'F', 'C', 'G'], pulso, B, 28, False)})
-    m.secao(1, {f['arp']: '[A3,C4,E4,A4]/1', f['bx']: 'A1/1', f['bat']: ('chimbal', 'c')})
-    return m, config(['Baixo'], ['Melodia', 'Guitarra solo'], m.faixas, oitava_esq=1)
-
-
-def fase_1_1():
-    m = Musica('Fase 1-1', 152)
-    bat = m.faixa('Bateria', 0)
-    bx = m.faixa('Baixo', 'quadrada', vel=90, gate=.8)
-    mel = m.faixa('Melodia', 'quadrada', vel=104, gate=.85)
-    arp = m.faixa('Arpejo', 'serra', vel=60, gate=.6)
-    B = m.barra
-    A = ('C5/8 E5/8 G5/8 C6/8 B5/4 G5/4 | A5/8 G5/8 E5/8 C5/8 D5/4 G4/4 | '
-         'C5/8 E5/8 G5/8 A5/8 G5/4 E5/8 C5/8 | D5/8 E5/8 D5/8 B4/8 C5/2')
-    Bp = ('F5/4 E5/8 D5/8 E5/4 C5/4 | D5/4 C5/8 B4/8 C5/4 A4/4 | '
-          'B4/8 C5/8 D5/8 E5/8 F5/4 D5/4 | G5/2 G4/2')
-    ha, hb = ['C', 'F G', 'C Am', 'G C'], ['F', 'G', 'G7', 'C']
-    salto = '8 8o 8 8o 8 8o 8 8o'
-
-    def parte(mel_, har, estilo):
-        return {mel: mel_, bx: riff(har, salto, B, 36, False), arp: arpejo(har, [0, 1, 2, 3], B, '16', 60), bat: estilo}
-    for volta in range(2):
-        m.secao(4, parte(A, ha, ('chip', 'c')))
-        m.secao(4, parte(A, ha, 'chip'))
-        m.secao(4, parte(Bp, hb, 'chip'))
-        m.secao(4, parte(A, ha, ('chip', 'f')))
-    m.secao(1, {mel: 'C6/4 G5/4 C5/2', bx: 'C3/4 G2/4 C2/2', bat: ('chimbal', 'c')})
-    return m, config(['Baixo'], ['Melodia'], m.faixas, oitava_esq=0)
 
 
 def rei_da_montanha():
@@ -956,16 +670,6 @@ def korobeiniki():
 
 
 MUSICAS = [
-    (arco_voltaico, 'composição original, hard rock'),
-    (alta_tensao, 'composição original, thrash metal'),
-    (galope_do_plasma, 'composição original, heavy metal com guitarras gêmeas'),
-    (descarga, 'composição original, punk rock'),
-    (ferrite, 'composição original, doom metal sobre o Dies Irae gregoriano'),
-    (faisca_7_8, 'composição original, metal progressivo em 7/8'),
-    (blindagem, 'composição original, death metal'),
-    (bobina_de_tesla, 'composição original, power ballad'),
-    (curto_circuito, 'composição original, synthwave'),
-    (fase_1_1, 'composição original, chiptune'),
     (rei_da_montanha, 'arranjo metal de E. Grieg, Peer Gynt'),
     (tocata, 'arranjo metal de J. S. Bach, BWV 565'),
     (fur_elise, 'arranjo rock de L. van Beethoven, WoO 59'),
@@ -989,7 +693,10 @@ def main():
         fins = [x[0] for x in tempos[1:]] + [m.pos]
         seg = sum((fim - t) * 60 / bpm for (t, bpm), fim in zip(tempos, fins))
         print(f'  {base:42} {len(m.faixas)} faixas · {int(seg // 60)}:{int(seg % 60):02d}')
-    (DESTINO / 'creditos.json').write_text(json.dumps(creditos, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+    arq = DESTINO / 'creditos.json'   # mescla: a pasta tem arquivos que não vêm daqui
+    antes = json.loads(arq.read_text(encoding='utf-8')) if arq.is_file() else {}
+    antes.update(creditos)
+    arq.write_text(json.dumps(dict(sorted(antes.items())), ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     print(f'{len(MUSICAS)} músicas em {DESTINO.relative_to(RAIZ)}')
 
 

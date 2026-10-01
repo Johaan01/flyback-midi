@@ -6,7 +6,7 @@
     python tools/baixar_bandas.py --fonte zeppelin --baixar
     python tools/baixar_bandas.py --fonte midiworld --busca "ac dc" metallica --baixar
 
-Três fontes, todas de acesso livre e sem cadastro:
+Quatro fontes, todas de acesso livre e sem cadastro:
 
   midiworld    https://www.midiworld.com/search/?q=...   busca paginada; cada resultado é
                "Título (Artista) - download". Não há página por artista — as que parecem
@@ -15,6 +15,11 @@ Três fontes, todas de acesso livre e sem cadastro:
                links para midi/*.mid. Tudo é Led Zeppelin.
   maiden       https://maidenmidi.com/                   mesma forma, em im-midis/*.mid.
                Tudo é Iron Maiden.
+  folkrusso    https://www.freesheetmusic.net/russian.html   uma página só, com o acervo de
+               folk russo e soviético: Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika.
+               Fica fora de `--fonte todas` porque tem destino próprio:
+
+                   --fonte folkrusso --destino "musicas/folk russo (unsorted)" --baixar
 
 Os arquivos caem em `musicas/rock e metal (unsorted)/` com o nome "Artista - Título.mid", que
 é o formato que `tools/organizar_bandas.py` sabe ler, e o endereço de origem de cada um fica
@@ -65,7 +70,16 @@ LINK = re.compile(r'href="([^"#?]+)"', re.I)
 RX_FAIXA = re.compile(r'^\d{1,3}[A-Za-z]?[-_]+\d{0,3}[-_]*')   # "04A-1__Black_Dog"
 
 
+def url_segura(u):
+    """Escapa o caminho da URL. Vários arquivos do acervo de folk têm espaço no nome
+    ("pust vsegda budet solntse.mid") e o servidor devolve 404 se o espaço for cru."""
+    p = urllib.parse.urlsplit(u)
+    return urllib.parse.urlunsplit(
+        (p.scheme, p.netloc, urllib.parse.quote(p.path, safe='/%'), p.query, p.fragment))
+
+
 def abrir(url, binario=False, tentativas=3):
+    url = url_segura(url)
     espera = 2.0
     for n in range(tentativas):
         try:
@@ -130,6 +144,79 @@ def do_midiworld(buscas, paginas, pausa):
     return achados
 
 
+# O acervo russo traz o mesmo tema transliterado de vários jeitos — "two guitars", "dve gitari"
+# e "dwje gitary" são a mesma música, assim como "moscow evenings", "pod moskovniye vechera" e
+# "padmoskownye vjetsjera". Sem juntar isso o acervo fica com a mesma canção três vezes, e com
+# nomes que ninguém procura. A chave é o nome do arquivo, sem extensão.
+FOLK_RUSSO = {
+    'kalinka': 'Kalinka',
+    'katyusha': 'Katyusha',
+    'korobochka': 'Korobeiniki',
+    'troika': 'Troika',
+    'kamarynska': 'Kamarinskaya',
+    'barinya': 'Barynya',
+    'lezginka': 'Lezginka',
+    'metelitsa': 'Metelitsa',
+    'khorovod': 'Khorovod',
+    'kasatsjok': 'Kazachok',
+    'chastushky': 'Chastushki',
+    'walenki': 'Valenki',
+    'snowstorm': 'Metelitsa (Nevasca)',
+    'ochi chorniya': 'Ochi Chornye', 'black eyes': 'Ochi Chornye', 'schwarze augen': 'Ochi Chornye',
+    'two guitars': 'Dve Gitary', 'dve gitari': 'Dve Gitary', 'dwje gitary': 'Dve Gitary',
+    'moscow evenings': 'Podmoskovnye Vechera', 'pod moskovniye vechera': 'Podmoskovnye Vechera',
+    'padmoskownye vjetsjera': 'Podmoskovnye Vechera', 'midnight in moscow': 'Podmoskovnye Vechera',
+    'pust vsegda budet solntse': 'Pust Vsegda Budet Solntse',
+    'let there always be sunshine': 'Pust Vsegda Budet Solntse',
+    'uralskaya ryabinushka': 'Uralskaya Ryabinushka', 'ural rowan tree': 'Uralskaya Ryabinushka',
+    'uralin pihlaja': 'Uralskaya Ryabinushka',
+    'otsveli hrizantemy': 'Otsveli Hrizantemy',
+    'chrysanthemums were blooming': 'Otsveli Hrizantemy',
+    'odinokaya garmon': 'Odinokaya Garmon', 'lonely accordion': 'Odinokaya Garmon',
+    'in the manchurian hills': 'Na Sopkah Manchzhurii',
+    'mantsurian kukkuloilla': 'Na Sopkah Manchzhurii',
+    'bublichki': 'Bublichki', 'pretzels': 'Bublichki',
+    'bielo litza kruglolitza': 'Belolitsa Kruglolitsa',
+    'bielolitza kruglolitza': 'Belolitsa Kruglolitsa',
+    'dorogoy dalnoyu': 'Dorogoi Dlinnoyu',
+    'yamshchik ne goni loshadey': 'Yamshchik, ne Goni Loshadey',
+    'vo sadu ly v ohorode': 'Vo Sadu Li, v Ogorode',
+    'otce nash': 'Otche Nash', 'pater noster': 'Otche Nash',
+    'in the city garden': 'V Gorodskom Sadu',
+    'ozhidanie expectation waltz': 'Ozhidanie', 'ozhidanie': 'Ozhidanie',
+    'toska po rodina mot barrikaderna': 'Toska po Rodine',
+    'mot barrikaderna toska po rodina': 'Toska po Rodine',
+    'toska po rodina': 'Toska po Rodine', 'mot barrikaderna': 'Toska po Rodine',
+    'round dance': 'Khorovod',
+    'russian sher': 'Russian Sher',
+}
+
+
+def de_pagina_unica(url, prefixo, artista, pausa, nomes=None):
+    """Uma página só, com os .mid listados nela — é a forma do acervo de folk do FreeSheetMusic."""
+    try:
+        corpo = abrir(url)
+    except Exception as e:
+        print(f'  ! {url}: {e}', file=sys.stderr)
+        return []
+    achados, vistos = [], set()
+    for h in LINK.findall(corpo):
+        if not h.lower().endswith(('.mid', '.midi')) or (prefixo and prefixo not in h.lower()):
+            continue
+        alvo = urllib.parse.urljoin(url, h)
+        base = urllib.parse.unquote(h.rsplit('/', 1)[-1]).rsplit('.', 1)[0].lower().strip()
+        titulo = (nomes or {}).get(base) or de_arquivo(h)
+        chave_item = titulo.casefold()
+        if alvo in vistos or chave_item in vistos:
+            continue
+        vistos.add(alvo)
+        vistos.add(chave_item)      # transliteração diferente do mesmo tema não entra duas vezes
+        achados.append({'artista': artista, 'titulo': titulo, 'url': alvo})
+    print(f'  {url.rsplit("/", 1)[-1]}: {len(achados)}')
+    time.sleep(pausa)
+    return achados
+
+
 def de_site_por_disco(base, pasta_midi, artista, pausa):
     """zeppelinmidi e maidenmidi: a home lista as páginas de disco, cada uma lista os .mid."""
     try:
@@ -172,7 +259,13 @@ FONTES = {
     'midiworld': lambda a: do_midiworld(a.busca or BUSCAS, a.paginas, a.pausa),
     'zeppelin': lambda a: de_site_por_disco('https://zeppelinmidi.com/', 'midi/', 'Led Zeppelin', a.pausa),
     'maiden': lambda a: de_site_por_disco('https://maidenmidi.com/', 'im-midis/', 'Iron Maiden', a.pausa),
+    'folkrusso': lambda a: de_pagina_unica('https://www.freesheetmusic.net/russian.html',
+                                           '/music/worldfolk/russian/', 'Tradicional russo',
+                                           a.pausa, FOLK_RUSSO),
 }
+# 'todas' é o que se quer para encher a pasta de bandas; o folk russo tem destino próprio e por
+# isso fica de fora, rodado à parte com --fonte folkrusso --destino "musicas/folk russo (…)".
+PADRAO = ['midiworld', 'zeppelin', 'maiden']
 # De onde veio cada arquivo. `organizar_bandas.py` lê este manifesto e copia o endereço para o
 # creditos.json, para que a atribuição aponte para quem publicou a transcrição — sem isso o
 # crédito morreria junto com a pasta de entrada, que é apagada quando tudo dela é arrumado.
@@ -198,7 +291,11 @@ def gravar_manifesto(itens):
 
 # ---------------------------------------------------------------- principal
 def executar(args):
-    fontes = list(FONTES) if args.fonte == 'todas' else [args.fonte]
+    global DESTINO
+    if args.destino:
+        d = Path(args.destino)
+        DESTINO = d if d.is_absolute() else (RAIZ / d)
+    fontes = PADRAO if args.fonte == 'todas' else [args.fonte]
     DESTINO.mkdir(parents=True, exist_ok=True)
     ja_tem = {p.name.lower() for p in DESTINO.glob('*')}
 
@@ -253,7 +350,11 @@ def executar(args):
             print(f'  {k}/{len(novos)}…')
         time.sleep(args.pausa)
 
-    print(f'\n{ok} baixados, {ruins} recusados, em {DESTINO.relative_to(RAIZ)}')
+    try:
+        onde = DESTINO.relative_to(RAIZ)
+    except ValueError:
+        onde = DESTINO
+    print(f'\n{ok} baixados, {ruins} recusados, em {onde}')
     if ok:
         print('Agora rode: python tools/organizar_bandas.py --aplicar')
 
@@ -261,6 +362,7 @@ def executar(args):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     p.add_argument('--fonte', choices=list(FONTES) + ['todas'], default='todas')
+    p.add_argument('--destino', help='pasta de entrada (padrão: musicas/rock e metal (unsorted))')
     p.add_argument('--busca', nargs='*', help='termos para o midiworld (padrão: lista embutida)')
     p.add_argument('--paginas', type=int, default=3, help='páginas de busca por termo (padrão 3)')
     p.add_argument('--limite', type=int, default=0, help='no máximo tantos arquivos nesta rodada')

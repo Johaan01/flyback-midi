@@ -5578,6 +5578,46 @@
   "White Zombie|thunderkiss 65": {
    "artigo": null,
    "visitas": 0
+  },
+  "AC/DC|back in black": {
+   "artigo": "Back in Black (song)",
+   "visitas": 47110
+  },
+  "AC/DC|dirty deeds done dirt cheap": {
+   "artigo": "Dirty Deeds Done Dirt Cheap (song)",
+   "visitas": 37916
+  },
+  "AC/DC|for those about to rock": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "AC/DC|hells bells": {
+   "artigo": "Hells Bells (song)",
+   "visitas": 60501
+  },
+  "AC/DC|thunderstruck": {
+   "artigo": "Thunderstruck",
+   "visitas": 42080
+  },
+  "AC/DC|tnt": {
+   "artigo": null,
+   "visitas": 0
+  },
+  "AC/DC|who made who": {
+   "artigo": "Who Made Who (song)",
+   "visitas": 14475
+  },
+  "a-ha|hunting high and low": {
+   "artigo": "Hunting High and Low (song)",
+   "visitas": 3554
+  },
+  "a-ha|take on me": {
+   "artigo": "Take On Me",
+   "visitas": 278605
+  },
+  "a-ha|sun always shines on tv": {
+   "artigo": null,
+   "visitas": 0
   }
  },
  "categorias": {
@@ -6042,6 +6082,14 @@
   "Right Now (Van Halen song)": true,
   "Runnin' with the Devil": true,
   "When It's Love": true,
-  "Why Can't This Be Love": true
+  "Why Can't This Be Love": true,
+  "Back in Black": false,
+  "Back in Black (song)": true,
+  "Dirty Deeds Done Dirt Cheap": false,
+  "Dirty Deeds Done Dirt Cheap (song)": true,
+  "Hells Bells (song)": true,
+  "Thunderstruck": true,
+  "Who Made Who": false,
+  "Who Made Who (song)": true
  }
 }

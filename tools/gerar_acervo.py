@@ -34,7 +34,7 @@ TIPOS = {
     '.musicxml': 'XML', '.mxl': 'XML',
 }
 CAMPOS = ('autor', 'artista', 'instrumentos', 'estilo', 'licenca', 'credito',
-          'transcricao', 'popularidade', 'fonte')
+          'transcricao', 'popularidade', 'posicao', 'fonte')
 
 
 def sem_acento(s):
