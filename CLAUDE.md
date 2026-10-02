@@ -4,13 +4,12 @@ Contexto do projeto para quem for continuar o desenvolvimento.
 
 ## O que é
 
-Três páginas web que geram áudio para alimentar **alto-falantes de plasma** — arcos elétricos de transformadores flyback que reproduzem som. O hardware é um projeto de eletrônica de potência separado; estas páginas são apenas a fonte de áudio.
+Duas páginas web que geram áudio para alimentar **alto-falantes de plasma** — arcos elétricos de transformadores flyback que reproduzem som. O hardware é um projeto de eletrônica de potência separado; estas páginas são apenas a fonte de áudio.
 
 - `index.html` — abre MIDI ou Guitar Pro (do acervo ou do aparelho), roteia cada faixa de instrumento para o canal esquerdo ou direito, e sintetiza onda quadrada.
-- `stems.html` — carrega dois arquivos de áudio já separados (stems) e toca um em cada canal.
 - `tom.html` — gerador de tom contínuo, um por canal: frequência livre no slider, forma de onda à escolha e varredura.
 
-As três são **arquivo único, sem build, sem dependência de pacote**. Fontes do Google Fonts via CDN; o leitor de Guitar Pro vem do jsDelivr, carregado só quando um arquivo que não é MIDI é aberto. Devem funcionar abertas direto do disco e servidas pelo GitHub Pages.
+As duas são **arquivo único, sem build, sem dependência de pacote**. Fontes do Google Fonts via CDN; o leitor de Guitar Pro vem do jsDelivr, carregado só quando um arquivo que não é MIDI é aberto. Devem funcionar abertas direto do disco e servidas pelo GitHub Pages.
 
 Arquivos de apoio, fora das páginas:
 
@@ -26,6 +25,7 @@ Arquivos de apoio, fora das páginas:
 | `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi, do acervo Lakh via rawl.rocks e do folk russo do FreeSheetMusic |
 | `tools/organizar_bandas.py` | Identifica, tira repetidas e arruma `musicas/bandas` por artista, medindo o quanto cada música é conhecida (Wikipedia e ListenBrainz). Com `--plano` serve a acervo sem artista, como o folk russo |
 | `tools/popularidade.json` | O que as duas APIs responderam, guardado. Faz as rodadas seguintes não precisarem de internet e darem o mesmo resultado |
+| `tools/transcrever.py` | Gera MIDI a partir de uma gravação: separa os stems e transcreve cada um. **A única ferramenta que precisa de pacotes além da biblioteca padrão** (torch, torchaudio, librosa, basic-pitch) — é opcional, e nada no site depende dela |
 | `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
 | `tools/publicar.ps1`, `tools/publicar.cmd` | Cria o repositório, envia e liga o GitHub Pages via GitHub CLI |
@@ -195,13 +195,42 @@ O traço do osciloscópio desenha uma janela de três ciclos da frequência atua
 
 Estado no endereço (`?f=…&o=…&g=…&l=…&v=…`) e no `localStorage`. A gravação é adiada 400 ms, porque a varredura mexe na frequência a cada quadro e gravar a cada quadro seria absurdo.
 
-### stems.html — player de áudio
-
-Carrega dois arquivos de áudio, converte para mono, e roteia um para cada canal. Ganho, passa-baixa e mudo por canal. Exporta WAV com esses ajustes aplicados. Mais simples, sem lógica de notas.
-
 ### Celular
 
 Barra de reprodução fixa no rodapé, alvos de toque de 40 px ou mais (`pointer: coarse`), campos com 16 px para o iOS não dar zoom, sem rolagem horizontal a 360 px. `navigator.audioSession.type = 'playback'` para o iOS tocar com a chave de silencioso ligada. Wake Lock enquanto toca, porque tela apagada suspende o áudio. O desenho do osciloscópio para quando nada toca, para poupar bateria.
+
+### Gerar MIDI do áudio — `tools/transcrever.py`
+
+O acervo vive de transcrição de fã, e a qualidade varia muito. Transcrever direto da gravação tira a interpretação de terceiros do caminho, e o problema é mais fácil do que parece **por causa do aparelho**: cada flyback toca uma nota por vez, então não é preciso resolver transcrição polifônica — basta a linha dominante de cada stem.
+
+Separação com o Hybrid Demucs que vem no torchaudio (`HDEMUCS_HIGH_MUSDB_PLUS`), sem o pacote `demucs`. Depois, **o transcritor muda conforme a fonte**, e essa escolha é a diferença entre soar certo e soar cacofônico:
+
+| Faixa | Método | Por quê |
+|---|---|---|
+| `Vocal` | pYIN (monofônico) | voz é monofônica por natureza; sai limpo |
+| `Baixo` | pYIN (monofônico) | idem, e o registro estreito ajuda o estimador |
+| `Harmonia` | basic-pitch → linha de raiz | guitarra e teclas tocam acordes |
+
+**A `Harmonia` é o caso interessante.** Tratada como monofônica, a linha pulava entre os parciais do acorde e soava mal. Mas transcrição polifônica crua é *pior* ainda depois da redução do site: a regra de "ganha a nota mais recente" faz a linha saltar entre os membros do acorde conforme cada um entra. Medido no mesmo trecho:
+
+| | segmentos | nota média | cobertura | saltos > 5ª |
+|---|---|---|---|---|
+| pYIN | 341 | 368 ms | 62% | 34% |
+| basic-pitch cru | 1837 | 106 ms | 97% | 44% |
+| **basic-pitch → raiz** | **329** | **596 ms** | **97%** | **17%** |
+
+Então o basic-pitch entra como **detector de acorde**, não como fonte de notas: `linha_de_raiz()` pega a nota mais grave a cada instante e só troca depois que ela se firma. Dá notas longas e linha coerente.
+
+Quatro armadilhas que custaram caro e estão resolvidas no código, todas achadas medindo o funil de filtros em vez de adivinhar:
+
+- **`voiced_prob` não é confiança na altura.** Filtrar por ela descartava 80% dos quadros que o pYIN já aceitara pelo caminho de Viterbi; mesmo um piso de 0,1 derrubava 101 s de vocal para 55 s. Vale a decisão do Viterbi (`voiced_flag`), que usa continuidade temporal.
+- **Juntar antes de cortar.** Medir a duração mínima antes de unir fragmentos da mesma nota reprovava cada pedaço sozinho: 864 trechos somando 55 s viravam 36 s.
+- **Janela do pYIN.** Precisa caber dois períodos de `fmin`; com 2048 amostras e `fmin` de 30 Hz o baixo não devolvia nota nenhuma.
+- **Erro de oitava.** O estimador trava no subharmônico em ~5% das notas. `corrigir_oitavas()` puxa de volta o que está a mais de 14 semitons da mediana da faixa.
+
+Instalação: o `basic-pitch` fixa dependências antigas demais para o Python 3.13 (`resampy<0.4.3` arrasta um numpy que não compila), então vai com `pip install --no-deps basic-pitch` mais `onnxruntime pretty_midi mir_eval resampy`. O backend é ONNX; TensorFlow não entra.
+
+Numa RTX 2060, cerca de 1min40 para uma música de cinco minutos, download incluído. Se a área de trabalho estiver usando VRAM, a separação pode falhar mesmo com memória livre — daí `--trecho 5` ou `--cpu`, e o áudio baixado fica preservado para não repetir o download.
 
 ## Convenções
 

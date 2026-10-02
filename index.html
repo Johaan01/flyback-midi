@@ -170,7 +170,6 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
     <h1>MIDI para dois flybacks</h1>
     <nav class="tabs" aria-label="Páginas">
       <a href="./" aria-current="page">MIDI</a>
-      <a href="stems.html">Stems</a>
       <a href="tom.html">Tom</a>
     </nav>
   </header>
@@ -203,6 +202,8 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
         <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
         <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
         <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
+        <button id="libAdd">Adicionar MIDI deste aparelho</button>
+        <button id="libDel" class="hide">Esquecer os meus</button>
         <button id="libOff" class="hide">Guardar para usar sem internet</button>
         <a id="libUp" class="btn hide" target="_blank" rel="noopener">Enviar música para o acervo</a>
       </div>
@@ -211,6 +212,7 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
 
   <div class="drop" id="drop" tabindex="0" role="button">abrir arquivo do aparelho · MIDI ou Guitar Pro</div>
   <input type="file" id="file">
+<input type="file" id="fileMeus" multiple accept=".mid,.midi,.kar,.rmi">
 
   <div id="panel" class="hide">
     <h2>Faixas encontradas</h2>
@@ -1012,32 +1014,48 @@ async function libFromGitHub(){
   const all = new Set(paths);
   return paths.map(p => itemFromPath(p, all)).filter(Boolean);
 }
-async function loadLibrary(){
-  const msg = $('libMsg');
-  if (GH){
-    const up = $('libUp');
-    up.href = 'https://github.com/' + GH.owner + '/' + GH.repo + '/upload/main/musicas';
-    up.classList.remove('hide');
-  }
-  if (!ONLINE){
-    msg.textContent = 'O acervo aparece quando a página é aberta pelo site publicado ou pelo servidor local (python tools/servir.py).';
-    return;
-  }
-  let list = null, dados = null;
-  try {
-    const r = await fetch('musicas/index.json', { cache: 'no-cache' });
-    if (r.ok){ dados = await r.json(); list = dados.musicas; }
-  } catch (e) {}
-  if (!Array.isArray(list)){
-    list = await libFromGitHub().catch(() => null);
-    if (list) list.sort((a, b) => (a.pasta ? 1 : 0) - (b.pasta ? 1 : 0) || fold(a.pasta).localeCompare(fold(b.pasta)) || fold(a.titulo).localeCompare(fold(b.titulo)));
-  }
-  if (!Array.isArray(list)){ msg.textContent = 'Não foi possível carregar o acervo. Sem internet, só aparecem músicas guardadas antes.'; return; }
-  lib = list.filter(x => x && typeof x.arquivo === 'string');
+/* ---------- meus arquivos: MIDI guardado neste aparelho ----------
+   Fica no IndexedDB, nao no localStorage: um MIDI passa facil de 100 KB e o localStorage nao
+   comporta. Nao vai para o repositorio nem para lugar nenhum — e deste aparelho. Aparece no
+   acervo como uma pasta a parte, para tocar pelo mesmo player, com os mesmos presets. */
+const PASTA_MEUS = 'meus arquivos';
+const DB_NOME = 'flyback-meus', DB_LOJA = 'midis';
+function abrirDB(){
+  return new Promise((ok, erro) => {
+    let r;
+    try { r = indexedDB.open(DB_NOME, 1); } catch (e) { return erro(e); }
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(DB_LOJA)) r.result.createObjectStore(DB_LOJA, { keyPath: 'nome' }); };
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => erro(r.error);
+  });
+}
+function naLoja(modo, fn){
+  return abrirDB().then(db => new Promise((ok, erro) => {
+    const req = fn(db.transaction(DB_LOJA, modo).objectStore(DB_LOJA));
+    req.onsuccess = () => ok(req.result);
+    req.onerror = () => erro(req.error);
+  }));
+}
+/* tudo com try/catch: em janela anonima, ou com armazenamento bloqueado, o IndexedDB
+   simplesmente nao existe — e o resto do site tem de seguir funcionando */
+const meusTodos = () => naLoja('readonly', l => l.getAll()).catch(() => []);
+const meusUm = nome => naLoja('readonly', l => l.get(nome)).catch(() => null);
+const meusPor = reg => naLoja('readwrite', l => l.put(reg)).catch(() => null);
+const meusLimpar = () => naLoja('readwrite', l => l.clear()).catch(() => null);
+
+function meusComoItens(regs){
+  return regs.map(r => ({
+    arquivo: 'meus/' + r.nome, titulo: baseName(r.nome), tipo: 'MIDI',
+    pasta: PASTA_MEUS, config: null, local: true, nomeLocal: r.nome,
+  })).sort((a, b) => fold(a.titulo).localeCompare(fold(b.titulo)));
+}
+
+async function montarAcervo(){
+  const meus = meusComoItens(await meusTodos());
+  lib = libRemoto.concat(meus);
   lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.artista, it.instrumentos, it.estilo, temVoz(it) ? 'vocal' : ''].join(' ')); });
-  pastas = dados && Array.isArray(dados.pastas) ? dados.pastas : [];
-  if (!pastas.length) lib.forEach(it => { const r = it.pasta.split('/')[0]; if (!r) return;
-    const p = pastas.find(x => x.nome === r); p ? p.musicas++ : pastas.push({ nome: r, musicas: 1 }); });
+  pastas = pastasRemoto.slice();
+  if (meus.length) pastas.push({ nome: PASTA_MEUS, musicas: meus.length });
   const salva = store.get('pasta');
   /* o ajuste guardado pode ser de um acervo que não existe mais: só vale se ainda bater */
   acervo = salva && pastas.some(p => p.nome === salva) ? salva : '';
@@ -1045,13 +1063,62 @@ async function loadLibrary(){
   montarFiltro();
   $('libTools').classList.toggle('hide', lib.length < 7);
   $('libA').classList.toggle('hide', pastas.length < 2);
-  if (lib.some(it => it.posicao > 0)) $('libTop').classList.remove('hide');
-  if (lib.some(it => it.vocal)) $('libVoz').classList.remove('hide');
-  if (lib.some(it => it.aproveitamento)) $('libBom').classList.remove('hide');
-  if (lib.length) $('libRnd').classList.remove('hide');
+  $('libTop').classList.toggle('hide', !lib.some(it => it.posicao > 0));
+  $('libVoz').classList.toggle('hide', !lib.some(it => it.vocal));
+  $('libBom').classList.toggle('hide', !lib.some(it => it.aproveitamento));
+  $('libDel').classList.toggle('hide', !meus.length);
+  $('libDel').textContent = 'Esquecer os meus (' + meus.length + ')';
+  $('libRnd').classList.toggle('hide', !lib.length);
   if ('caches' in window && lib.length) $('libOff').classList.remove('hide');
-  msg.textContent = lib.length ? '' : 'O acervo está vazio. Envie arquivos .mid ou .gp para a pasta musicas do repositório.';
   renderLib();
+}
+
+async function guardarMeus(arquivos){
+  const msg = $('libMsg');
+  let n = 0;
+  for (const f of arquivos){
+    try {
+      await meusPor({ nome: f.name, dados: await f.arrayBuffer(), quando: Date.now() });
+      n++;
+    } catch (e) { msg.textContent = 'não deu para guardar ' + f.name + ': ' + e.message; }
+  }
+  await montarAcervo();
+  if (n) msg.textContent = n + (n === 1 ? ' arquivo guardado neste aparelho.' : ' arquivos guardados neste aparelho.');
+}
+
+let libRemoto = [], pastasRemoto = [];
+async function loadLibrary(){
+  const msg = $('libMsg');
+  if (GH){
+    const up = $('libUp');
+    up.href = 'https://github.com/' + GH.owner + '/' + GH.repo + '/upload/main/musicas';
+    up.classList.remove('hide');
+  }
+  /* O acervo remoto pode faltar — aberto do disco, ou sem rede. Os arquivos deste aparelho
+     valem do mesmo jeito, entao a montagem acontece de qualquer forma. */
+  if (ONLINE){
+    let list = null, dados = null;
+    try {
+      const r = await fetch('musicas/index.json', { cache: 'no-cache' });
+      if (r.ok){ dados = await r.json(); list = dados.musicas; }
+    } catch (e) {}
+    if (!Array.isArray(list)){
+      list = await libFromGitHub().catch(() => null);
+      if (list) list.sort((a, b) => (a.pasta ? 1 : 0) - (b.pasta ? 1 : 0) || fold(a.pasta).localeCompare(fold(b.pasta)) || fold(a.titulo).localeCompare(fold(b.titulo)));
+    }
+    if (Array.isArray(list)){
+      libRemoto = list.filter(x => x && typeof x.arquivo === 'string');
+      pastasRemoto = dados && Array.isArray(dados.pastas) ? dados.pastas : [];
+      if (!pastasRemoto.length) libRemoto.forEach(it => { const r = (it.pasta || '').split('/')[0]; if (!r) return;
+        const p = pastasRemoto.find(x => x.nome === r); p ? p.musicas++ : pastasRemoto.push({ nome: r, musicas: 1 }); });
+    } else {
+      msg.textContent = 'Não foi possível carregar o acervo. Sem internet, só aparecem músicas guardadas antes.';
+    }
+  } else {
+    msg.textContent = 'O acervo online aparece pelo site publicado ou pelo servidor local (python tools/servir.py). Os arquivos deste aparelho continuam valendo.';
+  }
+  await montarAcervo();
+  if (libRemoto.length) msg.textContent = '';
   const want = new URLSearchParams(location.search).get('m');
   const it = want && lib.find(x => x.arquivo === want);
   if (it) openLib(it);
@@ -1190,11 +1257,19 @@ function showCredit(it){
   el.classList.remove('hide');
 }
 async function openLib(it){
-  const el = $('drop'); el.textContent = 'baixando ' + it.titulo + '…'; el.classList.remove('has');
+  const el = $('drop');
+  el.textContent = (it.local ? 'abrindo ' : 'baixando ') + it.titulo + '…'; el.classList.remove('has');
   try {
-    const r = await fetch(libUrl(it.arquivo));
-    if (!r.ok) throw new Error('arquivo não encontrado no acervo (' + r.status + ')');
-    const buf = await r.arrayBuffer();
+    let buf;
+    if (it.local){
+      const reg = await meusUm(it.nomeLocal);
+      if (!reg) throw new Error('o arquivo não está mais guardado neste aparelho');
+      buf = reg.dados;
+    } else {
+      const r = await fetch(libUrl(it.arquivo));
+      if (!r.ok) throw new Error('arquivo não encontrado no acervo (' + r.status + ')');
+      buf = await r.arrayBuffer();
+    }
     let sidecar = null;
     if (it.config){ try { const c = await fetch(libUrl(it.config)); if (c.ok) sidecar = await c.json(); } catch (e) {} }
     const n = await openBuffer(buf, { key: 'acervo:' + it.arquivo, file: it.arquivo.split('/').pop(), title: it.titulo, sidecar, lib: it });
@@ -1222,6 +1297,14 @@ $('libBom').onclick = () => {
   soBom = !soBom;
   $('libBom').setAttribute('aria-pressed', String(soBom));
   renderLib();
+};
+$('libAdd').onclick = () => $('fileMeus').click();
+$('fileMeus').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) guardarMeus(fs); };
+$('libDel').onclick = async () => {
+  if (!confirm('Esquecer os arquivos MIDI guardados neste aparelho? O acervo online não muda.')) return;
+  await meusLimpar();
+  await montarAcervo();
+  $('libMsg').textContent = 'arquivos esquecidos.';
 };
 $('libRnd').onclick = () => { const pool = filtrados.length ? filtrados : lib; if (pool.length) openLib(pool[Math.floor(Math.random() * pool.length)]); };
 $('libOff').onclick = async () => {

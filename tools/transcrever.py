@@ -47,10 +47,21 @@ BPM = 120          # andamento nominal; as notas vão em tempo absoluto, então 
 
 # Faixa de busca de altura por stem, em Hz. Limitar ajuda muito o pYIN: fora destes limites
 # ele erra oitava, que é o erro mais comum e o mais audível.
+# 'metodo' escolhe o transcritor pela natureza da fonte, e é a diferença entre soar certo e
+# soar cacofônico:
+#   mono  rastreio de altura (pYIN). Voz e baixo são monofônicos por natureza — uma nota por
+#         vez — e aqui o resultado é limpo.
+#   poli  basic-pitch, que devolve eventos de nota de verdade. O stem "other" é guitarra e
+#         teclas juntas, tocando acordes; tratá-lo como monofônico fazia a linha pular entre
+#         os parciais do acorde, que é exatamente o barulho que se ouve. Com os acordes
+#         escritos como acordes, a redução do site escolhe a raiz e sai harmonia coerente.
 STEMS = {
-    'vocals': {'nome': 'Vocal', 'programa': 85, 'fmin': 80.0, 'fmax': 1100.0, 'min_dur': .08},
-    'bass': {'nome': 'Baixo', 'programa': 33, 'fmin': 38.0, 'fmax': 400.0, 'min_dur': .10},
-    'other': {'nome': 'Harmonia', 'programa': 30, 'fmin': 70.0, 'fmax': 1600.0, 'min_dur': .10},
+    'vocals': {'nome': 'Vocal', 'programa': 85, 'metodo': 'mono',
+               'fmin': 80.0, 'fmax': 1100.0, 'min_dur': .08},
+    'bass': {'nome': 'Baixo', 'programa': 33, 'metodo': 'mono',
+             'fmin': 38.0, 'fmax': 400.0, 'min_dur': .10},
+    'other': {'nome': 'Harmonia', 'programa': 30, 'metodo': 'poli', 'raiz': True,
+              'fmin': 70.0, 'fmax': 1600.0, 'min_dur': .10},
 }
 ORDEM = ['vocals', 'bass', 'other']
 
@@ -119,7 +130,7 @@ def titulo_de(url):
 
 
 # ---------------------------------------------------------------- separação
-def separar(caminho, dispositivo):
+def separar(caminho, dispositivo, segundos=10.0):
     """Devolve {nome do stem: onda mono em 44,1 kHz} usando o Hybrid Demucs do torchaudio."""
     import librosa
     import numpy as np
@@ -141,7 +152,10 @@ def separar(caminho, dispositivo):
     onda = (onda - ref.mean()) / (ref.std() + 1e-8)
 
     # Em pedaços, com sobreposição: a música inteira de uma vez não cabe em 6 GB de VRAM.
-    trecho = int(sr * 20.0)
+    # Blocos de 10 s, não de 20. O pico de VRAM do Demucs cresce com o bloco, e numa placa de
+    # 6 GB o navegador e o resto da área de trabalho já ocupam perto de 2 — com blocos grandes
+    # a alocação falha no meio da música. Melhor processar em mais pedaços e terminar.
+    trecho = int(sr * segundos)
     borda = int(sr * 1.0)
     saida = None
     pos = 0
@@ -157,12 +171,92 @@ def separar(caminho, dispositivo):
             b = a + min(trecho, onda.shape[1] - pos)
             saida[:, :, pos:pos + (b - a)] = r[:, :, a:b]
             pos += trecho
+            if dispositivo == 'cuda':
+                torch.cuda.empty_cache()   # o pico de um bloco nao pode somar com o do seguinte
             log(f'  separando… {min(100, int(100 * pos / onda.shape[1]))}%')
     saida = saida * (ref.std() + 1e-8) + ref.mean()
     return {n: saida[i].mean(0).numpy() for i, n in enumerate(nomes)}, sr
 
 
 # ---------------------------------------------------------------- altura -> notas
+def notas_polifonicas(onda, sr, cfg):
+    """Transcrição polifônica com o basic-pitch, para o stem que tem acorde.
+
+    Vai pelo backend ONNX. O pacote fixa dependências antigas demais para o Python 3.13
+    (`resampy<0.4.3` arrasta um numpy que não compila mais), então o caminho de instalação é
+    `pip install --no-deps basic-pitch` mais `onnxruntime pretty_midi mir_eval resampy`.
+    """
+    import soundfile as sf
+    from basic_pitch.inference import predict
+
+    with tempfile.TemporaryDirectory() as d:
+        wav = Path(d) / 'stem.wav'
+        sf.write(wav, onda, sr)
+        _, _, eventos = predict(
+            str(wav),
+            minimum_frequency=cfg['fmin'], maximum_frequency=cfg['fmax'],
+            minimum_note_length=cfg['min_dur'] * 1000,
+            onset_threshold=.55, frame_threshold=.35)
+    notas = []
+    for ini, fim, altura, amp, *_ in eventos:
+        if fim - ini < cfg['min_dur'] or not 0 <= int(altura) < 128:
+            continue
+        vel = int(max(28, min(127, round(28 + 99 * min(1.0, float(amp)) ** .6))))
+        notas.append((float(ini), float(fim), int(altura), vel))
+    return linha_de_raiz(sorted(notas), cfg) if cfg.get('raiz') else sorted(notas)
+
+
+def linha_de_raiz(notas, cfg, passo=.04, firmeza=.14):
+    """Reduz um acorde a uma linha de raiz, segurando a nota enquanto o acorde não muda.
+
+    Transcrição polifônica escreve a representação certa, mas sozinha ela piora o resultado no
+    arco. O flyback toca uma nota por vez, e a regra de "ganha a nota mais recente" faz a linha
+    pular entre os membros do acorde conforme cada um entra: medido no mesmo trecho, as notas
+    caem de 368 ms para 106 ms e o salto mediano sobe de 5 para 7 semitons. Fica picotado.
+
+    Então o basic-pitch entra como detector de acorde, não como fonte de notas: a cada instante
+    vale a nota mais grave entre as que soam, que é a raiz na maioria das posições de guitarra e
+    teclado, e ela só troca depois de se firmar por `firmeza` segundos. O resultado é uma linha
+    harmônica que acompanha a música em vez de brigar com ela.
+    """
+    if not notas:
+        return []
+    fim_total = max(b for _, b, _, _ in notas)
+    k = int(fim_total / passo) + 1
+    grave = [None] * k
+    forca = [0.0] * k
+    for a, b, n, v in notas:
+        for i in range(int(a / passo), min(k, int(b / passo) + 1)):
+            if grave[i] is None or n < grave[i]:
+                grave[i] = n
+                forca[i] = v
+    # só troca de nota depois que a nova se firma, para não seguir ruído de um quadro
+    firme, atual, desde = [], None, 0
+    espera = max(1, int(firmeza / passo))
+    for i in range(k):
+        n = grave[i]
+        if n != atual:
+            if n is not None and all(grave[j] == n for j in range(i, min(k, i + espera))):
+                atual, desde = n, i
+            elif n is None and all(grave[j] is None for j in range(i, min(k, i + espera))):
+                atual, desde = None, i
+        firme.append(atual)
+
+    saida, ini = [], None
+    for i in range(k + 1):
+        n = firme[i] if i < k else None
+        ant = firme[i - 1] if i else None
+        if ini is not None and n != ant:
+            dur = (i - ini) * passo
+            if dur >= cfg['min_dur'] and ant is not None:
+                v = int(max(28, min(127, max(forca[ini:i], default=70))))
+                saida.append((ini * passo, i * passo, int(ant), v))
+            ini = None
+        if n is not None and ini is None:
+            ini = i
+    return saida
+
+
 def notas_do_stem(onda, sr, cfg):
     """Rastreia a altura dominante e devolve [(inicio, fim, nota MIDI, velocity)]."""
     import librosa
@@ -324,14 +418,32 @@ def transcrever(args):
     disp = 'cuda' if torch.cuda.is_available() and not args.cpu else 'cpu'
     log(f'"{titulo}"  ·  {disp}')
 
-    stems, sr = separar(audio, disp)
+    try:
+        stems, sr = separar(audio, disp, args.trecho)
+    except Exception as e:
+        if disp == 'cpu':
+            raise
+        # Sem tentar a CPU no mesmo processo: depois de um erro de CUDA o estado do processo
+        # não é confiável e a segunda tentativa termina em falha de segmentação. Melhor parar
+        # dizendo o que fazer, com o áudio já baixado à mão para não repetir o download.
+        sys.exit(f'a GPU falhou: {type(e).__name__}: {e}\n'
+                 f'O áudio ficou em {audio}\n'
+                 f'Rode de novo apontando para ele, com uma destas:\n'
+                 f'  --trecho 5   blocos menores, menos VRAM por vez\n'
+                 f'  --cpu        sem GPU, bem mais lento mas sempre termina')
     faixas = []
     for chave in ORDEM:
         if chave not in stems:
             continue
         cfg = STEMS[chave]
-        log(f'  transcrevendo {cfg["nome"]}…')
-        notas = notas_do_stem(stems[chave], sr, cfg)
+        poli = cfg['metodo'] == 'poli' and not args.so_mono
+        log(f'  transcrevendo {cfg["nome"]} ({"polifônico" if poli else "monofônico"})…')
+        try:
+            notas = notas_polifonicas(stems[chave], sr, cfg) if poli \
+                else notas_do_stem(stems[chave], sr, cfg)
+        except ImportError as e:
+            log(f'    (basic-pitch indisponível: {e}; caindo no rastreio monofônico)')
+            notas = notas_do_stem(stems[chave], sr, cfg)
         log(f'    {len(notas)} notas')
         if notas:
             faixas.append((cfg['nome'], cfg['programa'], notas))
@@ -357,6 +469,10 @@ def main():
     p.add_argument('--titulo', help='nome da música no acervo')
     p.add_argument('--saida', help='pasta de destino (padrão: musicas/unsorted)')
     p.add_argument('--cpu', action='store_true', help='não usar a GPU')
+    p.add_argument('--trecho', type=float, default=10.0,
+                   help='segundos de áudio por bloco na separação (padrão 10)')
+    p.add_argument('--so-mono', action='store_true',
+                   help='rastreio monofônico em tudo, sem basic-pitch')
     args = p.parse_args()
     if not args.audio and not args.url:
         p.error('passe um arquivo de áudio ou --url')

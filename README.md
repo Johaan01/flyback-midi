@@ -1,12 +1,11 @@
 # Flyback MIDI
 
 Fonte de áudio para alto-falantes de plasma: arcos elétricos de transformadores flyback que
-reproduzem som. Três páginas, cada uma um arquivo único, sem build.
+reproduzem som. Duas páginas, cada uma um arquivo único, sem build.
 
 | Arquivo | O que faz |
 |---|---|
 | `index.html` | Abre MIDI ou Guitar Pro, roteia cada faixa de instrumento para um canal, sintetiza onda quadrada |
-| `stems.html` | Carrega dois arquivos de áudio separados e toca um em cada canal |
 | `tom.html` | Gerador de tom: frequência livre no slider, forma de onda à escolha e varredura, um tom por canal |
 
 Cada canal de saída corresponde a um flyback. Como o arco é monofônico, acordes são reduzidos
@@ -22,7 +21,10 @@ a uma nota por vez, e a separação entre os canais é dura.
   "Baixar configuração" gera um `.json` que, enviado junto com a música, deixa ela pronta para
   qualquer aparelho.
 - **WAV estéreo.** Renderiza a música com os dois canais separados, para tocar em qualquer player
-  pelo cabo P2, sem navegador. A página de stems também exporta.
+  pelo cabo P2, sem navegador.
+- **Meus arquivos.** "Adicionar MIDI deste aparelho" guarda os arquivos no navegador e os mostra
+  no acervo como uma pasta à parte, tocando pelo mesmo player e com os mesmos presets. Ficam só
+  neste aparelho: não sobem para o repositório nem para lugar nenhum.
 - **Gerador de tom.** Um tom contínuo por canal, com slider logarítmico de 20 Hz a 20 kHz que
   desliza sem degrau, senoide/quadrada/triangular/dente de serra, varredura automática entre
   dois limites e intervalos prontos entre os dois flybacks (uníssono, oitava, quinta, batimento
@@ -102,6 +104,7 @@ mesma música e normalmente só uma traz o vocal. Em *Highway to Hell*, por exem
 | `tools/curar_acervo.py` | Enxuga e reorganiza `classicos` por região e compositor. O download bruto traz 4.867 arquivos, a maior parte método, estudo e parte de instrumento solta; a ferramenta mede quanto de cada peça sobrevive à redução a dois canais monofônicos e deixa o repertório que se reconhece |
 | `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi, do acervo Lakh (via rawl.rocks) e do folk russo do FreeSheetMusic |
 | `tools/organizar_bandas.py` | Identifica, tira repetidas, mede a linha de canto e ordena `bandas` pelo quanto a música é conhecida, com Wikipedia e ListenBrainz |
+| `tools/transcrever.py` | Gera MIDI a partir de uma gravação, separando voz, baixo e harmonia em faixas. Opcional, e a única ferramenta que precisa de pacotes além da biblioteca padrão |
 
 O caminho completo para acrescentar músicas de banda é:
 
