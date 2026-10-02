@@ -458,7 +458,13 @@ def organizar(args):
     if args.destino:
         d = Path(args.destino)
         DESTINO = d if d.is_absolute() else (RAIZ / d)
-    origem = Path(args.origem) if args.origem else ORIGEM
+    # resolvida contra a raiz, como --destino: caminho relativo não casa com DESTINO, e aí
+    # ja_arrumado() não reconhece arquivo que já está no acervo e todos caem em "(sem banda)"
+    if args.origem:
+        o = Path(args.origem)
+        origem = o if o.is_absolute() else (RAIZ / o)
+    else:
+        origem = ORIGEM
     # a pasta de entrada some quando tudo dela já foi arrumado; sem ela a ferramenta ainda
     # serve, para reclassificar o que está em musicas/bandas
     if not origem.is_dir() and not DESTINO.is_dir():
@@ -547,6 +553,12 @@ def organizar(args):
     if anonimas > max(5, len(ficam) * .02):
         print(f'\n!! {anonimas} de {len(ficam)} músicas sem artista identificado — confira o nome '
               f'dos arquivos de entrada ("Artista - Título.mid")', file=sys.stderr)
+        # Parar, e não só avisar. Com o artista perdido todas caem no mesmo balde e, ao tirar
+        # repetidas, músicas homônimas de bandas diferentes viram uma só — o acervo é destruído
+        # em silêncio. Já aconteceu: um --origem relativo fez 1.210 de 1.225 caírem aqui, e o
+        # aviso sozinho não impediu a gravação.
+        if args.aplicar and not args.mesmo_assim:
+            sys.exit('parando antes de gravar. Use --mesmo-assim se for mesmo o que você quer.')
     print(f'{len(bandas)} bandas: {", ".join(bandas)}')
     print(f'{len(ficam)} músicas distintas, {len(repetidas)} repetidas descartadas\n')
 
@@ -705,6 +717,11 @@ def organizar(args):
         entrada['vocal'] = veredito_lead(i['lead'])
         if i['cantor'] and i['lead'] >= 3.8:
             entrada['vocal'] += f' · faixa "{i["cantor"]}"'
+        # quanto da música sobrevive à redução a duas linhas monofônicas. É a medida que
+        # responde "isso vai soar bem no arco?", e já era calculada para escolher a versão —
+        # só não chegava ao site. Transcrição cheia de acorde cai aqui, e é justamente a que
+        # soa pobre no flyback.
+        entrada['aproveitamento'] = round(i['score'] * 100)
         if not args.plano:     # sem medição, não há posição nem nível para registrar
             entrada['posicao'] = i['posicao']
             entrada['nivel'] = nivel
@@ -764,6 +781,8 @@ def main():
     p.add_argument('--artista', help='artista fixo, para acervo sem autor identificado')
     p.add_argument('--token', help='token do ListenBrainz (ou a variável LISTENBRAINZ_TOKEN)')
     p.add_argument('--offline', action='store_true', help='usa só o que já está em popularidade.json')
+    p.add_argument('--mesmo-assim', action='store_true',
+                   help='grava mesmo com muitas músicas sem artista identificado')
     p.add_argument('-v', '--verbose', action='store_true', help='mostra as repetidas uma a uma')
     organizar(p.parse_args())
 

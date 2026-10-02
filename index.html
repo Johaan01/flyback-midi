@@ -202,6 +202,7 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
         <button id="libRnd" class="hide">Sortear uma</button>
         <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
         <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
+        <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
         <button id="libOff" class="hide">Guardar para usar sem internet</button>
         <a id="libUp" class="btn hide" target="_blank" rel="noopener">Enviar música para o acervo</a>
       </div>
@@ -244,6 +245,14 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
           <label for="pick0">Em acorde, tocar</label>
           <select id="pick0"><option value="hi" selected>a nota mais aguda</option><option value="lo">a nota mais grave</option></select>
         </div>
+        <div class="ctl">
+          <label for="env0">Envelope</label>
+          <select id="env0"><option value="nenhum">nenhum (OOK)</option><option value="percussivo">percussivo</option><option value="medio" selected>médio</option><option value="sustentado">sustentado</option></select>
+        </div>
+        <div class="ctl">
+          <label for="vel0">Dinâmica do MIDI</label>
+          <select id="vel0"><option value="sim" selected>seguir a velocity</option><option value="nao">ignorar</option></select>
+        </div>
         <p class="stat" id="stat0">sem faixa</p>
       </section>
       <section class="ch b">
@@ -263,6 +272,14 @@ select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);bor
         <div class="ctl">
           <label for="pick1">Em acorde, tocar</label>
           <select id="pick1"><option value="hi" selected>a nota mais aguda</option><option value="lo">a nota mais grave</option></select>
+        </div>
+        <div class="ctl">
+          <label for="env1">Envelope</label>
+          <select id="env1"><option value="nenhum">nenhum (OOK)</option><option value="percussivo">percussivo</option><option value="medio" selected>médio</option><option value="sustentado">sustentado</option></select>
+        </div>
+        <div class="ctl">
+          <label for="vel1">Dinâmica do MIDI</label>
+          <select id="vel1"><option value="sim" selected>seguir a velocity</option><option value="nao">ignorar</option></select>
         </div>
         <p class="stat" id="stat1">sem faixa</p>
       </section>
@@ -389,7 +406,7 @@ function parseMidi(buf, porCanal = true){
   if (!division) throw new Error('cabeçalho MIDI inválido');
 
   const raw = [], tempos = [], progAny = new Array(16).fill(-1);
-  const add = (m, c, s, e, n) => { let a = m.get(c); if (!a) m.set(c, a = []); a.push({ s, e, n }); };
+  const add = (m, c, s, e, n, v) => { let a = m.get(c); if (!a) m.set(c, a = []); a.push({ s, e, n, v }); };
   let seen = 0;
   while (seen < ntrks && p + 8 <= len){
     const id = str(4), clen = v.getUint32(p); p += 4;
@@ -416,15 +433,16 @@ function parseMidi(buf, porCanal = true){
           const hi = st & 0xf0, c = st & 0x0f;
           if (hi === 0x90 || hi === 0x80){
             const n = u8(), vel = u8(), key = c * 128 + n;
-            if (hi === 0x90 && vel > 0){ const q = open.get(key); q ? q.push(tick) : open.set(key, [tick]); }
-            else { const q = open.get(key); if (q && q.length){ const s = q.shift(); if (tick > s) add(byCh, c, s, tick, n); } }
+            /* a velocity segue junto: e a dinamica que o arquivo ja carrega e que o site jogava fora */
+            if (hi === 0x90 && vel > 0){ const q = open.get(key); q ? q.push({ s: tick, v: vel }) : open.set(key, [{ s: tick, v: vel }]); }
+            else { const q = open.get(key); if (q && q.length){ const o = q.shift(); if (tick > o.s) add(byCh, c, o.s, tick, n, o.v); } }
           } else if (hi === 0xc0){ const pg = u8(); if (prog[c] < 0) prog[c] = pg; if (progAny[c] < 0) progAny[c] = pg; }
           else if (hi === 0xd0) p += 1;
           else p += 2;
         }
       }
     } catch (e) { if (!(e instanceof RangeError)) throw e; } /* arquivo truncado: fica com o que deu para ler */
-    open.forEach((q, key) => q.forEach(s => { if (tick > s) add(byCh, key >> 7, s, tick, key & 127); }));
+    open.forEach((q, key) => q.forEach(o => { if (tick > o.s) add(byCh, key >> 7, o.s, tick, key & 127, o.v); }));
     p = end;
     raw.push({ name, byCh, prog, mtrk: seen - 1 });
   }
@@ -441,7 +459,7 @@ function parseMidi(buf, porCanal = true){
     while (lo < hi){ const mid = (lo + hi + 1) >> 1; if (map[mid].tick <= tk) lo = mid; else hi = mid - 1; }
     const m = map[lo]; return m.sec + (tk - m.tick) / division * (m.us / 1e6);
   };
-  const conv = list => list.map(x => ({ n: x.n, t0: toSec(x.s), t1: toSec(x.e) })).sort((a, b) => a.t0 - b.t0);
+  const conv = list => list.map(x => ({ n: x.n, t0: toSec(x.s), t1: toSec(x.e), v: x.v || 96 })).sort((a, b) => a.t0 - b.t0);
   const instr = (r, c) => { const pg = r.prog[c] >= 0 ? r.prog[c] : progAny[c]; return c === 9 ? 'Bateria' : pg >= 0 ? GM[pg] : ''; };
   /* o numero do programa vai junto na faixa: scoreVoz() usa a familia do instrumento para
      reconhecer voz e lead, e para descartar baixo quando a faixa nao tem nome */
@@ -550,24 +568,39 @@ function buildSegs(i){
   const ev = [];
   sel.forEach(([t, p]) => t.notes.forEach(n => {
     const k = (n.n << 4) | p;                                    /* altura e prioridade numa chave so */
-    ev.push({ t: n.t0, on: 1, k: k }); ev.push({ t: n.t1, on: 0, k: k });
+    ev.push({ t: n.t0, on: 1, k: k, v: n.v }); ev.push({ t: n.t1, on: 0, k: k });
   }));
   ev.sort((a, b) => a.t - b.t || a.on - b.on);
   const live = new Map(); const segs = []; let cur = null;
+  /* Entre as notas soando ganha, nesta ordem: prioridade da faixa, depois a que entrou por
+     ultimo, e so entao a altura.
+
+     A recencia e o que conserta a melodia. Numa linha tocada em legato as notas se
+     sobrepoem por alguns milissegundos, e escolher sempre a mais aguda fazia a linha travar
+     na nota anterior toda vez que a melodia descia — dava um pulo errado, audivel. "A ultima
+     que entrou ganha" e o comportamento padrao de sintetizador monofonico.
+
+     A altura so decide quando duas notas comecam juntas, que e o caso do acorde — e ai o
+     criterio do usuario (mais aguda ou mais grave) continua valendo como antes. */
   const best = () => {
-    let bn = null, bp = -1;
-    for (const k of live.keys()){
+    let bk = null, bp = -1, bt = -1, bn = -1;
+    for (const [k, o] of live){
       const n = k >> 4, p = k & 15;
-      if (p > bp || (p === bp && (pick === 'hi' ? n > bn : n < bn))){ bp = p; bn = n; }
+      if (p > bp || (p === bp && (o.t > bt + 1e-9
+          || (Math.abs(o.t - bt) <= 1e-9 && (pick === 'hi' ? n > bn : n < bn))))){
+        bk = k; bp = p; bt = o.t; bn = n;
+      }
     }
-    return bn;
+    return bk === null ? null : { n: bn, v: live.get(bk).v };
   };
   for (const e of ev){
-    if (e.on) live.set(e.k, (live.get(e.k) || 0) + 1);
-    else { const c = (live.get(e.k) || 0) - 1; c <= 0 ? live.delete(e.k) : live.set(e.k, c); }
+    if (e.on){
+      const o = live.get(e.k);
+      if (o){ o.c++; o.t = e.t; o.v = e.v; } else live.set(e.k, { c: 1, t: e.t, v: e.v });
+    } else { const o = live.get(e.k); if (o && --o.c <= 0) live.delete(e.k); }
     const b = best();
-    if (cur && cur.n !== b){ cur.end = e.t; if (cur.end > cur.start + .005) segs.push(cur); cur = null; }
-    if (b !== null && !cur) cur = { start: e.t, end: null, n: b };
+    if (cur && (!b || cur.n !== b.n)){ cur.end = e.t; if (cur.end > cur.start + .005) segs.push(cur); cur = null; }
+    if (b && !cur) cur = { start: e.t, end: null, n: b.n, v: b.v };
   }
   if (cur && cur.end === null){ cur.end = duration; if (cur.end > cur.start) segs.push(cur); }
   segs.forEach(s => { s.n += 12 * oct; s.f = hz(s.n); });
@@ -576,7 +609,19 @@ function buildSegs(i){
 function rebuild(){ ch.forEach((c, i) => c.segs = buildSegs(i)); }
 
 /* ---------- síntese: a mesma agenda serve para tocar ao vivo e para renderizar o WAV ---------- */
-function scheduleVoice(c, dest, segs, at, t0, vol){
+/* Envelope por nota: constante de decaimento em segundos e nivel de sustentacao.
+   'nenhum' reproduz o modo OOK do driver, em que a portadora tem largura fixa e so liga e
+   desliga — ali o arco nao tem dinamica de amplitude e um envelope deixaria o preview menos
+   fiel, nao mais. Os outros valem para o modo de modulacao continua, em que a largura de
+   pulso acompanha o audio e a amplitude chega ao arco. Ver docs/hardware-decisoes.md, secao 1. */
+const ENVELOPES = {
+  nenhum:     null,
+  percussivo: { tau: .12, sus: .10 },
+  medio:      { tau: .45, sus: .35 },
+  sustentado: { tau: 1.2, sus: .70 },
+};
+const ATAQUE = .004;
+function scheduleVoice(c, dest, segs, at, t0, vol, env, usaVel){
   const osc = c.createOscillator(); osc.type = 'square';
   const gn = c.createGain(); gn.gain.value = 0;
   osc.connect(gn); gn.connect(dest);
@@ -584,17 +629,30 @@ function scheduleVoice(c, dest, segs, at, t0, vol){
   for (const s of segs){
     if (s.end <= at) continue;
     const a = t0 + Math.max(0, s.start - at), b = t0 + (s.end - at);
-    if (b - a < .012){ osc.frequency.setValueAtTime(s.f, a); gn.gain.setValueAtTime(vol, a); gn.gain.setValueAtTime(0, b); continue; }
+    /* a velocity do MIDI vira amplitude inicial; a curva deixa o pianissimo audivel */
+    const pico = vol * (usaVel ? .25 + .75 * Math.pow(Math.min(127, s.v || 96) / 127, 1.4) : 1);
     osc.frequency.setValueAtTime(s.f, a);
+    if (b - a < .012){ gn.gain.setValueAtTime(pico, a); gn.gain.setValueAtTime(0, b); continue; }
     gn.gain.setValueAtTime(0, a);
-    gn.gain.linearRampToValueAtTime(vol, a + .004);
-    gn.gain.setValueAtTime(vol, b - .006);
-    gn.gain.linearRampToValueAtTime(0, b);
+    gn.gain.linearRampToValueAtTime(pico, a + ATAQUE);
+    if (env){
+      /* decaimento exponencial ate o nivel de sustentacao, por setTargetAtTime */
+      gn.gain.setTargetAtTime(pico * env.sus, a + ATAQUE, env.tau);
+      const fim = Math.max(a + ATAQUE + .002, b - .006);
+      const nivel = pico * (env.sus + (1 - env.sus) * Math.exp(-(fim - a - ATAQUE) / env.tau));
+      gn.gain.setValueAtTime(nivel, fim);
+      gn.gain.linearRampToValueAtTime(0, b);
+    } else {
+      gn.gain.setValueAtTime(pico, b - .006);
+      gn.gain.linearRampToValueAtTime(0, b);
+    }
   }
   osc.start(t0); osc.stop(t0 + Math.max(.1, duration - at) + .2);
   return { osc, gn };
 }
 const volOf = i => (+$('gain' + i).value) / 100;
+const envOf = i => ENVELOPES[$('env' + i).value] || null;
+const velOf = i => $('vel' + i).value === 'sim';
 
 /* ---------- transporte ---------- */
 function start(at){
@@ -602,7 +660,7 @@ function start(at){
   if (c.state !== 'running') c.resume();
   stopVoices();
   const t0 = c.currentTime + .06;
-  ch.forEach((k, i) => { const v = scheduleVoice(c, k.filter, k.segs, at, t0, volOf(i)); k.osc = v.osc; k.gain = v.gn; });
+  ch.forEach((k, i) => { const v = scheduleVoice(c, k.filter, k.segs, at, t0, volOf(i), envOf(i), velOf(i)); k.osc = v.osc; k.gain = v.gn; });
   startedAt = t0; offset = at; playing = true;
   $('play').textContent = '❚❚'; $('play').setAttribute('aria-label', 'Pausar');
   keepAwake(true); serialStart(at);
@@ -831,7 +889,9 @@ function currentCfg(){
       ganho: +$('gain' + i).value,
       passaBaixa: Math.round(freqOf(+$('lp' + i).value)),
       oitava: +$('oct' + i).value,
-      acorde: $('pick' + i).value === 'lo' ? 'grave' : 'agudo'
+      acorde: $('pick' + i).value === 'lo' ? 'grave' : 'agudo',
+      envelope: $('env' + i).value,
+      velocity: $('vel' + i).value === 'sim'
     }))
   };
 }
@@ -844,7 +904,12 @@ function syncLabels(){
   }
 }
 function resetControls(){
-  for (let i = 0; i < N; i++){ $('gain' + i).value = 70; $('lp' + i).value = 1000; $('oct' + i).value = '0'; $('pick' + i).value = 'hi'; }
+  /* Esquerda na nota mais grave, direita na mais aguda. A esquerda quase sempre fica com o
+     acompanhamento, e reduzir um acorde a nota mais aguda entrega a oitava ou a quinta em vez
+     da raiz — a harmonia sai errada e fina. Os arranjos do proprio projeto ja vinham com
+     'acorde: grave' a esquerda; o padrao do site e que estava fora de passo com eles. */
+  for (let i = 0; i < N; i++){ $('gain' + i).value = 70; $('lp' + i).value = 1000; $('oct' + i).value = '0';
+    $('pick' + i).value = i === 0 ? 'lo' : 'hi'; $('env' + i).value = 'medio'; $('vel' + i).value = 'sim'; }
   syncLabels();
 }
 /* devolve false se nenhuma faixa casar pelo nome, ou seja, se a configuração é de outro arquivo */
@@ -868,6 +933,8 @@ function applyCfg(cfg){
     if (isFinite(c.passaBaixa) && c.passaBaixa > 0) $('lp' + i).value = Math.max(0, Math.min(1000, sliderOf(+c.passaBaixa)));
     if ([-2, -1, 0, 1, 2].includes(+c.oitava)) $('oct' + i).value = String(+c.oitava);
     if (c.acorde) $('pick' + i).value = c.acorde === 'grave' ? 'lo' : 'hi';
+    if (c.envelope && ENVELOPES.hasOwnProperty(c.envelope)) $('env' + i).value = c.envelope;
+    if (typeof c.velocity === 'boolean') $('vel' + i).value = c.velocity ? 'sim' : 'nao';
   });
   syncLabels(); renderTracks(); reschedule();
   return true;
@@ -980,6 +1047,7 @@ async function loadLibrary(){
   $('libA').classList.toggle('hide', pastas.length < 2);
   if (lib.some(it => it.posicao > 0)) $('libTop').classList.remove('hide');
   if (lib.some(it => it.vocal)) $('libVoz').classList.remove('hide');
+  if (lib.some(it => it.aproveitamento)) $('libBom').classList.remove('hide');
   if (lib.length) $('libRnd').classList.remove('hide');
   if ('caches' in window && lib.length) $('libOff').classList.remove('hide');
   msg.textContent = lib.length ? '' : 'O acervo está vazio. Envie arquivos .mid ou .gp para a pasta musicas do repositório.';
@@ -998,7 +1066,14 @@ const TOPO = 60;
    pobre no flyback, porque toca só acompanhamento. Quem monta o acervo mede isso arquivo a
    arquivo — ouvir 718 um a um não é possível. */
 const temVoz = it => typeof it.vocal === 'string' && it.vocal.startsWith('sim');
-let acervo = '', soTopo = false, soVoz = false;
+/* 'aproveitamento' e quanto da musica sobrevive a reducao a duas linhas monofonicas.
+   Transcricao cheia de acorde cai aqui, e e justamente a que soa pobre no arco. */
+/* Calibrado contra o que o dono do projeto diz que soa bem no arco: 'Na Gruta do Rei da
+   Montanha' tira 83%, Korobeiniki 61% e ambas soam excelentes; 'Back in Black', cheia de
+   acorde, tira 34% e soa pobre. O corte fica logo abaixo do Korobeiniki. */
+const APROV_MIN = 58;
+const soaBem = it => (it.aproveitamento || 0) >= APROV_MIN;
+let acervo = '', soTopo = false, soVoz = false, soBom = false;
 const dentroDe = (it, p) => !p || it.pasta === p || it.pasta.startsWith(p + '/');
 const contar = p => lib.reduce((s, it) => s + (dentroDe(it, p) ? 1 : 0), 0);
 const nBR = v => v.toLocaleString('pt-BR');
@@ -1010,7 +1085,7 @@ function montarAcervos(){
     b.textContent = rotulo + ' (' + nBR(contar(valor)) + ')';
     b.setAttribute('aria-pressed', acervo === valor);
     b.onclick = () => {
-      acervo = valor; soTopo = soVoz = false;
+      acervo = valor; soTopo = soVoz = soBom = false;
       store.set('pasta', valor);
       montarAcervos(); montarFiltro(); renderLib();
     };
@@ -1059,6 +1134,7 @@ function filtrar(){
   return lib.filter(it => dentroDe(it, p)
     && (!soTopo || (it.posicao > 0 && it.posicao <= TOPO))
     && (!soVoz || temVoz(it))
+    && (!soBom || soaBem(it))
     && ws.every(w => it._busca.includes(w)));
 }
 function renderLib(){
@@ -1102,8 +1178,9 @@ function showCredit(it){
      de onde saiu a posição delas no acervo. Ver USO-EDUCACIONAL.md. */
   const VOZ = { sim: 'tem linha de canto', nao: 'sem linha de canto', talvez: 'linha de canto incerta' };
   const voz = it.vocal ? it.vocal.replace(/^(sim|nao|talvez)/, m => VOZ[m]) : null;
+  const aprov = it.aproveitamento ? 'cabe em dois canais: ' + it.aproveitamento + '%' : null;
   const partes = [it.autor, it.instrumentos, it.estilo, it.licenca === 'deste projeto' ? null : it.licenca,
-                  it.credito, voz, it.popularidade].filter(Boolean);
+                  it.credito, voz, aprov, it.popularidade].filter(Boolean);
   el.appendChild(document.createTextNode(partes.join(' · ')));
   if (/^https?:\/\//.test(it.fonte || '')){
     const a = document.createElement('a'); a.href = it.fonte; a.target = '_blank'; a.rel = 'noopener';
@@ -1139,6 +1216,11 @@ $('libTop').onclick = () => {
 $('libVoz').onclick = () => {
   soVoz = !soVoz;
   $('libVoz').setAttribute('aria-pressed', String(soVoz));
+  renderLib();
+};
+$('libBom').onclick = () => {
+  soBom = !soBom;
+  $('libBom').setAttribute('aria-pressed', String(soBom));
   renderLib();
 };
 $('libRnd').onclick = () => { const pool = filtrados.length ? filtrados : lib; if (pool.length) openLib(pool[Math.floor(Math.random() * pool.length)]); };
@@ -1192,7 +1274,7 @@ async function renderWav(){
   ch.forEach((k, i) => {
     const f = oc.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freqOf(+$('lp' + i).value); f.Q.value = .707;
     f.connect(m, 0, i);
-    scheduleVoice(oc, f, k.segs, 0, 0, volOf(i));
+    scheduleVoice(oc, f, k.segs, 0, 0, volOf(i), envOf(i), velOf(i));
   });
   return oc.startRendering();
 }
@@ -1302,6 +1384,9 @@ for (let i = 0; i < N; i++){
   $('lp' + i).addEventListener('change', saveCfg);
   $('oct' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
   $('pick' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
+  /* envelope e velocity mudam so a sintese, nao a linha de notas: basta reagendar */
+  $('env' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
+  $('vel' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
 }
 
 function tick(){

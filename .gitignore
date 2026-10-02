@@ -12,3 +12,5 @@ musicas/index.json
 # pastas de entrada dos baixadores: o conteúdo é movido para o acervo pelo organizar_bandas
 musicas/*(unsorted)/
 musicas/unsorted/
+# transcrições geradas de áudio, à espera de julgamento pelo ouvido antes de publicar
+musicas/transcritas/

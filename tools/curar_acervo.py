@@ -437,11 +437,20 @@ def _linha(faixas, atrib, pr, lado, dur):
     for t, on, n, p in ev:
         ch = (p, n)
         if on:
-            vivos[ch] = vivos.get(ch, 0) + 1
+            o = vivos.get(ch)
+            if o:
+                o[0] += 1
+                o[1] = t
+            else:
+                vivos[ch] = [1, t]
         else:
-            c = vivos.get(ch, 0) - 1
-            vivos.pop(ch, None) if c <= 0 else vivos.__setitem__(ch, c)
-        b = max(vivos)[1] if vivos else None
+            o = vivos.get(ch)
+            if o:
+                o[0] -= 1
+                if o[0] <= 0:
+                    vivos.pop(ch, None)
+        # mesma ordem do site: prioridade, depois a nota que entrou por último, depois a altura
+        b = max(vivos, key=lambda c: (c[0], vivos[c][1], c[1]))[1] if vivos else None
         if cur is not None and cur[1] != b:
             if t > cur[0] + .005:
                 soando += t - cur[0]
