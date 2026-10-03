@@ -258,6 +258,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
         <div class="filtros">
           <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
           <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
+          <button id="libIA" class="hide" aria-pressed="false" title="transcritas por IA (MuScriptor), com uma faixa por instrumento">só IA</button>
           <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
           <button id="libRnd" class="hide">sortear uma</button>
           <button id="abrir" class="abrir">Abrir arquivo…</button>
@@ -1499,7 +1500,7 @@ function meusComoItens(regs){
 async function montarAcervo(){
   const meus = meusComoItens(await meusTodos());
   lib = libRemoto.concat(meus);
-  lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.artista, it.instrumentos, it.estilo, temVoz(it) ? 'vocal' : ''].join(' ')); });
+  lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.artista, it.instrumentos, it.estilo, temVoz(it) ? 'vocal' : '', it.origem === 'ia' ? 'ia' : ''].join(' ')); });
   pastas = pastasRemoto.slice();
   if (meus.length) pastas.push({ nome: PASTA_MEUS, musicas: meus.length });
   const salva = store.get('pasta');
@@ -1511,6 +1512,7 @@ async function montarAcervo(){
   $('libA').classList.toggle('hide', pastas.length < 2);
   $('libTop').classList.toggle('hide', !lib.some(it => it.posicao > 0));
   $('libVoz').classList.toggle('hide', !lib.some(it => it.vocal));
+  $('libIA').classList.toggle('hide', !lib.some(it => it.origem === 'ia'));
   $('libBom').classList.toggle('hide', !lib.some(it => it.aproveitamento));
   $('libDel').classList.toggle('hide', !meus.length);
   $('libDel').textContent = 'Esquecer os meus (' + meus.length + ')';
@@ -1596,7 +1598,7 @@ const cabe6 = it => cabe2(it) || (it.aproveitamento6 || 0) >= APROV6_MIN;
    flybacks, se soa bem com um instrumento por flyback */
 const filtroSeis = () => esp.n >= 3;
 const soaBem = it => filtroSeis() ? cabe6(it) : cabe2(it);
-let acervo = '', soTopo = false, soVoz = false, soBom = false;
+let acervo = '', soTopo = false, soVoz = false, soBom = false, soIA = false;
 const dentroDe = (it, p) => !p || it.pasta === p || it.pasta.startsWith(p + '/');
 const contar = p => lib.reduce((s, it) => s + (dentroDe(it, p) ? 1 : 0), 0);
 const nBR = v => v.toLocaleString('pt-BR');
@@ -1609,7 +1611,8 @@ function montarAcervos(){
     b.setAttribute('aria-pressed', acervo === valor);
     b.onclick = () => {
       acervo = valor; soTopo = soVoz = soBom = false;
-      ['libTop', 'libVoz', 'libBom'].forEach(id => $(id).setAttribute('aria-pressed', 'false'));
+      soIA = false;
+      ['libTop', 'libVoz', 'libBom', 'libIA'].forEach(id => $(id).setAttribute('aria-pressed', 'false'));
       store.set('pasta', valor);
       montarAcervos(); montarFiltro(); renderLib();
     };
@@ -1658,6 +1661,7 @@ function filtrar(){
   return lib.filter(it => dentroDe(it, p)
     && (!soTopo || (it.posicao > 0 && it.posicao <= TOPO))
     && (!soVoz || temVoz(it))
+    && (!soIA || it.origem === 'ia')
     && (!soBom || soaBem(it))
     && ws.every(w => it._busca.includes(w)));
 }
@@ -1681,7 +1685,9 @@ function renderLib(){
        a linha de canto, sem precisar abrir uma a uma */
     /* "cabe em 2" soa bem já com dois flybacks; "pede 6" só soa bem com um instrumento por
        flyback, que é o que separa o repertório de cada montagem */
-    tag.textContent = it.tipo + (it.config ? ' · pronta' : '') + (temVoz(it) ? ' · vocal' : '')
+    /* IA: transcrita pelo MuScriptor, com uma faixa por instrumento — é o que a montagem fixa
+       espera; as outras são transcrições de pessoas, mais densas, de 8 a 16 faixas */
+    tag.textContent = it.tipo + (it.origem === 'ia' ? ' · IA' : '') + (it.config ? ' · pronta' : '') + (temVoz(it) ? ' · vocal' : '')
       + (cabe2(it) ? ' · cabe em 2' : cabe6(it) ? ' · pede 6' : '');
     b.append(t, tag); b.dataset.path = it.arquivo; b.onclick = () => openLib(it);
     li.appendChild(b); ul.appendChild(li);
@@ -1744,6 +1750,7 @@ $('libQ').addEventListener('input', () => { clearTimeout(buscaTimer); buscaTimer
 $('libF').addEventListener('change', renderLib);
 $('libTop').onclick = () => { soTopo = !soTopo; $('libTop').setAttribute('aria-pressed', String(soTopo)); renderLib(); };
 $('libVoz').onclick = () => { soVoz = !soVoz; $('libVoz').setAttribute('aria-pressed', String(soVoz)); renderLib(); };
+$('libIA').onclick = () => { soIA = !soIA; $('libIA').setAttribute('aria-pressed', String(soIA)); renderLib(); };
 $('libBom').onclick = () => { soBom = !soBom; $('libBom').setAttribute('aria-pressed', String(soBom)); renderLib(); };
 $('libAdd').onclick = () => $('fileMeus').click();
 $('fileMeus').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) guardarMeus(fs); };

@@ -82,6 +82,11 @@ def gerar():
             }
             info = creditos.get(rel.as_posix(), {})
             item.update({k: info[k] for k in CAMPOS if info.get(k)})
+            # Origem: feita por IA (MuScriptor, no Mirelo ou aqui) ou por uma pessoa. É uma
+            # característica da música, não um lugar: fica como campo, para o site filtrar e
+            # marcar, em vez de pasta — a mesma música pode existir nas duas versões.
+            if 'MuScriptor' in (info.get('transcricao') or '') + (info.get('credito') or ''):
+                item['origem'] = 'ia'
             itens.append(item)
 
     ordem = ordem_das_pastas()

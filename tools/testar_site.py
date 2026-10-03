@@ -152,6 +152,12 @@ def player(nav, base, telas):
     r = pg.evaluate("() => { const g = tracks.findIndex(t => /guitar/.test(t.name)); return canaisDe(assign[g]).length; }")
     confere(r == 2, f'power chord, que tem duas notas, ocupa dois ({r})')
 
+    print('origem')
+    pg.click('#libIA')
+    ia = pg.eval_on_selector_all('#libList button .tag', 'x => x.map(e => e.textContent)')
+    confere(ia and all(' · IA' in t for t in ia), f'"só IA" mostra só as transcritas por IA ({len(ia)})')
+    pg.click('#libIA')
+
     print('outros arquivos')
     gp = pg.evaluate("lib.filter(it => it.tipo === 'GP').map(it => it.arquivo)")
     if gp:
