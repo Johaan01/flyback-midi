@@ -481,10 +481,7 @@ def por_muscriptor(audio, titulo, args):
     midi = modelo.transcribe_to_midi(audio, instruments=instrumentos,
                                      beam_size=args.beam, detect_tempo='best-effort')
 
-    saida = Path(args.saida) if args.saida else (RAIZ / 'musicas' / 'unsorted')
-    if not saida.is_absolute():
-        saida = RAIZ / saida
-    saida.mkdir(parents=True, exist_ok=True)
+    saida = pasta_saida(args.saida)
     limpo = ''.join(c for c in titulo if c not in '\\/:*?"<>|').strip() or 'transcricao'
     arq = saida / f'{limpo}.mid'
     arq.write_bytes(midi)
@@ -514,14 +511,28 @@ def faixas_de(stems, sr, so_mono):
     return faixas
 
 
+def pasta_saida(pedida):
+    """Resolve e cria a pasta de destino, ou para dizendo por quê.
+
+    É chamada no começo, antes de separar ou transcrever, e de novo na hora de gravar. Descobrir
+    que a pasta não é gravável depois de doze minutos de MuScriptor `large` joga os doze minutos
+    fora — aconteceu, com um caminho que o Git Bash traduziu para dentro de C:\\Program Files.
+    """
+    saida = Path(pedida) if pedida else (RAIZ / 'musicas' / 'unsorted')
+    if not saida.is_absolute():
+        saida = RAIZ / saida
+    try:
+        saida.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        sys.exit(f'não dá para gravar em {saida}: {e}')
+    return saida
+
+
 def gravar(faixas, titulo, saida_pedida):
     """Escreve o MIDI e devolve o caminho."""
     if not faixas:
         sys.exit('não saiu nota nenhuma — o áudio é instrumental puro ou muito curto?')
-    saida = Path(saida_pedida) if saida_pedida else (RAIZ / 'musicas' / 'unsorted')
-    if not saida.is_absolute():
-        saida = RAIZ / saida
-    saida.mkdir(parents=True, exist_ok=True)
+    saida = pasta_saida(saida_pedida)
     limpo = ''.join(c for c in titulo if c not in '\\/:*?"<>|').strip() or 'transcricao'
     arq = saida / f'{limpo}.mid'
     arq.write_bytes(escrever_midi(faixas, limpo))
@@ -557,6 +568,7 @@ def de_stems(args, titulo):
 
 
 def transcrever(args):
+    pasta_saida(args.saida)   # antes de qualquer trabalho pesado, nos dois motores
     tmp = Path(tempfile.mkdtemp(prefix='flyback-'))
     titulo = args.titulo or ''
     if args.stems:
