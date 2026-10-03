@@ -58,5 +58,82 @@
   "vocal": "sim — faixa \"voice\"",
   "aproveitamento": 73,
   "aproveitamento6": 66
+ },
+ "Black Sabbath - Iron Man.mid": {
+  "autor": "Black Sabbath",
+  "artista": "Black Sabbath",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Black Sabbath; \"Iron Man\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "fonte": "https://www.youtube.com/watch?v=b3-QqGVt-tM",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 63,
+  "aproveitamento6": 89
+ },
+ "Bon Jovi - You Give Love A Bad Name.mid": {
+  "autor": "Bon Jovi",
+  "artista": "Bon Jovi",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Bon Jovi; \"You Give Love A Bad Name\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "fonte": "https://www.youtube.com/watch?v=Aqc3VTpz9HQ",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 83,
+  "aproveitamento6": 70
+ },
+ "AC-DC - Thunderstruck.mid": {
+  "autor": "AC/DC",
+  "artista": "AC/DC",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de AC/DC; \"Thunderstruck\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar, acoustic_guitar",
+  "fonte": "https://www.youtube.com/watch?v=lhg9bYNLvOg",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 49,
+  "aproveitamento6": 76
+ },
+ "Black Sabbath - War Pigs - Luke's Wall.mid": {
+  "autor": "Black Sabbath",
+  "artista": "Black Sabbath",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Black Sabbath; \"War Pigs / Luke's Wall\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, drums, distorted_electric_guitar",
+  "fonte": "https://www.youtube.com/watch?v=lLb6UUw2ZVQ",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 48,
+  "aproveitamento6": 73
+ },
+ "AC-DC - Back In Black.mid": {
+  "autor": "AC/DC",
+  "artista": "AC/DC",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de AC/DC; \"Back In Black\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "fonte": "https://www.youtube.com/watch?v=9vWNauaZAgg",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 46,
+  "aproveitamento6": 75
+ },
+ "AC-DC - Rock N Roll Train.mid": {
+  "autor": "AC/DC",
+  "artista": "AC/DC",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de AC/DC; \"Rock N Roll Train\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "fonte": "https://www.youtube.com/watch?v=1sdKWB_8C1k",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 43,
+  "aproveitamento6": 69
+ },
+ "Black Sabbath - Paranoid.mid": {
+  "autor": "Black Sabbath",
+  "artista": "Black Sabbath",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Black Sabbath; \"Paranoid\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "fonte": "https://www.youtube.com/watch?v=WfmXJuurKH8",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 54,
+  "aproveitamento6": 80
  }
 }
