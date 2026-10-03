@@ -73,7 +73,10 @@ def metadados(url):
     artista = musica = ''
     duracao = 0
     if rc == 0 and out.strip():
-        artista, musica, titulo, canal, dur = (out.strip().splitlines()[-1].split('\t') + [''] * 5)[:5]
+        # strip só de quebra de linha: campo vazio no começo é tabulação, e um strip() comum a
+        # comia, escorregando tudo uma posição (o artista virava o título)
+        linha = [l for l in out.strip('\r\n').splitlines() if l.strip()][-1]
+        artista, musica, titulo, canal, dur = (linha.split('\t') + [''] * 5)[:5]
         duracao = int(float(dur or 0))
         titulo = RUIDO.sub('', titulo).strip()
         if not musica:
@@ -85,7 +88,11 @@ def metadados(url):
         if not artista:
             artista = re.sub(r'\s*-\s*Topic$|VEVO$|\s+Official$', '', canal or '', flags=re.I).strip()
         artista = artista.split(',')[0].strip()
-    return artista or 'artista não identificado', RUIDO.sub('', musica).strip() or 'sem título', duracao
+    musica = RUIDO.sub('', musica).strip()
+    # título que repete o artista no fim ("Livin' On A Prayer - Bon Jovi") perde a repetição
+    if artista and musica.lower().endswith(' - ' + artista.lower()):
+        musica = musica[:-len(artista) - 3].strip()
+    return artista or 'artista não identificado', musica or 'sem título', duracao
 
 
 def baixar(url, vid):
@@ -266,6 +273,12 @@ def main():
             atual['situacao'] = 'sem audio'
             guardar()
             continue
+        if not duracao:            # o YouTube nem sempre informa; o áudio baixado sempre sabe
+            try:
+                import soundfile as sf
+                duracao = int(sf.info(str(audio)).duration)
+            except Exception:
+                pass
 
         rel = None
         for t in range(1, args.tentativas + 1):
