@@ -145,7 +145,10 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 .strip-h .nome{flex:1;font-weight:600;font-size:12.5px;color:var(--cor);white-space:nowrap}
 .strip-h button{padding:1px 7px;font-size:11.5px;font-family:"IBM Plex Mono",monospace}
 .strip .fontes{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-4px}
-.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:nowrap}
+.ctl .row label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ctl .val{flex:none;white-space:nowrap}
+.legenda{margin:0 0 6px;font-size:11.5px;color:var(--dim)}
 .ctl label{display:block;font-size:11.5px;color:var(--dim);line-height:1.3}
 .ctl .val{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-variant-numeric:tabular-nums}
 .ctl select{width:100%;padding:2px 4px}
@@ -216,6 +219,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
         <p class="musica" id="titulo">nenhuma música aberta</p>
         <div class="presets hide" id="presets" role="group" aria-label="Distribuição automática"></div>
         <p class="verdict" id="verdict"></p>
+        <p class="legenda hide" id="legenda">Montagem fixa: 1 voz · 2 baixo · 3 guitarra · 4 bateria · 5 teclado · 6 extra. O som de cada flyback vale para todas as músicas.</p>
       </div>
       <div class="pane-b">
         <div class="tracks" id="tracks" role="list"></div>
@@ -536,7 +540,12 @@ function midiOffset(buf){
    O roteamento de cada faixa é uma máscara de bits, um bit por canal. Com dois flybacks os
    valores 0, 1, 2 e 3 são exatamente o desligada/esquerdo/direito/ambos de antes, e a
    configuração é a de sempre — inclusive os .json do acervo. */
-const CTL = { ganho: 70, lp: 1000, oct: 0, pick: 'lo', env: 'medio', vel: true };
+/* 'agudo' é o limite de altura do canal, em Hz: nota acima desce de oitava até caber. Substitui
+   o passa-baixa, que era um filtro no áudio do computador — não chegava aos flybacks do ESP, que
+   recebem a frequência da nota, cortava 12 dB por oitava e deformava o topo da onda quadrada.
+   AGUDO_LIVRE é "sem limite". */
+const AGUDO_LIVRE = 20000;
+const CTL = { ganho: 70, agudo: AGUDO_LIVRE, oct: 0, pick: 'lo', env: 'medio', vel: true };
 const ch = Array.from({ length: MAX }, () => ({
   osc: null, gain: null, filter: null, an: null, out: null, data: null,
   segs: [], lo: 60, hi: 72, cur: null, freqAgora: 0, ctl: Object.assign({}, CTL),
@@ -570,7 +579,7 @@ const pelaP2 = () => esp.n <= 2;          /* o áudio do computador aciona os fl
 const dois = () => esp.n === 2;           /* presets e configuração clássicos, de dois lados */
 const mascara = () => (1 << nCanais()) - 1;
 const canaisDe = m => { const r = []; for (let i = 0; i < MAX; i++) if (m >> i & 1) r.push(i); return r; };
-const nomeCanal = i => 'Canal ' + (i + 1);
+const nomeCanal = i => esp.n >= 3 ? (i + 1) + ' · ' + PAPEIS[i] : 'Canal ' + (i + 1);
 const subCanal = i => (pelaP2() ? (i ? 'direito · ' : 'esquerdo · ') : '') + 'GPIO ' + esp.pinos[i];
 const algumSolo = () => ch.slice(0, nCanais()).some(c => c.solo);
 const soa = i => i < nCanais() && (algumSolo() ? ch[i].solo : !ch[i].mudo);
@@ -582,8 +591,7 @@ function ensureCtx(){
   merger = actx.createChannelMerger(2);
   merger.connect(actx.destination);
   ch.forEach(c => {
-    c.filter = actx.createBiquadFilter(); c.filter.type = 'lowpass';
-    c.filter.frequency.value = freqOf(c.ctl.lp); c.filter.Q.value = .707;
+    c.filter = actx.createGain();      /* entrada do canal; já foi um passa-baixa */
     c.an = actx.createAnalyser(); c.an.fftSize = 2048; c.data = new Float32Array(c.an.fftSize);
     c.out = actx.createGain();
     c.filter.connect(c.an); c.an.connect(c.out);
@@ -611,7 +619,6 @@ function ligarSaida(){
     }
   });
 }
-const aplicarFiltros = () => ch.forEach(c => { if (c.filter) c.filter.frequency.value = freqOf(c.ctl.lp); });
 
 /* ---------- monta a linha monofônica ---------- */
 /* Varredura cronologica: num instante soa uma nota so. Entre as que estao soando ganha a de
@@ -669,6 +676,10 @@ function buildSegs(i){
   }
   if (cur && cur.end === null){ cur.end = duration; if (cur.end > cur.start) segs.push(cur); }
   segs.forEach(s => { s.n += 12 * oct; s.f = hz(s.n); });
+  /* limite de agudo: desce de oitava até caber. Vale para o P2 e para a serial, porque mexe na
+     nota, não no áudio */
+  const lim = ch[i].ctl.agudo;
+  if (lim < AGUDO_LIVRE) segs.forEach(s => { while (s.f > lim && s.n > 12){ s.n -= 12; s.f = hz(s.n); } });
   return segs;
 }
 /* Bateria num arco. A transcricao escreve cada batida como uma nota de 10 ms na tecla do mapa
@@ -684,14 +695,14 @@ const BATIDA = {
   39: [60, .06, 3],                                            /* palma */
   41: [40, .15, 2], 43: [40, .15, 2], 45: [45, .14, 2],        /* tons graves */
   47: [45, .14, 2], 48: [50, .13, 2], 50: [50, .13, 2],        /* tons agudos */
-  42: [93, .03, 1], 44: [93, .03, 1], 46: [91, .15, 1],        /* chimbal fechado, pedal, aberto */
-  49: [88, .35, 1], 52: [88, .35, 1], 55: [88, .35, 1], 57: [88, .35, 1],   /* pratos de ataque */
-  51: [86, .12, 1], 53: [86, .12, 1], 59: [86, .12, 1]         /* condução */
 };
+/* Chimbal e pratos ficam de fora. Mapeados como estouros agudos (A6, E6), viraram o que mais se
+   ouvia no canal — estridente em onda quadrada, como o dono do projeto apontou de ouvido — e são
+   a peça que menos carrega o ritmo. Ficam bumbo, caixa, palma e tons. */
 function notasDe(t){
   if (!isDrum(t)) return t.notes;
-  if (!t.batidas) t.batidas = t.notes.map(x => {
-    const b = BATIDA[x.n] || [72, .05, 1];
+  if (!t.batidas) t.batidas = t.notes.filter(x => BATIDA[x.n]).map(x => {
+    const b = BATIDA[x.n];
     return { n: b[0], t0: x.t0, t1: x.t0 + b[1], v: x.v, p: b[2] };
   });
   return t.batidas;
@@ -985,62 +996,73 @@ function computePreset(p){
    prioridade menor no canal onde mais traz brecha nova, pelas mesmas regras do preset de dois
    canais: nem a sombra do dono do canal, nem um punhado de notas soltas.
    É o preset feito para a saída do MuScriptor, que já separa voz, guitarra, piano e baixo. */
+/* Montagem fixa: cada família de instrumento cai sempre no mesmo flyback, em toda música —
+   1 voz, 2 baixo, 3 guitarra, 4 bateria, 5 teclado, 6 extra. Pedido do dono do projeto: duas
+   músicas de rock têm de sair com os mesmos instrumentos nos mesmos arcos, e os ajustes de cada
+   arco (agudo, envelope...) valem para todas. A ordem é a de importância: com 4 flybacks ficam
+   voz, baixo, guitarra e bateria.
+
+   Na família, a faixa que mais ocupa a música é a dona do flyback; as outras entram com
+   prioridade menor só onde trazem brecha de verdade (as regras de 6% e 30% do preset "sem
+   atropelo"). O flyback 1 é da melodia principal pela detecção de canto — numa instrumental,
+   pode ser a guitarra solo. Os flybacks que sobram vazios — o 6 quase sempre, o 5 quando não há
+   teclado — recebem as outras notas do acorde da faixa mais polifônica: o power chord sai em
+   dois arcos, e acorde de três notas, em três. */
+const PAPEIS = ['voz', 'baixo', 'guitarra', 'bateria', 'teclado', 'extra'];
+const PICK_PAPEL = ['hi', 'lo', 'lo', 'hi', 'lo', 'hi'];
+const RX_TECLADO = /piano|keys|teclad|organ|[oó]rg[aã]o|synth|sint|pad\b|rhodes|clav|harpsi|cravo|accord|acorde[aã]o|sanfona|celesta|marimba|vibra|xylo|chromatic/i;
+function familia(t){
+  if (isDrum(t)) return 'bateria';
+  if (isBass(t) || (t.prog >= 32 && t.prog <= 39)) return 'baixo';
+  if (isGuitar(t) || (t.prog >= 24 && t.prog <= 31)) return 'guitarra';
+  if (RX_TECLADO.test(t.name) || (t.prog >= 0 && t.prog <= 23) || (t.prog >= 80 && t.prog <= 95)) return 'teclado';
+  if (RX_CANTO.test(t.name) || [52, 53, 54, 85].includes(t.prog)) return 'voz';
+  return 'extra';
+}
 function umPorFlyback(n){
   const occ = occupancy(), nb = occ.length ? occ[0].length : 0;
   const tam = occ.map(a => { let c = 0; for (let k = 0; k < nb; k++) c += a[k]; return c; });
-  const cand = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]) && tracks[i].notes.length);
   const out = tracks.map(() => 0), pr = tracks.map(() => 0);
   prio = pr;
-  if (!cand.length) return out;
-  const sc = new Map(cand.map(i => [i, scoreVoz(i, occ, nb)]));
-  let li = cand.reduce((a, b) => sc.get(b) > sc.get(a) ? b : a);
-  if (!sc.get(li)) li = cand.reduce((a, b) => tam[b] > tam[a] ? b : a);
-  const resto = cand.filter(i => i !== li).sort((a, b) => tam[b] - tam[a]);
-  const grave = resto.find(i => isBass(tracks[i]) || (tracks[i].prog >= 32 && tracks[i].prog <= 39));
-  if (grave !== undefined){ resto.splice(resto.indexOf(grave), 1); resto.unshift(grave); }
-  const donos = [li].concat(resto.slice(0, n - 1));
-  donos.forEach((i, c) => { out[i] = 1 << c; pr[i] = c ? 2 : 3; });
-  const cheio = donos.map(i => occ[i].slice());
-  for (const i of resto.slice(n - 1)){
-    let melhor = -1, mv = 0;
-    cheio.forEach((a, c) => { let novo = 0; for (let k = 0; k < nb; k++) if (occ[i][k] && !a[k]) novo++; if (novo > mv){ mv = novo; melhor = c; } });
-    if (melhor < 0 || mv < nb * .06 || mv < tam[i] * .3) continue;
-    out[i] = 1 << melhor; pr[i] = 1;
-    for (let k = 0; k < nb; k++) if (occ[i][k]) cheio[melhor][k] = 1;
+  const com = tracks.map((t, i) => i).filter(i => tracks[i].notes.length);
+  if (!com.length) return out;
+  const fam = new Map(com.map(i => [i, familia(tracks[i])]));
+  const dono = new Array(MAX).fill(-1), cheio = [];
+  const ocupa = (i, c) => { cheio[c] = cheio[c] || new Uint8Array(nb); for (let k = 0; k < nb; k++) if (occ[i][k]) cheio[c][k] = 1; };
+  /* melodia principal: a que mais parece canto; sem nenhuma, a voz que houver, ou a melódica
+     que mais ocupa */
+  const melod = com.filter(i => fam.get(i) !== 'bateria' && fam.get(i) !== 'baixo');
+  let li = -1;
+  if (melod.length){
+    const sc = new Map(melod.map(i => [i, scoreVoz(i, occ, nb)]));
+    li = melod.reduce((a, b) => sc.get(b) > sc.get(a) ? b : a);
+    if (!sc.get(li)){ const v = melod.filter(i => fam.get(i) === 'voz'); li = (v.length ? v : melod).reduce((a, b) => tam[b] > tam[a] ? b : a); }
+    out[li] = 1; pr[li] = 3; dono[0] = li; ocupa(li, 0);
   }
-  /* Sobrou flyback — uma banda de rock tem voz, guitarra, baixo e bateria, e o MuScriptor põe
-     as duas guitarras numa faixa só. Primeiro a bateria, que em vez de ficar desligada toca como
-     estouros de tom (ver BATIDA). Depois, as outras notas do acorde da faixa mais polifônica: o
-     power chord da guitarra sai em dois ou três arcos, fundamental, quinta e oitava. */
-  let livre = donos.length;
-  const bateria = tracks.map((t, i) => i).filter(i => isDrum(tracks[i]) && tracks[i].notes.length);
-  if (livre < n && bateria.length){
-    bateria.forEach(i => { out[i] = 1 << livre; });
-    ajustes.push([livre, { env: 'percussivo', pick: 'hi' }]);
-    livre++;
+  const resto = com.filter(i => i !== li).sort((a, b) => tam[b] - tam[a]);
+  for (const i of resto){
+    const c = PAPEIS.indexOf(fam.get(i));
+    if (c >= n) continue;
+    if (dono[c] < 0){ out[i] = 1 << c; pr[i] = fam.get(i) === 'bateria' ? 0 : 2; dono[c] = i; ocupa(i, c); continue; }
+    let novo = 0;
+    for (let k = 0; k < nb; k++) if (occ[i][k] && !cheio[c][k]) novo++;
+    if (novo < nb * .06 || novo < tam[i] * .3) continue;
+    out[i] |= 1 << c; pr[i] = Math.max(pr[i], 1); ocupa(i, c);
   }
-  const cheia = donos.map(i => [i, polifonia(tracks[i])]).filter(([, p]) => p >= 1.3).sort((a, b) => b[1] - a[1])[0];
-  if (cheia && livre < n){
-    const [i] = cheia, dono = donos.indexOf(i);
-    /* a voz do meio só existe em acorde de três notas ou mais; num power chord, que tem duas,
-       ela repetiria a aguda num terceiro arco */
-    const vozes = (dono === 0 ? ['lo'] : ['hi']).concat(acordesDeTres(tracks[i]) >= .25 ? ['meio'] : []);
-    ajustes.push([dono, { pick: dono === 0 ? 'hi' : 'lo' }]);
-    for (const v of vozes){
-      if (livre >= n) break;
-      out[i] |= 1 << livre;
-      /* as outras notas do acorde soam como a principal: mesmo envelope */
-      ajustes.push([livre, RX_CORDA.test(tracks[i].name) ? { pick: v, env: 'corda' } : { pick: v }]);
-      livre++;
+  /* flybacks vazios: as outras notas do acorde da faixa mais polifônica, primeiro o 6, depois o 5 */
+  const cheia = dono.filter(i => i >= 0 && fam.get(i) !== 'bateria').map(i => [i, polifonia(tracks[i])])
+    .filter(([, p]) => p >= 1.3).sort((a, b) => b[1] - a[1])[0];
+  if (cheia){
+    const [i] = cheia, base = dono.indexOf(i);
+    const vozes = [base === 0 ? 'lo' : 'hi'].concat(acordesDeTres(tracks[i]) >= .25 ? ['meio'] : []);
+    for (const c of [5, 4]){
+      if (!vozes.length || c >= n || dono[c] >= 0) continue;
+      out[i] |= 1 << c; dono[c] = i;
+      ajustes.push([c, { pick: vozes.shift() }]);
     }
   }
-  /* Corda pinçada ou percutida apaga sozinha depois do ataque: o envelope "corda" é o que faz a
-     introdução de Iron Man soar como guitarra, cada nota esmaecendo até a próxima. Voz e sopro
-     ficam no médio. */
-  donos.forEach((i, c) => { if (RX_CORDA.test(tracks[i].name)) ajustes.push([c, { env: 'corda' }]); });
   return out;
 }
-const RX_CORDA = /guit|gtr|viol[aã]o|bass|baix|piano|harp|harpa|banjo|mandolin|ukulele|marimba|xylo|vibra|chromatic|celesta|bell/i;
 /* fração dos ataques de acorde (duas notas ou mais juntas) que têm três notas ou mais */
 function acordesDeTres(t){
   const por = new Map();
@@ -1049,8 +1071,28 @@ function acordesDeTres(t){
   por.forEach(q => { if (q >= 2) dois++; if (q >= 3) tres++; });
   return dois ? tres / dois : 0;
 }
-/* controles de canal que o último preset quer: [canal, {pick, env}] */
+/* controles de canal que o último preset quer: [canal, {pick}] */
 let ajustes = [];
+/* Com 3 ou mais flybacks, o som de cada arco — ganho, agudo, oitava, envelope, dinâmica — é da
+   montagem, não da música: ajustado uma vez, vale para todas. O que é da música é o roteamento e
+   que nota do acorde cada arco toca. Com dois, tudo continua por música, como sempre foi (e como
+   os .json do acervo descrevem). Os padrões seguem o papel: voz no médio, bateria em batida, e
+   corda no resto — guitarra, baixo e teclado apagam sozinhos depois do ataque, e é o "corda" que
+   fez a introdução de Iron Man soar como guitarra. */
+const SOM = ['ganho', 'agudo', 'oct', 'env', 'vel'];
+const SOM_PADRAO = ['medio', 'corda', 'corda', 'percussivo', 'corda', 'corda']
+  .map(env => ({ ganho: 70, agudo: AGUDO_LIVRE, oct: 0, env, vel: true }));
+const montagem = (() => {
+  const salvo = store.get('montagem');
+  return SOM_PADRAO.map((p, i) => {
+    const m = Object.assign({}, p);
+    const s = Array.isArray(salvo) && salvo[i];
+    if (s) SOM.forEach(k => { if (s[k] !== undefined) m[k] = s[k]; });
+    if (!ENVELOPES.hasOwnProperty(m.env)) m.env = p.env;
+    return m;
+  });
+})();
+const salvarMontagem = () => store.set('montagem', montagem);
 function computePresetN(p){
   const n = esp.n;
   prio = tracks.map(() => 0);
@@ -1066,7 +1108,7 @@ function computePresetN(p){
 }
 const PRESETS_EST = [['bass', 'Baixo e melodia'], ['guitars', 'Guitarras somadas'], ['lead', 'Principal e acompanhamento'],
   ['complement', 'Melodia inteira, resto sem atropelo'], ['split', 'Grave e agudo'], ['none', 'Desligar tudo']];
-const PRESETS_ESP = [['um', 'Um instrumento por flyback'], ['faixas', 'Grave para agudo'], ['none', 'Desligar tudo']];
+const PRESETS_ESP = [['um', 'Montagem fixa'], ['faixas', 'Grave para agudo'], ['none', 'Desligar tudo']];
 const LETRA_MASC = { O: 0, L: 1, R: 2, B: 3 };
 function preset(p, user){
   ajustes = [];
@@ -1076,6 +1118,7 @@ function preset(p, user){
   renderTracks(); reschedule(); if (user) saveCfg();
 }
 function renderPresets(){
+  $('legenda').classList.toggle('hide', dois() || !tracks.length);
   const box = $('presets'); box.textContent = '';
   (dois() ? PRESETS_EST : PRESETS_ESP).forEach(([p, rot]) => {
     const b = el('button', null, rot); b.onclick = () => preset(p, true); box.appendChild(b);
@@ -1106,11 +1149,11 @@ function analyse(){
 
 /* ---------- configuração por música: neste navegador e no acervo ----------
    Duas por música: a de dois flybacks, na chave de sempre ('cfg:'), que é a única que o .json
-   do acervo descreve, e a de qualquer outro número ('cfgesp:'). Rotear para dois e para seis
+   do acervo descreve, e a de qualquer outro número ('cfgmont:'). Rotear para dois e para seis
    não têm nada a ver um com o outro, e mudar o número não pode apagar o ajuste do outro. */
 const MASC_NOME = ['desligada', 'esquerdo', 'direito', 'ambos'];
 const CANAL_IN = { desligada: 0, esquerdo: 1, direito: 2, ambos: 3, O: 0, L: 1, R: 2, B: 3 };
-const cfgChave = () => (dois() ? 'cfg:' : 'cfgesp:') + current.key;
+const cfgChave = () => (dois() ? 'cfg:' : 'cfgmont:') + current.key;
 function currentCfg(){
   return {
     versao: 2,
@@ -1125,9 +1168,9 @@ function currentCfg(){
     }),
     canais: ch.slice(0, nCanais()).map(c => ({
       ganho: c.ctl.ganho,
-      passaBaixa: Math.round(freqOf(c.ctl.lp)),
+      agudo: c.ctl.agudo,
       oitava: c.ctl.oct,
-      acorde: c.ctl.pick === 'lo' ? 'grave' : 'agudo',
+      acorde: c.ctl.pick === 'lo' ? 'grave' : c.ctl.pick === 'meio' ? 'meio' : 'agudo',
       envelope: c.ctl.env,
       velocity: c.ctl.vel
     }))
@@ -1139,8 +1182,10 @@ function resetControls(){
      vez da raiz — a harmonia sai errada e fina.
      Outro número: o canal 1 é o da linha de canto no preset "um por flyback", e vai na mais aguda; os
      outros levam acompanhamento e baixo, e vão na mais grave pelo mesmo motivo. */
-  ch.forEach((c, i) => { c.ctl = Object.assign({}, CTL, { pick: dois() ? (i ? 'hi' : 'lo') : (i ? 'lo' : 'hi') }); });
-  aplicarFiltros();
+  ch.forEach((c, i) => {
+    c.ctl = dois() ? Object.assign({}, CTL, { pick: i ? 'hi' : 'lo' })
+                   : Object.assign({}, CTL, montagem[i], { pick: PICK_PAPEL[i] });
+  });
 }
 /* devolve false se nenhuma faixa casar pelo nome, ou seja, se a configuração é de outro arquivo */
 function applyCfg(cfg){
@@ -1165,14 +1210,15 @@ function applyCfg(cfg){
   (Array.isArray(cfg.canais) ? cfg.canais : []).slice(0, nCanais()).forEach((c, i) => {
     if (!c) return;
     const k = ch[i].ctl;
+    if (c.acorde) k.pick = c.acorde === 'grave' ? 'lo' : c.acorde === 'meio' ? 'meio' : 'hi';
+    if (!dois()) return;               /* com 3 ou mais, o som é da montagem */
     if (isFinite(c.ganho)) k.ganho = Math.max(0, Math.min(150, +c.ganho));
-    if (isFinite(c.passaBaixa) && c.passaBaixa > 0) k.lp = Math.max(0, Math.min(1000, sliderOf(+c.passaBaixa)));
+    if (isFinite(c.agudo) && c.agudo > 0) k.agudo = Math.max(100, Math.min(AGUDO_LIVRE, Math.round(+c.agudo)));
     if ([-2, -1, 0, 1, 2].includes(+c.oitava)) k.oct = +c.oitava;
-    if (c.acorde) k.pick = c.acorde === 'grave' ? 'lo' : 'hi';
     if (c.envelope && ENVELOPES.hasOwnProperty(c.envelope)) k.env = c.envelope;
     if (typeof c.velocity === 'boolean') k.vel = c.velocity;
   });
-  aplicarFiltros(); renderTracks(); renderStrips(); reschedule();
+  renderTracks(); renderStrips(); reschedule();
   return true;
 }
 function saveCfg(){
@@ -1186,7 +1232,7 @@ function initialCfg(){
   if (current.sidecar && nCanais() === 2 && applyCfg(current.sidecar)){ $('cfgMsg').textContent = 'Configuração que veio com a música no acervo.'; return; }
   resetControls(); renderStrips();
   if (dois()){ preset('bass', false); $('cfgMsg').textContent = 'Padrão: baixo e melodia. Qualquer ajuste fica salvo neste navegador.'; }
-  else { preset('um', false); $('cfgMsg').textContent = 'Padrão: um instrumento por flyback. Qualquer ajuste fica salvo neste navegador.'; }
+  else { preset('um', false); $('cfgMsg').textContent = 'Padrão: montagem fixa. As rotas ficam salvas por música; o som de cada flyback, para todas.'; }
 }
 $('cfgReset').onclick = () => { if (!current) return; store.del(cfgChave()); initialCfg(); };
 $('cfgDown').onclick = () => {
@@ -1223,24 +1269,28 @@ function renderStrips(){
     const ganho = el('input', { type: 'range', id: 'gain' + i, min: '0', max: '150' }); ganho.value = k.ganho;
     const gv = el('span', { class: 'val' }, k.ganho + '%');
     ganho.oninput = () => { k.ganho = +ganho.value; gv.textContent = k.ganho + '%'; };
-    ganho.onchange = () => { reschedule(); saveCfg(); };
-    const lp = el('input', { type: 'range', id: 'lp' + i, min: '0', max: '1000' }); lp.value = k.lp;
-    const lv = el('span', { class: 'val' }, fmtF(freqOf(k.lp)));
-    lp.oninput = () => { k.lp = +lp.value; const f = freqOf(k.lp); lv.textContent = fmtF(f); if (c.filter) c.filter.frequency.value = f; };
-    lp.onchange = saveCfg;
-    const sel = (id, opcoes, valor, fn) => {
+    ganho.onchange = () => { guarda('ganho'); reschedule(); saveCfg(); };
+    /* com 3 ou mais flybacks, mexer no som de um arco grava na montagem: vale para todas as músicas */
+    const guarda = campo => { if (!dois()){ montagem[i][campo] = k[campo]; salvarMontagem(); } };
+    const fmtAgudo = v => v >= AGUDO_LIVRE ? 'livre' : fmtF(v);
+    const agudo = el('input', { type: 'range', id: 'agudo' + i, min: '0', max: '1000' }); agudo.value = Math.min(1000, sliderOf(k.agudo));
+    const av = el('span', { class: 'val' }, fmtAgudo(k.agudo));
+    const deSlider = v => v >= 1000 ? AGUDO_LIVRE : Math.round(freqOf(v));
+    agudo.oninput = () => { av.textContent = fmtAgudo(deSlider(+agudo.value)); };
+    agudo.onchange = () => { k.agudo = deSlider(+agudo.value); guarda('agudo'); reschedule(); saveCfg(); };
+    const sel = (id, opcoes, valor, fn, campo) => {
       const e = el('select', { id }); opcoes.forEach(([v, t]) => e.appendChild(new Option(t, v)));
-      e.value = valor; e.onchange = () => { fn(e.value); reschedule(); saveCfg(); }; return e;
+      e.value = valor; e.onchange = () => { fn(e.value); if (campo) guarda(campo); reschedule(); saveCfg(); }; return e;
     };
     /* oitava e acorde mudam a linha de notas; envelope e velocity só a síntese — os dois
        casos passam por reschedule, que é barato */
-    const oct = sel('oct' + i, OPC.oct, String(k.oct), v => k.oct = +v);
+    const oct = sel('oct' + i, OPC.oct, String(k.oct), v => k.oct = +v, 'oct');
     const pick = sel('pick' + i, OPC.pick, k.pick, v => k.pick = v);
-    const env = sel('env' + i, OPC.env, k.env, v => k.env = v);
-    const vel = sel('vel' + i, OPC.vel, k.vel ? 'sim' : 'nao', v => k.vel = v === 'sim');
+    const env = sel('env' + i, OPC.env, k.env, v => k.env = v, 'env');
+    const vel = sel('vel' + i, OPC.vel, k.vel ? 'sim' : 'nao', v => k.vel = v === 'sim', 'vel');
     const stat = el('p', { class: 'stat' }, c.stat);
     s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome' }, nomeCanal(i)), mudo, solo), fontes,
-      faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('lp' + i, 'Passa-baixa', lp, lv),
+      faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('agudo' + i, 'Agudo máx', agudo, av),
       linhaCtl('oct' + i, 'Oitava', oct, 'transpõe o canal'),
       linhaCtl('pick' + i, 'Acorde', pick, 'que nota do acorde o arco toca. Para o acorde inteiro, ponha a mesma faixa em dois ou três flybacks, um em cada'),
       linhaCtl('env' + i, 'Envelope', env, 'OOK: só liga e desliga · batida: cai rápido · médio · longo: quase reto · corda: vai apagando até a próxima nota'),
@@ -1757,8 +1807,7 @@ async function renderWav(){
   try { oc.destination.channelInterpretation = 'discrete'; } catch (e) {}
   const m = oc.createChannelMerger(n); m.connect(oc.destination);
   for (let i = 0; i < n; i++){
-    const k = ch[i], f = oc.createBiquadFilter();
-    f.type = 'lowpass'; f.frequency.value = freqOf(k.ctl.lp); f.Q.value = .707;
+    const k = ch[i], f = oc.createGain();
     f.connect(m, 0, i);
     if (k.segs.length) scheduleVoice(oc, f, k.segs, 0, 0, volOf(i), envOf(i), velOf(i));
   }

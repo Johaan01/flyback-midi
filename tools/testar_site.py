@@ -107,14 +107,24 @@ def player(nav, base, telas):
     e = estado(pg)
     confere(e['pistas'] == 6 and e['canais'] == 6, 'seis pistas e seis canais')
     rotas = {e['nomes'][k]: [i + 1 for i in range(6) if m >> i & 1] for k, m in enumerate(e['assign'])}
-    confere(rotas.get('voice') == [1] and rotas.get('electric_bass') == [2] and rotas.get('drums') == [6],
-            f'um por flyback: voz no 1, baixo no 2, bateria no flyback que sobra ({rotas})')
+    confere(rotas.get('voice') == [1] and rotas.get('electric_bass') == [2] and rotas.get('acoustic_guitar', [0])[0] == 3
+            and rotas.get('drums') == [4] and 5 in rotas.get('synth_pad', []) + rotas.get('acoustic_piano', []),
+            f'montagem fixa: 1 voz, 2 baixo, 3 violão, 4 bateria, 5 teclado ({rotas})')
     env = pg.evaluate("ch.slice(0, 6).map(c => c.ctl.env)")
-    confere(env[2] == 'corda' and env[5] == 'percussivo' and env[0] == 'medio',
-            f'envelopes do preset: violão em corda, bateria em batida, voz em médio ({env})')
-    ritmo = pg.evaluate("ch[5].segs.slice(0, 40).map(s => s.n)")
-    confere(ritmo and set(ritmo) <= {33, 40, 45, 50, 55, 60, 72, 86, 88, 91, 93},
-            f'bateria vira estouros nas alturas das peças ({sorted(set(ritmo))})')
+    confere(env[0] == 'medio' and env[2] == 'corda' and env[3] == 'percussivo',
+            f'som padrão da montagem: voz em médio, violão em corda, bateria em batida ({env})')
+    ritmo = pg.evaluate("ch[3].segs.map(s => s.n)")
+    confere(ritmo and set(ritmo) <= {33, 40, 45, 50, 55, 60},
+            f'bateria vira estouros de bumbo, caixa e tons, sem chimbal nem prato ({sorted(set(ritmo))})')
+    # o som de um flyback vale para todas as músicas
+    pg.select_option('#env2', 'longo' if False else 'sustentado')
+    abrir(pg, base, 'transcritas/AC-DC - Thunderstruck.mid')
+    confere(pg.evaluate("ch[2].ctl.env") == 'sustentado', 'o envelope mudado no flyback 3 continua em outra música')
+    pg.evaluate("ch[2].ctl.agudo = 400; rebuild()")
+    alto = pg.evaluate("Math.max(...ch[2].segs.map(s => s.f))")
+    confere(alto <= 400, f'limite de agudo desce as notas de oitava até caber ({alto:.0f} Hz)')
+    pg.select_option('#env2', 'corda')
+    abrir(pg, base, 'transcritas/Borboletas.mid')
     pg.select_option('#espN', '4'); time.sleep(.2)
     e = estado(pg)
     confere(e['pistas'] == 4 and all(m < 16 for m in e['assign']), 'quatro flybacks: nenhuma rota além do canal 4')
