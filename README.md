@@ -5,14 +5,25 @@ reproduzem som. Duas páginas, cada uma um arquivo único, sem build.
 
 | Arquivo | O que faz |
 |---|---|
-| `index.html` | Abre MIDI ou Guitar Pro, roteia cada faixa de instrumento para um canal, sintetiza onda quadrada |
+| `index.html` | Abre MIDI ou Guitar Pro, roteia cada faixa de instrumento para um flyback, sintetiza onda quadrada. Dois flybacks pelo P2 ou até seis por um ESP32 |
 | `tom.html` | Gerador de tom: frequência livre no slider, forma de onda à escolha e varredura, um tom por canal |
 
 Cada canal de saída corresponde a um flyback. Como o arco é monofônico, acordes são reduzidos
 a uma nota por vez, e a separação entre os canais é dura.
 
+A página é feita para o computador, como uma interface de editor: as faixas da música em cima à
+esquerda, uma pista por flyback tocando em cima à direita, e embaixo, lado a lado, o acervo, um
+mixer com um módulo por canal e o painel da saída.
+
 ## O que o site faz
 
+- **Duas saídas.** **Estéreo · P2**: dois flybacks pelo cabo de áudio, esquerdo e direito.
+  **ESP32 · serial**: de 1 a 6 flybacks, um por pino de um ESP32 — escolha quantos, a placa e o
+  pino de cada canal, e use "testar" para achar qual flyback é qual. Cada modo guarda seu próprio
+  roteamento.
+- **Um instrumento por flyback.** No modo ESP, o preset padrão põe a voz no canal 1, o baixo no
+  2 e os outros instrumentos um por canal, deixando a bateria de fora. É feito para os MIDIs
+  separados por instrumento que o MuScriptor gera.
 - **Acervo online.** Tudo que estiver na pasta `musicas/` aparece como lista no site, pronto
   para tocar. Subpastas viram grupos.
 - **MIDI e Guitar Pro.** `.mid`, `.gp3`, `.gp4`, `.gp5`, `.gpx`, `.gp` e MusicXML abrem direto,
@@ -20,8 +31,8 @@ a uma nota por vez, e a separação entre os canais é dura.
 - **Configuração por música.** O roteamento e os ajustes de cada canal ficam salvos no aparelho.
   "Baixar configuração" gera um `.json` que, enviado junto com a música, deixa ela pronta para
   qualquer aparelho.
-- **WAV estéreo.** Renderiza a música com os dois canais separados, para tocar em qualquer player
-  pelo cabo P2, sem navegador.
+- **WAV.** Renderiza a música com um canal do arquivo por flyback — estéreo para o P2, ou N
+  canais para uma interface de áudio multicanal —, para tocar sem navegador.
 - **Meus arquivos.** "Adicionar MIDI deste aparelho" guarda os arquivos no navegador e os mostra
   no acervo como uma pasta à parte, tocando pelo mesmo player e com os mesmos presets. Ficam só
   neste aparelho: não sobem para o repositório nem para lugar nenhum.
@@ -29,9 +40,14 @@ a uma nota por vez, e a separação entre os canais é dura.
   desliza sem degrau, senoide/quadrada/triangular/dente de serra, varredura automática entre
   dois limites e intervalos prontos entre os dois flybacks (uníssono, oitava, quinta, batimento
   de 1 Hz). Serve para achar a ressonância do arco e casar o par.
-- **Saída serial para ESP32.** Chrome ou Edge no computador. Protocolo em `docs/protocolo-serial.md`.
-- **Celular.** Controles grandes, barra de reprodução fixa, tela acesa enquanto toca, funciona sem
-  internet depois da primeira visita e pode ser instalado na tela inicial.
+- **Saída serial para ESP32.** Chrome ou Edge. Protocolo em `docs/protocolo-serial.md`. O painel
+  "Linhas enviadas" mostra o que vai para a porta, também sem ESP ligado.
+- **Mixer.** Cada canal tem silenciar e solo, ganho, passa-baixa, oitava, que nota tirar do
+  acorde, envelope e dinâmica.
+- **Atalhos.** Espaço toca e pausa, setas andam 5 s, Home volta ao início. Arrastar um arquivo
+  para a janela abre.
+- **Sem internet.** Funciona sem conexão depois da primeira visita. Em tela pequena os painéis
+  empilham.
 - **Link direto.** Ao abrir uma música do acervo, o endereço muda para `?m=...`; esse link abre a
   mesma música em outro aparelho.
 
@@ -178,6 +194,12 @@ finalidade, o que a atribuição cobre e o que ela não cobre, e como pedir a re
 
 Abre em `http://localhost:8000`. O script mostra também um endereço para abrir no celular, na
 mesma rede Wi-Fi. Abrir o `index.html` com duplo clique funciona, mas sem o acervo.
+
+Para conferir o player inteiro sem clicar à mão — os dois modos de saída, o roteamento, o WAV e
+a serial com uma porta simulada — num Chrome ou Edge de verdade:
+
+    pip install playwright
+    python tools/testar_site.py --telas
 
 ## Documentação
 

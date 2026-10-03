@@ -6,7 +6,7 @@ Contexto do projeto para quem for continuar o desenvolvimento.
 
 Duas páginas web que geram áudio para alimentar **alto-falantes de plasma** — arcos elétricos de transformadores flyback que reproduzem som. O hardware é um projeto de eletrônica de potência separado; estas páginas são apenas a fonte de áudio.
 
-- `index.html` — abre MIDI ou Guitar Pro (do acervo ou do aparelho), roteia cada faixa de instrumento para o canal esquerdo ou direito, e sintetiza onda quadrada.
+- `index.html` — abre MIDI ou Guitar Pro (do acervo ou do computador), roteia cada faixa de instrumento para um flyback e sintetiza onda quadrada. Dois flybacks pelo áudio estéreo, ou de 1 a 6 por um ESP32 na serial.
 - `tom.html` — gerador de tom contínuo, um por canal: frequência livre no slider, forma de onda à escolha e varredura.
 
 As duas são **arquivo único, sem build, sem dependência de pacote**. Fontes do Google Fonts via CDN; o leitor de Guitar Pro vem do jsDelivr, carregado só quando um arquivo que não é MIDI é aberto. Devem funcionar abertas direto do disco e servidas pelo GitHub Pages.
@@ -28,6 +28,7 @@ Arquivos de apoio, fora das páginas:
 | `tools/transcrever.py` | Gera MIDI a partir de uma gravação: separa os stems e transcreve cada um. **A única ferramenta que precisa de pacotes além da biblioteca padrão** (torch, torchaudio, librosa, basic-pitch) — é opcional, e nada no site depende dela |
 | `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
+| `tools/testar_site.py` | Abre o `index.html` num Chrome de verdade (Playwright) e exercita os dois modos de saída, o roteamento, o WAV e a serial com porta simulada. Opcional; precisa de `pip install playwright` |
 | `tools/publicar.ps1`, `tools/publicar.cmd` | Cria o repositório, envia e liga o GitHub Pages via GitHub CLI |
 | `.github/workflows/pages.yml` | A cada push na `main`: gera o índice do acervo e publica |
 
@@ -42,7 +43,12 @@ Consequências que já estão implementadas e não devem ser revertidas:
 - Faixas de percussão são detectadas (canal 10 do MIDI ou nome) e ficam fora dos presets automáticos, porque percussão não tem altura definida.
 - Separação estéreo é **dura**, via `ChannelMergerNode`, não `StereoPannerNode`. Cada lado vai para um flyback fisicamente distinto e não pode haver vazamento. Vale também para o WAV exportado: o teste confere que o canal sem faixa sai com amostras exatamente zero.
 
-Hoje são 2 canais (esquerdo e direito). O projeto de hardware prevê 6 canais no futuro, acionados por ESP32 via serial. A estrutura interna já está no formato certo para isso: `ch[i].segs` é uma lista de segmentos monofônicos `{start, end, n, f}`, que é exatamente o que o firmware consome pela saída serial.
+Há dois modos de saída, e a separação dura vale para o que aciona flyback:
+
+- **Estéreo · P2** — 2 canais pelo áudio do computador, esquerdo e direito, cada um num flyback. É como o site sempre foi.
+- **ESP32 · serial** — de 1 a 6 canais, um por pino de um ESP32. Os flybacks são acionados pela serial; o áudio do computador vira **monitor**, com os canais somados nos dois lados (e com o ganho dividido por √N para a soma não saturar). O monitor não aciona flyback nenhum, então a soma ali não fere a regra.
+
+`ch[i].segs` é uma lista de segmentos monofônicos `{start, end, n, f}` por canal, e é a mesma coisa que alimenta a síntese, o WAV e a serial.
 
 ## Estado atual
 
@@ -65,6 +71,15 @@ Presets de roteamento implementados:
 | Principal e acompanhamento | faixa com mais notas sozinha à direita, resto somado à esquerda |
 | Melodia inteira, resto sem atropelo | a melodia sai inteira à direita; à esquerda, a base e o que couber nas brechas dela |
 | Grave e agudo | ordena por nota média e divide ao meio |
+
+No modo ESP os presets são outros, porque os de cima são pensados para dois lados:
+
+| Preset | Critério |
+|---|---|
+| Um instrumento por flyback | o "sem atropelo" levado a N canais: a linha de canto (`scoreVoz()`) sozinha no canal 1, o baixo no 2, as faixas de maior ocupação uma por canal; o que sobra entra com prioridade 1 no canal onde mais traz brecha nova, pelas mesmas regras de 6% e 30% |
+| Grave para agudo | ordena por nota média e divide em N grupos |
+
+"Um por flyback" é o padrão do modo ESP e foi feito para a saída do MuScriptor, que já vem com voz, guitarra, piano e baixo separados: em Borboletas sai voz no 1, baixo no 2, violão no 3, pad no 4, piano no 5 e bateria desligada.
 
 **O preset "Melodia inteira, resto sem atropelo".** Era força bruta sobre 3^n atribuições minimizando sobreposição, o que tratava todas as faixas por igual e com frequência partia a melodia ao meio. Agora é dirigido:
 
@@ -170,20 +185,30 @@ Cada música tem Bateria, Baixo, Guitarra base, Melodia e Guitarra solo, às vez
 Formato (o mesmo no `localStorage` e no `.json` ao lado da música):
 
 ```json
-{ "versao": 1,
-  "faixas": [{ "nome": "Baixo", "canal": "esquerdo" }],
+{ "versao": 2, "saida": "estereo",
+  "faixas": [{ "nome": "Baixo", "canal": "esquerdo", "saidas": [1] }],
   "canais": [{ "ganho": 70, "passaBaixa": 20000, "oitava": 1, "acorde": "agudo" }, { … }] }
 ```
 
-`canal` é `desligada`, `esquerdo`, `direito` ou `ambos`. Faixas casam pelo nome; se nenhuma casar, a configuração é ignorada. Prioridade ao abrir: ajuste salvo no aparelho, depois `.json` do acervo, depois o preset baixo e melodia. Só ação do usuário grava no aparelho; "Restaurar" apaga o ajuste local.
+Internamente o roteamento de cada faixa é uma **máscara de bits**, um bit por canal (`assign[k]`): no estéreo 0, 1, 2 e 3 são exatamente o desligada, esquerdo, direito e ambos de antes; no ESP qualquer combinação dos seis vale, e uma faixa pode ir para mais de um flyback.
+
+`saidas` é a lista de canais, contando de 1. `canal` (`desligada`, `esquerdo`, `direito` ou `ambos`) continua sendo escrito no modo estéreo, e é lido quando `saidas` falta — é assim que os `.json` da versão 1 que estão no acervo continuam valendo. Faixas casam pelo nome; se nenhuma casar, a configuração é ignorada.
+
+**Uma configuração por modo**, em chaves separadas: `cfg:` para o estéreo (a de sempre) e `cfgesp:` para o ESP. O roteamento para dois flybacks no P2 e para seis no ESP não têm nada a ver um com o outro, e trocar de modo não pode apagar o ajuste do outro. Prioridade ao abrir: ajuste salvo no navegador para o modo atual; depois o `.json` do acervo, que descreve dois canais e por isso só vale no estéreo ou no ESP com dois flybacks; depois o preset padrão do modo. Mudar o número de flybacks redistribui pelo preset se a música não tem ajuste salvo, e só corta as rotas para canais que deixaram de existir se tem.
+
+Silenciar e solo (M e S em cada canal) são de sessão, como num mixer: não vão para a configuração e não afetam o WAV.
 
 ### Exportação WAV
 
-`OfflineAudioContext` estéreo a 44,1 kHz, PCM 16 bits. Ganho acima de 100% satura no arquivo como saturaria na saída ao vivo. No celular o arquivo sai por um link (toque novo, que o iOS exige) e, quando o navegador suporta, pelo compartilhamento do sistema.
+`OfflineAudioContext` a 44,1 kHz, PCM 16 bits, **um canal do arquivo por flyback**: estéreo no modo P2, N canais no modo ESP (para uma interface de áudio multicanal). Separação dura nos dois casos: canal sem faixa sai com amostras exatamente zero, e `tools/testar_site.py` confere isso. Ganho acima de 100% satura no arquivo como saturaria na saída ao vivo.
 
 ### Saída serial
 
-Web Serial, texto por linha, eventos com carimbo em ms enviados 100 ms antes. Contrato completo em `docs/protocolo-serial.md`. Testado com porta simulada; ainda não há firmware.
+Só no modo ESP. Web Serial, texto por linha, eventos com carimbo em ms enviados 100 ms antes, mais a mensagem `P c g` que diz qual GPIO cada canal aciona — o mapa inteiro vai ao conectar e a cada mudança. Contrato completo em `docs/protocolo-serial.md`.
+
+O painel da saída ESP32 tem o número de flybacks, a placa (ESP32 ou ESP32-S3, cada uma com a lista de pinos livres em módulo comum e seis padrão), um seletor de pino por canal que marca pino repetido, um botão "testar" por canal (um lá de 0,6 s, para achar qual flyback é qual) e o registro das linhas enviadas. **O registro funciona sem ESP conectado**: com ele aberto, tocar gera o mesmo fluxo que iria para a porta, e é o que serve para escrever e conferir o firmware.
+
+Testado com porta simulada em `tools/testar_site.py`; ainda não há firmware.
 
 ### tom.html — gerador de tom
 
@@ -195,9 +220,22 @@ O traço do osciloscópio desenha uma janela de três ciclos da frequência atua
 
 Estado no endereço (`?f=…&o=…&g=…&l=…&v=…`) e no `localStorage`. A gravação é adiada 400 ms, porque a varredura mexe na frequência a cada quadro e gravar a cada quadro seria absurdo.
 
-### Celular
+### Layout: interface de programa, para o computador
 
-Barra de reprodução fixa no rodapé, alvos de toque de 40 px ou mais (`pointer: coarse`), campos com 16 px para o iOS não dar zoom, sem rolagem horizontal a 360 px. `navigator.audioSession.type = 'playback'` para o iOS tocar com a chave de silencioso ligada. Wake Lock enquanto toca, porque tela apagada suspende o áudio. O desenho do osciloscópio para quando nada toca, para poupar bateria.
+O dono do projeto passou a usar só pelo computador, e o layout de coluna única, pensado para o celular, desperdiçava a tela em paisagem. Agora é uma interface de editor, no espírito do OBS ou de um editor de vídeo, com a janela inteira ocupada e cada painel rolando por dentro:
+
+- **Em cima, à esquerda — Faixas.** As faixas da música aberta, cada uma com uma luz que acende quando ela tem nota soando e o seletor de saída (E/D/ambos no estéreo, 1 a N no ESP). Os presets, o aproveitamento por canal e o crédito ficam aqui.
+- **Em cima, à direita — Saídas.** Uma pista por flyback: nome, pino ou lado, nota e frequência que está soando, de onde vem (as faixas roteadas), um osciloscópio com três ciclos da nota disparado na borda de subida, e um rolo com a linha monofônica correndo numa janela de 5 a 40 s, com o cursor a um quarto da largura para mostrar o que vem.
+- **Transporte**, entre as duas metades, com a linha do tempo da música inteira (uma faixa por saída) que serve de busca.
+- **Embaixo — a doca**, três painéis lado a lado: **Acervo**, **Canais** (um módulo de mixer por flyback, com M e S, ganho, passa-baixa, oitava, acorde, envelope e dinâmica) e **Saída** (o painel do modo: no estéreo, a explicação do P2; no ESP, a conexão e os pinos; nos dois, WAV e configuração).
+
+A divisória entre as duas metades arrasta (e anda com as setas), e o tamanho fica lembrado; duplo clique volta ao padrão. O padrão dá à doca uma altura estável (`clamp(200px, 100vh − 480px, 70vh)` para a metade de cima), porque é a doca que precisa de altura para o acervo e o mixer caberem — com a metade de cima proporcional à tela, a 1366×768 o acervo mostrava uma música só. A pista esconde a linha de faixas quando fica baixa demais, por container query.
+
+O seletor de modo fica na barra de cima. Trocar de modo pausa, silencia os flybacks (`X`) e carrega a configuração do outro modo.
+
+Arquivo se abre pelo acervo, por "Abrir arquivo…" ou **arrastando para qualquer ponto da janela**. Atalhos fora de campos de texto: espaço toca e pausa, setas andam 5 s, Home volta ao início.
+
+Abaixo de 1100 px de largura ou 600 px de altura os painéis empilham e a página rola, com o transporte grudado embaixo: não é o uso planejado, mas abrir num notebook pequeno ou no celular não pode quebrar. Continuam valendo `navigator.audioSession.type = 'playback'`, Wake Lock enquanto toca e o desenho parado quando nada toca.
 
 ### Gerar MIDI do áudio — `tools/transcrever.py`
 
@@ -295,15 +333,15 @@ Numa RTX 2060, cerca de 1min40 para uma música de cinco minutos, download inclu
 ## Convenções
 
 - **Interface em português do Brasil.** Todos os rótulos, mensagens e comentários voltados ao usuário. Nomes de instrumento General MIDI ficam em inglês, como aparecem nos programas de música.
-- **Estética de osciloscópio.** Fundo azul profundo, grade pontilhada, traço 1 amarelo-fósforo e traço 2 ciano. É referência ao Tektronix TDS 1012C que o autor usa na bancada. Amarelo é sempre o canal esquerdo, ciano sempre o direito, em toda a interface — por isso destaques que não são de canal (música atual, botão ligado) usam o painel azul, não essas cores.
+- **Estética de osciloscópio.** Fundo azul profundo, grade pontilhada, traço 1 amarelo-fósforo e traço 2 ciano. É referência ao Tektronix TDS 1012C que o autor usa na bancada. Amarelo é sempre o canal esquerdo (canal 1 no ESP), ciano sempre o direito (canal 2), em toda a interface — por isso destaques que não são de canal (música atual, botão ligado) usam o painel azul, não essas cores. Os canais 3 a 6 do modo ESP têm laranja, lilás, verde e rosa (`CORES` no `index.html`, `--c1` a `--c6` no CSS), e a mesma regra vale para eles: cor de canal só em coisa de canal.
 - Tipografia IBM Plex Sans para interface, IBM Plex Mono para leituras numéricas.
 - Sem caixa-alta decorativa, sem sombras em cartão, sem ícones genéricos.
 - `box-sizing: border-box` aplicado direto em `*`, não por herança: o conteúdo de `<details>` não herda pela árvore interna do navegador, e com `inherit` os botões do acervo estouravam a largura.
 
 ## O que está aberto
 
-- **Seis canais.** A interface e o roteamento são de dois canais; o protocolo serial já comporta seis.
-- **Firmware** que consuma o protocolo serial.
+- **Firmware** que consuma o protocolo serial, incluindo `P` para o mapa de pinos. O lado do navegador está pronto e testado com porta simulada; o painel "Linhas enviadas" mostra o fluxo sem ESP ligado.
+- **Saída multicanal pelo áudio.** Com uma interface de áudio de 6 saídas, o Web Audio poderia acionar seis flybacks sem ESP (`destination.channelCount`). O WAV de N canais já existe; a saída ao vivo não.
 - **Receber arquivo compartilhado** de outro aplicativo no celular (Web Share Target). Hoje se abre pelo seletor de arquivos ou pelo acervo.
 
 ## Contexto de hardware
@@ -316,7 +354,7 @@ Numa RTX 2060, cerca de 1min40 para uma música de cinco minutos, download inclu
 - Não usar `localStorage` sem `try/catch` e sem funcionar quando vazio (`store` em `index.html`).
 - Qualquer biblioteca externa só via `<script>` de CDN, com versão fixada.
 - Arquivo novo que o site precise servir tem de entrar no passo "Montar o site" do workflow e, se for do núcleo, em `BASE` no `sw.js`. Mudou `sw.js` de forma incompatível: troque o nome de `SITE`.
-- Testar com MIDI real antes de considerar pronto: um arquivo de música de videogame (3 a 4 faixas) e um arranjo de banda (6 a 8 faixas) cobrem os dois extremos. `musicas/exemplos` tem os dois casos, um Guitar Pro e os arranjos do projeto, que cobrem 6/8 e 3/8, andamento acelerando e ritardando; `musicas/bandas` tem arranjo de banda de verdade, com 8 a 16 faixas.
+- Rodar `python tools/testar_site.py` antes de publicar mudança no `index.html`. Testar com MIDI real antes de considerar pronto: um arquivo de música de videogame (3 a 4 faixas) e um arranjo de banda (6 a 8 faixas) cobrem os dois extremos. `musicas/exemplos` tem os dois casos, um Guitar Pro e os arranjos do projeto, que cobrem 6/8 e 3/8, andamento acelerando e ritardando; `musicas/bandas` tem arranjo de banda de verdade, com 8 a 16 faixas.
 - Ferramenta que mexe no acervo **não altera nada sem `--aplicar`** (ou `--baixar`, no download). Sem a opção, só imprime o que faria. Mantenha assim.
 - **Pasta no Windows vem com o atributo ReadOnly**, e aí `Path.rmdir()` falha com "Acesso negado" mesmo estando vazia. `remover_vazias()` em `curar_acervo.py` tira o atributo e tenta de novo, e engole a falha se ainda assim não for. Use essa função em vez de `rmdir()` direto. Pelo mesmo motivo, **grave o `creditos.json` antes da faxina de pastas**: é ele que guarda a atribuição exigida pelas licenças, e já se perdeu uma vez porque uma pasta vazia resistiu a sumir e abortou o resto.
 - Rodar script com `2>/dev/null | tail` esconde o traceback e devolve o código de saída do `tail`, que é sempre 0. Foi assim que a falha acima passou despercebida.

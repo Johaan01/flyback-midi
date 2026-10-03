@@ -2,353 +2,341 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#041e3c">
-<meta name="description" content="Toca MIDI e Guitar Pro em dois canais de onda quadrada, um para cada flyback.">
-<title>MIDI para dois flybacks</title>
+<meta name="description" content="Toca MIDI e Guitar Pro em flybacks: dois canais pelo P2 ou até seis por um ESP32, uma nota por arco.">
+<title>Flyback MIDI</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icones/icone.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icones/icone-180.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Flyback">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --field:#041e3c; --panel:#0a2e52; --chrome:#072744;
+  --fundo:#051a33; --field:#041e3c; --panel:#0a2e52; --chrome:#072744;
   --rule:rgba(140,190,235,.22); --soft:rgba(140,190,235,.10);
   --ink:#dceaf7; --dim:#7fa5c8;
-  --ch1:#d6e33c; --ch2:#43d3e6;
-  --bar:66px;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
+  /* um por flyback. 1 e 2 são o amarelo-fósforo e o ciano do osciloscópio de bancada: no modo
+     estéreo continuam sendo esquerdo e direito, como sempre foram */
+  --c1:#d6e33c; --c2:#43d3e6; --c3:#f2994a; --c4:#c792ea; --c5:#7ee08a; --c6:#f27396;
   -webkit-text-size-adjust:100%; text-size-adjust:100%;
 }
 *,*::before,*::after{box-sizing:border-box} /* direto, não inherit: o conteúdo de <details> não herda pela árvore interna */
-body{margin:0;background:#051a33;color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.55;
-  padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom,0px) + 12px)}
-.wrap{max-width:940px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
-h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em;line-height:1.25}
+html,body{height:100%}
+body{margin:0;background:var(--fundo);color:var(--ink);overflow:hidden;
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:13.5px;line-height:1.45}
+a{color:var(--c2)}
+.hide{display:none!important}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- moldura: barra, metade de cima, transporte, doca ---------- */
+.app{height:100vh;display:flex;flex-direction:column;gap:6px;padding:6px 8px 8px}
+.bar{display:flex;align-items:center;gap:14px;min-height:36px;flex:none;padding:0 2px}
+h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;white-space:nowrap}
 .tabs{display:inline-flex;flex:none;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
-.tabs a{padding:6px 13px;font-size:13px;color:var(--dim);text-decoration:none}
+.tabs a{padding:4px 12px;font-size:12.5px;color:var(--dim);text-decoration:none}
 .tabs a+a{border-left:1px solid var(--rule)}
 .tabs a[aria-current=page]{background:var(--panel);color:var(--ink)}
-.lede{color:var(--dim);margin:0 0 20px;max-width:64ch}
-a{color:var(--ch2)}
+.titulo{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dim)}
+.titulo b{color:var(--ink);font-weight:500}
+.bar .rotulo{font-size:12px;color:var(--dim)}
 
-.screen{position:relative;border:1px solid var(--rule);background:var(--field);border-radius:3px;overflow:hidden}
-#cv{display:block;width:100%;height:220px}
-@media(max-width:640px){#cv{height:160px}}
-.chip{position:absolute;left:8px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;pointer-events:none}
-.chip.a{top:calc(28% - 9px);color:var(--ch1)}
-.chip.b{top:calc(72% - 9px);color:var(--ch2)}
-.note{position:absolute;right:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-variant-numeric:tabular-nums;pointer-events:none}
-.note.a{top:calc(28% - 9px);color:var(--ch1)}
-.note.b{top:calc(72% - 9px);color:var(--ch2)}
-.empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font-size:14px;text-align:center;padding:0 24px}
-.roll{display:block;width:100%;height:52px;margin-top:6px;border:1px solid var(--rule);border-radius:3px;background:var(--field);cursor:pointer;touch-action:pan-y}
+/* a doca de baixo precisa de altura estável para o acervo e o mixer caberem; a metade de cima
+   fica com o que sobra, e a divisória ajusta */
+.topo{display:grid;grid-template-columns:minmax(380px,34%) minmax(0,1fr);gap:6px;height:clamp(200px,calc(100vh - 480px),70vh);min-height:150px;flex:none}
+.doca{flex:1;min-height:0;display:grid;grid-template-columns:minmax(320px,28%) minmax(0,1fr) minmax(290px,23%);gap:6px}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--rule);border-radius:3px;background:var(--field);overflow:hidden}
+.pane-h{display:flex;align-items:center;gap:10px;min-height:32px;padding:3px 10px;background:var(--chrome);border-bottom:1px solid var(--rule);flex:none}
+.pane-h h2{font-size:12.5px;font-weight:600;margin:0;white-space:nowrap}
+.pane-h .info{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pane-h .aux{margin-left:auto;display:flex;align-items:center;gap:6px;flex:none}
+.pane-b{flex:1;min-height:0;overflow:auto;padding:10px;overscroll-behavior:contain}
+h3{font-size:12.5px;font-weight:600;margin:16px 0 6px}
+.pane-b>h3:first-child,.pane-b>div>h3:first-child{margin-top:0}
+.txt{margin:0 0 8px;color:var(--dim);font-size:12.5px}
+.txt:empty{display:none}
 
-.lib{margin:18px 0 0;border:1px solid var(--rule);border-radius:3px}
-.lib>summary{display:flex;align-items:baseline;gap:10px;padding:11px 14px;cursor:pointer;list-style:none;font-weight:600;font-size:14px}
-.lib>summary::-webkit-details-marker{display:none}
-.lib>summary::before{content:"▸";color:var(--dim);font-size:12px;transition:transform .12s}
-.lib[open]>summary::before{transform:rotate(90deg)}
-.lib .count{font-weight:400;color:var(--dim);font-size:12.5px;font-family:"IBM Plex Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.lib-body{padding:0 14px 14px}
-input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:6px 10px;width:100%;margin:0}
-.lib-tools{margin:0 0 10px}
-.acervos{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 9px}
-.acervos button{padding:6px 13px;font-size:13px;color:var(--dim)}
-.acervos button[aria-pressed=true]{background:var(--panel);color:var(--ink);border-color:var(--ink)}
-.lib-linha{display:grid;grid-template-columns:minmax(0,16rem) minmax(0,1fr);gap:8px}
-.lib-linha select.hide+input{grid-column:1/-1}
-@media(max-width:560px){.lib-linha{grid-template-columns:minmax(0,1fr)}}
-.liblist .sub{display:block;font-size:12px;color:var(--dim)}
-.credit{margin:-6px 0 14px;color:var(--dim);font-size:12.5px;overflow-wrap:anywhere}
-.liblist{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto;overscroll-behavior:contain}
-.liblist li.grp{font-size:12px;color:var(--dim);padding:10px 0 4px;font-family:"IBM Plex Mono",monospace}
-.liblist button{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--soft);border-radius:0;background:transparent;padding:10px 6px}
-.liblist button[aria-current=true]{background:var(--panel)}
-.liblist .t{flex:1;min-width:0;overflow-wrap:anywhere}
-.liblist .tag{flex:none;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--dim)}
-.note-line{color:var(--dim);font-size:13px;margin:10px 0 0}
-.note-line:empty{display:none}
-.mono{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-variant-numeric:tabular-nums}
+.transport{display:flex;align-items:center;gap:8px;flex:none}
+.transport .play{width:42px;height:36px;padding:0;font-size:14px;display:grid;place-items:center}
+.transport .stop{width:36px;height:36px;padding:0;display:grid;place-items:center}
+.transport .loop{height:36px}
+.clock{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:100px;text-align:center}
+#roll{flex:1;min-width:0;height:36px;display:block;border:1px solid var(--rule);border-radius:3px;background:var(--field);cursor:pointer;touch-action:pan-y}
+.split{height:8px;margin:-5px 0 -3px;cursor:row-resize;position:relative;flex:none;z-index:2;touch-action:none}
+.split::after{content:"";position:absolute;left:50%;top:3px;width:56px;height:2px;margin-left:-28px;background:var(--rule);border-radius:1px}
+.split:hover::after,.split.drag::after,.split:focus-visible::after{background:var(--dim)}
 
-.drop{border:1px dashed var(--rule);border-radius:3px;padding:18px;text-align:center;color:var(--dim);
-  font-size:14px;cursor:pointer;margin:14px 0 24px;transition:border-color .12s,color .12s;overflow-wrap:anywhere}
-.drop:hover,.drop.over{border-color:var(--ch2);color:var(--ink)}
-.drop.has{border-style:solid;color:var(--ink)}
-input[type=file]{display:none}
-
-button,.btn{font:inherit;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;cursor:pointer}
+/* ---------- controles ---------- */
+button,.btn{font:inherit;font-size:12.5px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;cursor:pointer;padding:4px 10px}
 .btn{display:inline-flex;align-items:center;text-decoration:none}
 button:hover:not(:disabled),.btn:hover{background:var(--panel)}
 button:disabled{opacity:.35;cursor:default}
-button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible,.drop:focus-visible,.roll:focus-visible{outline:2px solid var(--ch2);outline-offset:2px}
-.btns{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
-.btns button,.btns .btn{padding:7px 13px;font-size:13px}
-.btns button[aria-pressed=true]{background:var(--panel);border-color:var(--ink)}
-
-.transport{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(5,26,51,.94);border-top:1px solid var(--rule);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  padding:9px max(16px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left))}
-.transport .in{max-width:940px;margin:0 auto;display:flex;align-items:center;gap:10px}
-.play{width:46px;height:46px;display:grid;place-items:center;flex:none;font-size:15px}
-.stop{width:40px;height:46px;display:grid;place-items:center;flex:none;font-size:13px}
-.pos{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
-.loop{flex:none;height:46px;padding:0 12px;font-size:13px;color:var(--dim)}
-.loop[aria-pressed=true]{background:var(--panel);color:var(--ink);border-color:var(--ink)}
-@media(max-width:520px){.pos{flex-direction:column;align-items:stretch;gap:0}.pos .clock{text-align:right;font-size:12px;line-height:1.2}}
-input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:20px;cursor:pointer;margin:0}
+button[aria-pressed=true]{background:var(--panel);border-color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible,#roll:focus-visible,.split:focus-visible{outline:2px solid var(--c2);outline-offset:1px}
+select,input[type=search]{font:inherit;font-size:12.5px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:3px 6px;min-width:0}
+input[type=search]{width:100%}
+input[type=file]{display:none}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:18px;cursor:pointer;margin:0}
 input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--rule)}
 input[type=range]::-moz-range-track{height:2px;background:var(--rule)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--ink);margin-top:-5.5px}
-input[type=range]::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:var(--ink)}
-.clock{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
-
-h2{font-size:14px;font-weight:600;margin:0 0 12px}
-.presets{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 18px}
-.presets button{padding:6px 13px;font-size:13px}
-.verdict{margin:0 0 14px;color:var(--dim);font-size:13px;font-family:"IBM Plex Mono",monospace;min-height:1.4em}
-.tracks{border-top:1px solid var(--soft);margin-bottom:26px}
-.trk{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--soft)}
-.trk .nm{min-width:0;overflow-wrap:anywhere}
-.trk .meta{display:block;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
-@media(max-width:560px){.trk{grid-template-columns:1fr}.trk .seg{display:flex}.trk .seg button{flex:1}}
-.seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
-.seg button{border:0;border-radius:0;padding:4px 11px;font-size:12.5px;background:transparent;color:var(--dim)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--ink);margin-top:-5px}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:var(--ink)}
+.linha{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--dim);cursor:pointer}
+.seg{display:inline-flex;flex:none;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:3px 8px;min-width:26px;background:transparent;color:var(--dim)}
 .seg button+button{border-left:1px solid var(--rule)}
 .seg button[aria-pressed=true]{background:var(--panel);color:var(--ink)}
-.seg button.L[aria-pressed=true]{background:var(--ch1);color:#041e3c}
-.seg button.R[aria-pressed=true]{background:var(--ch2);color:#041e3c}
-.stat{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--soft);color:var(--dim);font-size:12.5px;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.seg button.cor[aria-pressed=true]{background:var(--cor);color:#041e3c}
 
-.chans{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media(max-width:640px){.chans{grid-template-columns:1fr}}
-.ch{border:1px solid var(--rule);border-top-width:3px;border-radius:3px;padding:16px}
-.ch.a{border-top-color:var(--ch1)}
-.ch.b{border-top-color:var(--ch2)}
-.ctl{margin-bottom:14px}
-.ctl:last-of-type{margin-bottom:0}
-.ctl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
-.ctl label{font-size:13px;color:var(--dim)}
-.ctl .val{font-family:"IBM Plex Mono",monospace;font-size:12px;font-variant-numeric:tabular-nums}
-select{font:inherit;font-size:13px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:4px 8px;width:100%}
+/* ---------- faixas ---------- */
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.verdict{margin:0 0 6px;color:var(--dim);font-size:12px;font-family:"IBM Plex Mono",monospace;min-height:1.4em}
+.verdict:empty{display:none}
+.tracks{border-top:1px solid var(--soft)}
+.tracks:empty{display:none}
+.trk{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:6px 2px;border-bottom:1px solid var(--soft)}
+.luz{width:8px;height:8px;border-radius:50%;background:var(--soft)}
+.luz.on{background:var(--cor,var(--ink))}
+.trk .nm{min-width:0;overflow-wrap:anywhere}
+.trk.off .nm{color:var(--dim)}
+.trk .meta{display:block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.vazio{color:var(--dim);margin:0;max-width:48ch}
+.credit{margin:12px 0 0;color:var(--dim);font-size:12px;overflow-wrap:anywhere}
 
-.boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}
-@media(max-width:860px){.boxes{grid-template-columns:1fr}}
-.box{border:1px solid var(--rule);border-radius:3px;padding:16px}
-.box p{margin:0;color:var(--dim);font-size:13px}
-.box .btns select{width:auto}
+/* ---------- saídas: uma pista por flyback ---------- */
+.lanes{flex:1;min-height:0;display:flex;flex-direction:column}
+.lane{flex:1 1 0;min-height:38px;display:grid;grid-template-columns:172px 132px minmax(0,1fr);grid-template-rows:minmax(0,1fr);border-top:1px solid var(--soft)}
+.lane:first-child{border-top:0}
+.lane-h{border-left:3px solid var(--cor);padding:3px 8px;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center;overflow:hidden;container-type:size}
+.lane-h .l1{display:flex;align-items:baseline;gap:6px;white-space:nowrap;min-width:0}
+.lane-h .nome{font-size:12.5px;font-weight:600;color:var(--cor)}
+.lane-h .sub{font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis}
+.lane-h .nota{font-family:"IBM Plex Mono",monospace;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lane-h .fontes{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@container (max-height:52px){.lane-h .fontes{display:none}}
+.lane canvas{display:block;width:100%;height:100%;min-height:0;min-width:0}
+.lane .escopo{border-left:1px solid var(--soft);border-right:1px solid var(--soft)}
+.lane.mudo{opacity:.4}
+.saidas .pane-h select{font-size:11.5px;padding:1px 4px}
 
-.tip{margin-top:30px;padding-top:18px;border-top:1px solid var(--soft);color:var(--dim);font-size:13.5px;max-width:68ch}
-.tip p{margin:0 0 9px}
-.foot{margin-top:18px;color:var(--dim);font-size:12.5px}
-.hide{display:none!important}
+/* ---------- canais: um módulo de mixer por flyback ---------- */
+.strips{display:flex;gap:8px;min-height:100%;align-items:stretch}
+.strip{flex:1 1 0;min-width:136px;max-width:220px;display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--rule);border-top:3px solid var(--cor);border-radius:3px;background:var(--fundo)}
+.strip.mudo{opacity:.55}
+.strip-h{display:flex;align-items:center;gap:4px}
+.strip-h .nome{flex:1;font-weight:600;font-size:12.5px;color:var(--cor);white-space:nowrap}
+.strip-h button{padding:1px 7px;font-size:11.5px;font-family:"IBM Plex Mono",monospace}
+.strip .fontes{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-4px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.ctl label{display:block;font-size:11.5px;color:var(--dim);line-height:1.3}
+.ctl .val{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-variant-numeric:tabular-nums}
+.ctl select{width:100%;padding:2px 4px}
+.strip .stat{margin-top:auto;padding-top:6px;border-top:1px solid var(--soft);font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim)}
 
+/* ---------- acervo ---------- */
+.acervos{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.acervos button{color:var(--dim)}
+.acervos button[aria-pressed=true]{color:var(--ink)}
+.lib-linha{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:6px;margin:0 0 8px}
+.lib-linha select.hide+input{grid-column:1/-1}
+.filtros{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.filtros button{padding:2px 9px;font-size:12px;color:var(--dim)}
+.filtros button[aria-pressed=true]{color:var(--ink)}
+.liblist{list-style:none;margin:0;padding:0}
+.liblist li.grp{font-size:11.5px;color:var(--dim);padding:8px 0 3px;font-family:"IBM Plex Mono",monospace}
+.liblist button{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--soft);border-radius:0;background:transparent;padding:6px 4px}
+.liblist button[aria-current=true]{background:var(--panel)}
+.liblist .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.liblist .sub{display:block;font-size:11.5px;color:var(--dim)}
+.liblist .tag{flex:none;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--dim)}
+.note-line{color:var(--dim);font-size:12.5px;margin:8px 0 0}
+.note-line:empty{display:none}
+.lib-acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.foot{margin:12px 0 0;color:var(--dim);font-size:12px}
+
+/* ---------- saída ---------- */
+.pinos{width:100%;border-collapse:collapse;margin:0 0 6px}
+.pinos td{padding:3px 4px 3px 0;border-bottom:1px solid var(--soft)}
+.pinos td:first-child{color:var(--cor);font-weight:600;white-space:nowrap;padding-left:2px}
+.pinos td:last-child{text-align:right}
+.pinos select{width:100%}
+.pinos select.dup{outline:1px dashed var(--ink);outline-offset:1px}
+.grade2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 8px}
+.grade2 label{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--dim)}
+.log summary{cursor:pointer;font-size:12.5px;color:var(--dim)}
+.log pre{max-height:170px;overflow:auto;margin:6px 0 0;padding:6px 8px;font:11px/1.4 "IBM Plex Mono",monospace;color:var(--dim);background:var(--fundo);border-radius:3px;white-space:pre}
+
+.solta{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(4,30,60,.86);border:2px dashed var(--c2);font-size:16px;pointer-events:none}
+
+/* Tela estreita ou baixa: os painéis empilham e a página rola. O uso planejado é no
+   computador, mas abrir num notebook pequeno ou no celular não pode quebrar. */
+@media (max-width:1099px),(max-height:599px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100vh}
+  .topo,.doca{display:flex;flex-direction:column;height:auto!important}
+  .saidas{height:max(240px,45vh);flex:none}
+  .faixas .pane-b{max-height:60vh}
+  .acervo .pane-b{max-height:70vh}
+  .split{display:none}
+  .transport{position:sticky;bottom:0;z-index:5;background:var(--fundo);padding:6px 0;border-top:1px solid var(--rule)}
+  .lane{grid-template-columns:118px 88px minmax(0,1fr)}
+  .bar{flex-wrap:wrap}
+}
 @media(pointer:coarse){
-  input[type=range]{height:34px}
-  input[type=range]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-10px}
-  input[type=range]::-moz-range-thumb{width:22px;height:22px}
-  .seg button{min-height:40px;padding:0 14px}
-  .presets button,.btns button,.btns .btn,.tabs a{min-height:40px}
-  .tabs a{display:inline-flex;align-items:center}
-  select,input[type=search]{font-size:16px;min-height:40px}
-  .liblist button{padding:12px 6px}
+  .seg button{min-height:36px;padding:0 12px}
+  select,input[type=search]{font-size:16px;min-height:36px}
+  .liblist button{padding:10px 4px}
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>MIDI para dois flybacks</h1>
+<div class="app">
+  <header class="bar">
+    <h1>Flyback MIDI</h1>
     <nav class="tabs" aria-label="Páginas">
       <a href="./" aria-current="page">MIDI</a>
       <a href="tom.html">Tom</a>
     </nav>
+    <div class="titulo" id="titulo">nenhuma música aberta</div>
+    <span class="rotulo" id="rotSaida">Saída</span>
+    <div class="seg" id="modo" role="group" aria-labelledby="rotSaida">
+      <button data-modo="estereo">Estéreo · P2</button>
+      <button data-modo="esp" id="modoEsp">ESP32 · serial</button>
+    </div>
   </header>
-  <p class="lede">Escolha uma música do acervo ou abra um MIDI ou Guitar Pro, decida qual instrumento vai para cada lado, e a página sintetiza onda quadrada em estéreo. Cada lado é monofônico, como o arco.</p>
 
-  <div class="screen">
-    <canvas id="cv"></canvas>
-    <span class="chip a">1▸</span>
-    <span class="chip b">2▸</span>
-    <span class="note a" id="nota0"></span>
-    <span class="note b" id="nota1"></span>
-    <div class="empty" id="empty">sem arquivo</div>
-  </div>
-  <canvas class="roll hide" id="roll" role="slider" tabindex="0" aria-label="Linha do tempo dos dois canais. Toque para ir a um ponto da música." aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></canvas>
-
-  <details class="lib" id="lib" open>
-    <summary><span>Acervo</span><span class="count" id="libCount"></span></summary>
-    <div class="lib-body">
-      <div class="lib-tools hide" id="libTools">
-        <div class="acervos" id="libA" role="group" aria-label="Acervo"></div>
-        <div class="lib-linha">
-          <select id="libF" aria-label="Grupo dentro do acervo"></select>
-          <input type="search" id="libQ" placeholder="buscar título, artista, compositor" aria-label="Buscar no acervo" autocomplete="off">
-        </div>
+  <div class="topo" id="topo">
+    <section class="pane faixas" aria-labelledby="hFaixas">
+      <div class="pane-h"><h2 id="hFaixas">Faixas</h2><span class="info" id="nFaixas"></span></div>
+      <div class="pane-b">
+        <div class="presets hide" id="presets" role="group" aria-label="Distribuição automática"></div>
+        <p class="verdict" id="verdict"></p>
+        <div class="tracks" id="tracks" role="list"></div>
+        <p class="vazio" id="faixasVazio">Escolha uma música no acervo, aqui embaixo, ou arraste um arquivo MIDI ou Guitar Pro para esta janela. As faixas aparecem aqui, cada uma com o flyback para onde vai.</p>
+        <p class="credit hide" id="credito"></p>
       </div>
-      <ul class="liblist" id="libList"></ul>
-      <p class="note-line" id="libMsg">carregando…</p>
-      <div class="btns">
-        <button id="libRnd" class="hide">Sortear uma</button>
-        <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
-        <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
-        <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
-        <button id="libAdd">Adicionar MIDI deste aparelho</button>
-        <button id="libDel" class="hide">Esquecer os meus</button>
-        <button id="libOff" class="hide">Guardar para usar sem internet</button>
-        <a id="libUp" class="btn hide" target="_blank" rel="noopener">Enviar música para o acervo</a>
+    </section>
+
+    <section class="pane saidas" aria-labelledby="hSaidas">
+      <div class="pane-h">
+        <h2 id="hSaidas">Saídas</h2><span class="info" id="saidasInfo"></span>
+        <label class="aux"><span class="txt" style="margin:0">janela</span>
+          <select id="zoom" aria-label="Janela de tempo das pistas">
+            <option value="5">5 s</option><option value="10" selected>10 s</option><option value="20">20 s</option><option value="40">40 s</option>
+          </select></label>
       </div>
-    </div>
-  </details>
-
-  <div class="drop" id="drop" tabindex="0" role="button">abrir arquivo do aparelho · MIDI ou Guitar Pro</div>
-  <input type="file" id="file">
-<input type="file" id="fileMeus" multiple accept=".mid,.midi,.kar,.rmi">
-
-  <div id="panel" class="hide">
-    <h2>Faixas encontradas</h2>
-    <p class="credit hide" id="credito"></p>
-    <div class="presets">
-      <button data-p="bass">Baixo e melodia</button>
-      <button data-p="guitars">Guitarras somadas</button>
-      <button data-p="lead">Principal e acompanhamento</button>
-      <button data-p="complement">Melodia inteira, resto sem atropelo</button>
-      <button data-p="split">Grave e agudo</button>
-      <button data-p="none">Desligar tudo</button>
-    </div>
-    <p class="verdict" id="verdict"></p>
-    <div class="tracks" id="tracks" role="list"></div>
-
-    <div class="chans">
-      <section class="ch a">
-        <h2>Canal esquerdo</h2>
-        <div class="ctl">
-          <div class="row"><label for="gain0">Ganho</label><span class="val" id="gainv0">70%</span></div>
-          <input type="range" id="gain0" min="0" max="150" value="70">
-        </div>
-        <div class="ctl">
-          <div class="row"><label for="lp0">Passa-baixa</label><span class="val" id="lpv0">20,0 kHz</span></div>
-          <input type="range" id="lp0" min="0" max="1000" value="1000">
-        </div>
-        <div class="ctl">
-          <label for="oct0">Oitava</label>
-          <select id="oct0"><option value="-2">−2</option><option value="-1">−1</option><option value="0" selected>igual</option><option value="1">+1</option><option value="2">+2</option></select>
-        </div>
-        <div class="ctl">
-          <label for="pick0">Em acorde, tocar</label>
-          <select id="pick0"><option value="hi" selected>a nota mais aguda</option><option value="lo">a nota mais grave</option></select>
-        </div>
-        <div class="ctl">
-          <label for="env0">Envelope</label>
-          <select id="env0"><option value="nenhum">nenhum (OOK)</option><option value="percussivo">percussivo</option><option value="medio" selected>médio</option><option value="sustentado">sustentado</option></select>
-        </div>
-        <div class="ctl">
-          <label for="vel0">Dinâmica do MIDI</label>
-          <select id="vel0"><option value="sim" selected>seguir a velocity</option><option value="nao">ignorar</option></select>
-        </div>
-        <p class="stat" id="stat0">sem faixa</p>
-      </section>
-      <section class="ch b">
-        <h2>Canal direito</h2>
-        <div class="ctl">
-          <div class="row"><label for="gain1">Ganho</label><span class="val" id="gainv1">70%</span></div>
-          <input type="range" id="gain1" min="0" max="150" value="70">
-        </div>
-        <div class="ctl">
-          <div class="row"><label for="lp1">Passa-baixa</label><span class="val" id="lpv1">20,0 kHz</span></div>
-          <input type="range" id="lp1" min="0" max="1000" value="1000">
-        </div>
-        <div class="ctl">
-          <label for="oct1">Oitava</label>
-          <select id="oct1"><option value="-2">−2</option><option value="-1">−1</option><option value="0" selected>igual</option><option value="1">+1</option><option value="2">+2</option></select>
-        </div>
-        <div class="ctl">
-          <label for="pick1">Em acorde, tocar</label>
-          <select id="pick1"><option value="hi" selected>a nota mais aguda</option><option value="lo">a nota mais grave</option></select>
-        </div>
-        <div class="ctl">
-          <label for="env1">Envelope</label>
-          <select id="env1"><option value="nenhum">nenhum (OOK)</option><option value="percussivo">percussivo</option><option value="medio" selected>médio</option><option value="sustentado">sustentado</option></select>
-        </div>
-        <div class="ctl">
-          <label for="vel1">Dinâmica do MIDI</label>
-          <select id="vel1"><option value="sim" selected>seguir a velocity</option><option value="nao">ignorar</option></select>
-        </div>
-        <p class="stat" id="stat1">sem faixa</p>
-      </section>
-    </div>
-
-    <div class="boxes">
-      <section class="box">
-        <h2>Configuração</h2>
-        <p id="cfgMsg">padrão</p>
-        <div class="btns">
-          <button id="cfgDown">Baixar configuração</button>
-          <button id="cfgReset">Restaurar</button>
-        </div>
-      </section>
-      <section class="box">
-        <h2>Arquivo de áudio</h2>
-        <p>WAV estéreo com os dois canais separados, para tocar em qualquer player pelo cabo P2, sem o navegador.</p>
-        <div class="btns">
-          <button id="wavGo">Gerar WAV</button>
-          <a id="wavSave" class="btn hide">Salvar WAV</a>
-          <button id="wavShare" class="hide">Compartilhar</button>
-        </div>
-        <p class="note-line mono" id="wavMsg"></p>
-      </section>
-      <section class="box">
-        <h2>Saída serial para ESP32</h2>
-        <p id="serInfo">Envia as notas de cada canal com carimbo de tempo, 100 ms adiantadas. Protocolo em docs/protocolo-serial.md.</p>
-        <div class="btns">
-          <select id="baud" aria-label="Velocidade da serial"><option>115200</option><option>230400</option><option>460800</option><option>921600</option></select>
-          <button id="serGo">Conectar</button>
-        </div>
-        <p class="note-line mono" id="serMsg"></p>
-      </section>
-    </div>
+      <div class="lanes" id="lanes"></div>
+    </section>
   </div>
 
-  <div class="tip">
-    <p>Cada lado toca uma nota por vez. Se a faixa tiver acorde, a página escolhe uma nota conforme o seletor do canal, porque o arco não faz polifonia.</p>
-    <p>Faixas de bateria vêm desligadas: percussão não tem altura definida e o arco só produz tom.</p>
-    <p>Guitar Pro (.gp3 até .gp) e MusicXML abrem direto; na primeira vez a página baixa o leitor, cerca de 1 MB. O roteamento que você escolher fica salvo neste aparelho, por música.</p>
-    <p>No celular, a tela fica acesa enquanto toca. Para instalar como aplicativo, use “Adicionar à tela inicial” no menu do navegador.</p>
-  </div>
-  <footer class="foot" id="foot"></footer>
-</div>
-
-<div class="transport">
-  <div class="in">
+  <div class="transport">
     <button class="play" id="play" disabled aria-label="Tocar">▶</button>
     <button class="stop" id="stop" disabled aria-label="Voltar ao início">■</button>
-    <div class="pos">
-      <input type="range" id="seek" min="0" max="1000" value="0" disabled aria-label="Posição">
-      <span class="clock" id="clock">0:00 / 0:00</span>
-    </div>
     <button class="loop" id="loop" aria-pressed="false">repetir</button>
+    <span class="clock" id="clock">0:00 / 0:00</span>
+    <canvas id="roll" role="slider" tabindex="0" aria-label="Linha do tempo de todas as saídas. Clique ou arraste para ir a um ponto da música." aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></canvas>
+  </div>
+  <div class="split" id="split" role="separator" aria-orientation="horizontal" aria-label="Divisória entre as faixas e os painéis de baixo. Arraste, ou use as setas. Duplo clique volta ao tamanho padrão." tabindex="0"></div>
+
+  <div class="doca">
+    <section class="pane acervo" aria-labelledby="hAcervo">
+      <div class="pane-h">
+        <h2 id="hAcervo">Acervo</h2><span class="info" id="libCount"></span>
+        <div class="aux"><button id="abrir">Abrir arquivo…</button></div>
+      </div>
+      <div class="pane-b">
+        <div class="hide" id="libTools">
+          <div class="acervos" id="libA" role="group" aria-label="Acervo"></div>
+          <div class="lib-linha">
+            <select id="libF" aria-label="Grupo dentro do acervo"></select>
+            <input type="search" id="libQ" placeholder="buscar título, artista, compositor" aria-label="Buscar no acervo" autocomplete="off">
+          </div>
+          <div class="filtros">
+            <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
+            <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
+            <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
+            <button id="libRnd" class="hide">sortear uma</button>
+          </div>
+        </div>
+        <ul class="liblist" id="libList"></ul>
+        <p class="note-line" id="libMsg">carregando…</p>
+        <div class="lib-acoes">
+          <button id="libAdd">Guardar MIDI neste navegador…</button>
+          <button id="libDel" class="hide">Esquecer os meus</button>
+          <button id="libOff" class="hide">Guardar para usar sem internet</button>
+          <a id="libUp" class="btn hide" target="_blank" rel="noopener">Enviar música para o acervo</a>
+        </div>
+        <p class="foot" id="foot"></p>
+      </div>
+    </section>
+
+    <section class="pane canais" aria-labelledby="hCanais">
+      <div class="pane-h"><h2 id="hCanais">Canais</h2><span class="info">cada um toca uma nota por vez, como o arco</span></div>
+      <div class="pane-b"><div class="strips" id="strips"></div></div>
+    </section>
+
+    <section class="pane saida" aria-labelledby="saidaTit">
+      <div class="pane-h"><h2 id="saidaTit">Saída estéreo</h2></div>
+      <div class="pane-b">
+        <div id="saidaEst">
+          <p class="txt">Esquerdo vai para o flyback 1 e direito para o flyback 2, pelo cabo P2. A separação é dura: nada de um lado vaza para o outro.</p>
+          <p class="txt">Para mais de dois flybacks, use a saída ESP32.</p>
+        </div>
+        <div id="saidaEsp" class="hide">
+          <div class="linha">
+            <select id="baud" aria-label="Velocidade da serial"><option>115200</option><option>230400</option><option>460800</option><option>921600</option></select>
+            <button id="serGo">Conectar</button>
+          </div>
+          <p class="txt mono" id="serMsg">desconectado</p>
+          <div class="grade2">
+            <label>Flybacks<select id="espN"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+            <label>Placa<select id="espPlaca"><option value="esp32">ESP32</option><option value="s3">ESP32-S3</option></select></label>
+          </div>
+          <table class="pinos"><tbody id="pinos"></tbody></table>
+          <p class="txt" id="pinosMsg"></p>
+          <div class="linha">
+            <button id="serX">Silenciar tudo</button>
+            <label class="chk"><input type="checkbox" id="monitor"> ouvir no computador</label>
+          </div>
+          <details class="log" id="serLogBox"><summary>Linhas enviadas</summary><pre id="serLog">nada enviado ainda</pre></details>
+        </div>
+
+        <h3>Arquivo de áudio</h3>
+        <p class="txt" id="wavInfo"></p>
+        <div class="linha">
+          <button id="wavGo" disabled>Gerar WAV</button>
+          <a id="wavSave" class="btn hide">Salvar WAV</a>
+        </div>
+        <p class="txt mono" id="wavMsg"></p>
+
+        <h3>Configuração desta música</h3>
+        <p class="txt" id="cfgMsg">nenhuma música aberta</p>
+        <div class="linha">
+          <button id="cfgDown" disabled>Baixar configuração</button>
+          <button id="cfgReset" disabled>Restaurar</button>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
+<div class="solta hide" id="solta">solte para abrir · MIDI ou Guitar Pro</div>
+<input type="file" id="file">
+<input type="file" id="fileMeus" multiple accept=".mid,.midi,.kar,.rmi">
 
 <script>
 /* ---------- utilidades ---------- */
 const $ = id => document.getElementById(id);
-const N = 2;
+const MAX = 6;
+const CORES = ['#d6e33c', '#43d3e6', '#f2994a', '#c792ea', '#7ee08a', '#f27396'];
 const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const nm = n => NAMES[((n % 12) + 12) % 12] + (Math.floor(n / 12) - 1);
 const hz = n => 440 * Math.pow(2, (n - 69) / 12);
 const freqOf = v => 200 * Math.pow(100, v / 1000);
 const sliderOf = f => Math.round(1000 * Math.log(f / 200) / Math.log(100));
 const fmtF = f => f >= 1000 ? (f / 1000).toFixed(1).replace('.', ',') + ' kHz' : Math.round(f) + ' Hz';
+const fmtHz = f => f >= 1000 ? (f / 1000).toFixed(2).replace('.', ',') + ' kHz' : f.toFixed(1).replace('.', ',') + ' Hz';
 const fmtT = t => { if (!isFinite(t) || t < 0) t = 0; const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); };
 const baseName = s => String(s).replace(/\.[^./\\]+$/, '');
 const ONLINE = /^https?:$/.test(location.protocol);
@@ -357,6 +345,12 @@ const store = {
   set(k, v){ try { localStorage.setItem('flyback:' + k, JSON.stringify(v)); return true; } catch (e) { return false; } },
   del(k){ try { localStorage.removeItem('flyback:' + k); } catch (e) {} }
 };
+function el(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)){ if (k === 'class') e.className = v; else e.setAttribute(k, v); }
+  kids.forEach(x => { if (x !== null && x !== undefined) e.append(x); });
+  return e;
+}
 function saveBlob(blob, name){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = name;
@@ -535,26 +529,86 @@ function midiOffset(buf){
   return -1;
 }
 
-/* ---------- estado ---------- */
-const ch = [{ osc: null, gain: null, filter: null, an: null, data: null, segs: [], cur: '' },
-            { osc: null, gain: null, filter: null, an: null, data: null, segs: [], cur: '' }];
+/* ---------- estado ----------
+   Dois modos de saída. 'estereo': dois canais pelo áudio do computador, separação dura, como o
+   site sempre foi. 'esp': de 1 a 6 canais pela serial, para um ESP32 com um flyback por pino; o
+   áudio do computador vira só monitor.
+
+   O roteamento de cada faixa é uma máscara de bits, um bit por canal. No estéreo os valores
+   possíveis são 0 (desligada), 1 (esquerdo), 2 (direito) e 3 (ambos), que são exatamente o
+   'O', 'L', 'R' e 'B' de antes; no ESP qualquer combinação dos seis vale. */
+const CTL = { ganho: 70, lp: 1000, oct: 0, pick: 'lo', env: 'medio', vel: true };
+const ch = Array.from({ length: MAX }, () => ({
+  osc: null, gain: null, filter: null, an: null, out: null, data: null,
+  segs: [], lo: 60, hi: 72, cur: null, freqAgora: 0, ctl: Object.assign({}, CTL),
+  mudo: false, solo: false, stat: 'sem faixa', lx: null, sx: null }));
 let tracks = [], assign = [], prio = [], actx = null, merger = null, current = null;
-let startedAt = 0, offset = 0, playing = false, duration = 0, scrubbing = false, scrubAt = 0, loop = false;
+let startedAt = 0, offset = 0, playing = false, duration = 0, scrubbing = false, scrubAt = 0, loop = false, idle = 2;
+let janela = [5, 10, 20, 40].includes(+store.get('janela')) ? +store.get('janela') : 10;
+
+/* Pinos de saída livres em módulos comuns, sem os de boot (strapping), os da memória flash e
+   PSRAM, os da USB nativa e os da UART0. O MCPWM chega a qualquer GPIO pela matriz, então a
+   escolha do pino é livre dentro desta lista. O padrão são seis seguidos e fáceis de achar. */
+const PLACAS = {
+  esp32: { nome: 'ESP32', pinos: [4, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33], padrao: [18, 19, 21, 22, 23, 25] },
+  s3:    { nome: 'ESP32-S3', pinos: [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 38, 39, 40, 41, 42, 47, 48], padrao: [4, 5, 6, 7, 15, 16] }
+};
+const BAUDS = [115200, 230400, 460800, 921600];
+let modo = store.get('modo') === 'esp' ? 'esp' : 'estereo';
+const esp = (() => {
+  const s = store.get('esp') || {};
+  const placa = PLACAS[s.placa] ? s.placa : 's3';
+  const ok = Array.isArray(s.pinos) && s.pinos.length === MAX && s.pinos.every(p => PLACAS[placa].pinos.includes(+p));
+  return { n: Math.max(1, Math.min(MAX, Math.round(+s.n) || MAX)), placa,
+           pinos: ok ? s.pinos.map(Number) : PLACAS[placa].padrao.slice(),
+           baud: BAUDS.includes(+s.baud) ? +s.baud : 115200, monitor: s.monitor !== false };
+})();
+const salvarEsp = () => store.set('esp', esp);
+const nCanais = () => modo === 'esp' ? esp.n : 2;
+const mascara = () => (1 << nCanais()) - 1;
+const canaisDe = m => { const r = []; for (let i = 0; i < MAX; i++) if (m >> i & 1) r.push(i); return r; };
+const nomeCanal = i => modo === 'esp' ? 'Canal ' + (i + 1) : (i ? 'Direito' : 'Esquerdo');
+const subCanal = i => modo === 'esp' ? 'GPIO ' + esp.pinos[i] : 'flyback ' + (i + 1);
+const algumSolo = () => ch.slice(0, nCanais()).some(c => c.solo);
+const soa = i => i < nCanais() && (algumSolo() ? ch[i].solo : !ch[i].mudo);
 
 function ensureCtx(){
   if (actx) return actx;
-  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} /* iOS: toca mesmo com a chave de silencioso */
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
   actx = new (window.AudioContext || window.webkitAudioContext)();
   merger = actx.createChannelMerger(2);
   merger.connect(actx.destination);
-  ch.forEach((c, i) => {
+  ch.forEach(c => {
     c.filter = actx.createBiquadFilter(); c.filter.type = 'lowpass';
-    c.filter.frequency.value = freqOf(+$('lp' + i).value); c.filter.Q.value = .707;
+    c.filter.frequency.value = freqOf(c.ctl.lp); c.filter.Q.value = .707;
     c.an = actx.createAnalyser(); c.an.fftSize = 2048; c.data = new Float32Array(c.an.fftSize);
-    c.filter.connect(c.an); c.an.connect(merger, 0, i);
+    c.out = actx.createGain();
+    c.filter.connect(c.an); c.an.connect(c.out);
   });
+  ligarSaida();
   return actx;
 }
+/* No estéreo cada canal entra numa entrada própria do ChannelMerger: separação dura, sem
+   vazamento, porque cada lado vai para um flyback fisicamente distinto.
+   No ESP os flybacks são acionados pela serial, e o áudio do computador é só para ouvir: os
+   canais somam nos dois lados, com o ganho dividido para a soma de seis não saturar. O
+   analisador fica antes desse ganho, então o osciloscópio de cada pista mostra o canal
+   mesmo com o monitor desligado. */
+function ligarSaida(){
+  if (!actx) return;
+  const n = nCanais();
+  ch.forEach((c, i) => {
+    c.out.disconnect();
+    if (modo === 'estereo'){
+      if (i < 2) c.out.connect(merger, 0, i);
+      c.out.gain.value = 1;
+    } else if (i < n){
+      c.out.connect(merger, 0, 0); c.out.connect(merger, 0, 1);
+      c.out.gain.value = esp.monitor ? 1 / Math.sqrt(n) : 0;
+    }
+  });
+}
+const aplicarFiltros = () => ch.forEach(c => { if (c.filter) c.filter.frequency.value = freqOf(c.ctl.lp); });
 
 /* ---------- monta a linha monofônica ---------- */
 /* Varredura cronologica: num instante soa uma nota so. Entre as que estao soando ganha a de
@@ -563,10 +617,10 @@ function ensureCtx(){
    Com todas as faixas em prioridade 0 — todo preset menos o sem atropelo — o resultado e o
    mesmo de antes. */
 function buildSegs(i){
-  const lado = i === 0 ? 'L' : 'R', sel = [];
-  tracks.forEach((t, k) => { if (assign[k] === lado || assign[k] === 'B') sel.push([t, Math.max(0, Math.min(15, prio[k] | 0))]); });
+  const bit = 1 << i, sel = [];
+  tracks.forEach((t, k) => { if (assign[k] & bit) sel.push([t, Math.max(0, Math.min(15, prio[k] | 0))]); });
   if (!sel.length) return [];
-  const pick = $('pick' + i).value, oct = +$('oct' + i).value;
+  const pick = ch[i].ctl.pick, oct = ch[i].ctl.oct;
   const ev = [];
   sel.forEach(([t, p]) => t.notes.forEach(n => {
     const k = (n.n << 4) | p;                                    /* altura e prioridade numa chave so */
@@ -608,7 +662,14 @@ function buildSegs(i){
   segs.forEach(s => { s.n += 12 * oct; s.f = hz(s.n); });
   return segs;
 }
-function rebuild(){ ch.forEach((c, i) => c.segs = buildSegs(i)); }
+function rebuild(){
+  ch.forEach((c, i) => {
+    c.segs = i < nCanais() ? buildSegs(i) : [];
+    let lo = Infinity, hi = -Infinity;
+    c.segs.forEach(s => { if (s.n < lo) lo = s.n; if (s.n > hi) hi = s.n; });
+    c.lo = isFinite(lo) ? lo : 60; c.hi = isFinite(hi) ? hi : 72;
+  });
+}
 
 /* ---------- síntese: a mesma agenda serve para tocar ao vivo e para renderizar o WAV ---------- */
 /* Envelope por nota: constante de decaimento em segundos e nivel de sustentacao.
@@ -652,9 +713,9 @@ function scheduleVoice(c, dest, segs, at, t0, vol, env, usaVel){
   osc.start(t0); osc.stop(t0 + Math.max(.1, duration - at) + .2);
   return { osc, gn };
 }
-const volOf = i => (+$('gain' + i).value) / 100;
-const envOf = i => ENVELOPES[$('env' + i).value] || null;
-const velOf = i => $('vel' + i).value === 'sim';
+const volOf = i => ch[i].ctl.ganho / 100;
+const envOf = i => ENVELOPES[ch[i].ctl.env] || null;
+const velOf = i => !!ch[i].ctl.vel;
 
 /* ---------- transporte ---------- */
 function start(at){
@@ -662,19 +723,22 @@ function start(at){
   if (c.state !== 'running') c.resume();
   stopVoices();
   const t0 = c.currentTime + .06;
-  ch.forEach((k, i) => { const v = scheduleVoice(c, k.filter, k.segs, at, t0, volOf(i), envOf(i), velOf(i)); k.osc = v.osc; k.gain = v.gn; });
+  ch.forEach((k, i) => {
+    if (!soa(i) || !k.segs.length) return;
+    const v = scheduleVoice(c, k.filter, k.segs, at, t0, volOf(i), envOf(i), velOf(i)); k.osc = v.osc; k.gain = v.gn;
+  });
   startedAt = t0; offset = at; playing = true;
   $('play').textContent = '❚❚'; $('play').setAttribute('aria-label', 'Pausar');
-  keepAwake(true); serialStart(at);
+  keepAwake(true); serialStart(at); atualizarTestes();
 }
 function stopVoices(){ ch.forEach(k => { if (k.osc){ try { k.osc.stop(); } catch (e) {} k.osc.disconnect(); k.osc = null; } if (k.gain){ k.gain.disconnect(); k.gain = null; } }); }
 function position(){ return playing ? Math.min(duration, offset + Math.max(0, actx.currentTime - startedAt)) : offset; }
 function pause(){ if (!playing) return; offset = position(); playing = false; stopVoices(); serialHalt(); keepAwake(false);
-  $('play').textContent = '▶'; $('play').setAttribute('aria-label', 'Tocar'); idle = 12; }
-function stop(){ pause(); offset = 0; tick(); }
-function seekTo(at){ scrubbing = false; at = Math.max(0, Math.min(duration, at)); if (playing) start(at); else { offset = at; tick(); } }
+  $('play').textContent = '▶'; $('play').setAttribute('aria-label', 'Tocar'); idle = 12; atualizarTestes(); }
+function stop(){ pause(); offset = 0; idle = 2; tick(); }
+function seekTo(at){ scrubbing = false; at = Math.max(0, Math.min(duration, at)); if (playing) start(at); else { offset = at; idle = 2; tick(); } }
 
-/* mantém a tela acesa enquanto toca; no celular, tela apagada suspende o áudio */
+/* mantém a tela acesa enquanto toca */
 let wake = null, wakeWanted = false;
 async function keepAwake(on){
   wakeWanted = on;
@@ -693,30 +757,54 @@ document.addEventListener('visibilitychange', () => {
   if (actx && actx.state !== 'running') actx.resume();
 });
 
-/* ---------- interface das faixas ---------- */
-const ROUTES = [['—', 'O', 'desligada'], ['E', 'L', 'canal esquerdo'], ['D', 'R', 'canal direito'], ['ambos', 'B', 'os dois canais']];
+/* ---------- faixas ---------- */
+/* intervalos em que a faixa tem alguma nota soando, já unidos: a luz de cada faixa acende
+   por busca binária aqui, em vez de varrer as notas a cada quadro */
+function uniao(notes){
+  const iv = notes.map(n => [n.t0, n.t1]).sort((a, b) => a[0] - b[0]), out = [];
+  for (const [a, b] of iv){ const l = out[out.length - 1]; if (l && a <= l[1]){ if (b > l[1]) l[1] = b; } else out.push([a, b]); }
+  return out;
+}
+function ativa(t, p){
+  const u = t.uniao; let lo = 0, hi = u.length - 1;
+  while (lo <= hi){ const m = (lo + hi) >> 1; if (u[m][1] <= p) lo = m + 1; else if (u[m][0] > p) hi = m - 1; else return true; }
+  return false;
+}
 function renderTracks(){
   const box = $('tracks'); box.textContent = '';
+  const n = nCanais();
+  $('nFaixas').textContent = tracks.length ? tracks.length + (tracks.length === 1 ? ' faixa' : ' faixas') : '';
   tracks.forEach((t, k) => {
-    let lo = 127, hi = 0; t.notes.forEach(n => { if (n.n < lo) lo = n.n; if (n.n > hi) hi = n.n; });
-    const row = document.createElement('div'); row.className = 'trk'; row.setAttribute('role', 'listitem');
-    const name = document.createElement('div'); name.className = 'nm'; name.textContent = t.name;
-    const meta = document.createElement('span'); meta.className = 'meta';
-    const papel = assign[k] === 'O' || !prio[k] ? '' : prio[k] >= 3 ? ' · principal' : prio[k] >= 2 ? ' · base' : ' · preenche as brechas';
-    meta.textContent = t.notes.length + ' notas · ' + nm(lo) + ' – ' + nm(hi) + (isDrum(t) ? ' · percussão' : '') + papel;
-    name.appendChild(meta); row.appendChild(name);
-    const seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Canal de ' + t.name);
-    ROUTES.forEach(([lb, val, desc]) => {
-      const b = document.createElement('button');
-      b.textContent = lb; b.className = val; b.setAttribute('aria-label', desc);
-      b.setAttribute('aria-pressed', assign[k] === val);
-      b.onclick = () => { assign[k] = val; renderTracks(); reschedule(); saveCfg(); };
-      seg.appendChild(b);
-    });
-    row.appendChild(seg); box.appendChild(row);
+    let lo = 127, hi = 0; t.notes.forEach(x => { if (x.n < lo) lo = x.n; if (x.n > hi) hi = x.n; });
+    const row = el('div', { class: 'trk' + (assign[k] ? '' : ' off'), role: 'listitem' });
+    const luz = el('span', { class: 'luz', 'aria-hidden': 'true' });
+    const prim = canaisDe(assign[k])[0];
+    if (prim !== undefined) luz.style.setProperty('--cor', CORES[prim]);
+    t.luz = luz; t.aceso = false;
+    const papel = !assign[k] || !prio[k] ? '' : prio[k] >= 3 ? ' · principal' : prio[k] >= 2 ? ' · base' : ' · preenche as brechas';
+    const name = el('div', { class: 'nm' }, t.name,
+      el('span', { class: 'meta' }, t.notes.length + ' notas · ' + nm(lo) + ' – ' + nm(hi) + (isDrum(t) ? ' · percussão' : '') + papel));
+    const seg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Saída de ' + t.name });
+    const muda = m => { assign[k] = m; renderTracks(); reschedule(); saveCfg(); };
+    const botao = (rot, desc, ativo, cor, fn) => {
+      const b = el('button', { 'aria-label': desc, 'aria-pressed': String(ativo) }, rot);
+      if (cor){ b.classList.add('cor'); b.style.setProperty('--cor', cor); }
+      b.onclick = fn; seg.appendChild(b);
+    };
+    if (modo === 'esp'){
+      /* no ESP cada número liga e desliga aquele flyback para a faixa: uma faixa pode ir para
+         mais de um, como o "ambos" do estéreo */
+      botao('—', 'desligada', !assign[k], null, () => muda(0));
+      for (let i = 0; i < n; i++) botao(String(i + 1), 'canal ' + (i + 1), !!(assign[k] >> i & 1), CORES[i], () => muda(assign[k] ^ (1 << i)));
+    } else {
+      [['—', 0, 'desligada'], ['E', 1, 'canal esquerdo'], ['D', 2, 'canal direito'], ['ambos', 3, 'os dois canais']].forEach(([rot, m, desc]) =>
+        botao(rot, desc, assign[k] === m, m === 1 || m === 2 ? CORES[m - 1] : null, () => muda(m)));
+    }
+    row.append(luz, name, seg); box.appendChild(row);
   });
+  $('faixasVazio').classList.toggle('hide', tracks.length > 0);
 }
-function reschedule(){ const wasP = playing, at = position(); pause(); rebuild(); analyse(); drawRollBase(); if (wasP) start(at); }
+function reschedule(){ const wasP = playing, at = position(); pause(); rebuild(); analyse(); drawRollBase(); atualizarFontes(); idle = 2; if (wasP) start(at); }
 
 function avgPitch(t){ let s = 0; for (const n of t.notes) s += n.n; return s / t.notes.length; }
 function isDrum(t){ return t.chan === 9 || (!t.gm && /drum|bateri|percus|kit/i.test(t.name)); }
@@ -857,145 +945,372 @@ function computePreset(p){
   }
   return a;
 }
-function preset(p, user){ assign = computePreset(p); renderTracks(); reschedule(); if (user) saveCfg(); }
 
-function analyse(){
-  const msg = [];
-  for (let i = 0; i < N; i++){
-    const side = i === 0 ? 'L' : 'R';
-    const sel = tracks.filter((t, k) => assign[k] === side || assign[k] === 'B');
-    const noteTime = sel.reduce((s, t) => s + t.notes.reduce((a, n) => a + (n.t1 - n.t0), 0), 0);
-    const soundTime = ch[i].segs.reduce((s, x) => s + (x.end - x.start), 0);
-    const el = $('stat' + i);
-    if (!sel.length){ el.textContent = 'sem faixa'; msg.push('—'); continue; }
-    const used = noteTime ? Math.round(soundTime / noteTime * 100) : 0;
-    const busy = duration ? Math.round(soundTime / duration * 100) : 0;
-    el.textContent = 'toca ' + used + '% das notas · ativo ' + busy + '% do tempo';
-    msg.push(used + '%');
+/* "Um instrumento por flyback": é o "sem atropelo" levado a N canais.
+   A linha de canto vai sozinha para o canal 1, inteira. O baixo, se houver, para o 2. Os
+   demais canais recebem as faixas de maior ocupação, uma por canal. O que sobra entra com
+   prioridade menor no canal onde mais traz brecha nova, pelas mesmas regras do preset de dois
+   canais: nem a sombra do dono do canal, nem um punhado de notas soltas.
+   É o preset feito para a saída do MuScriptor, que já separa voz, guitarra, piano e baixo. */
+function umPorFlyback(n){
+  const occ = occupancy(), nb = occ.length ? occ[0].length : 0;
+  const tam = occ.map(a => { let c = 0; for (let k = 0; k < nb; k++) c += a[k]; return c; });
+  const cand = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]) && tracks[i].notes.length);
+  const out = tracks.map(() => 0), pr = tracks.map(() => 0);
+  prio = pr;
+  if (!cand.length) return out;
+  const sc = new Map(cand.map(i => [i, scoreVoz(i, occ, nb)]));
+  let li = cand.reduce((a, b) => sc.get(b) > sc.get(a) ? b : a);
+  if (!sc.get(li)) li = cand.reduce((a, b) => tam[b] > tam[a] ? b : a);
+  const resto = cand.filter(i => i !== li).sort((a, b) => tam[b] - tam[a]);
+  const grave = resto.find(i => isBass(tracks[i]) || (tracks[i].prog >= 32 && tracks[i].prog <= 39));
+  if (grave !== undefined){ resto.splice(resto.indexOf(grave), 1); resto.unshift(grave); }
+  const donos = [li].concat(resto.slice(0, n - 1));
+  donos.forEach((i, c) => { out[i] = 1 << c; pr[i] = c ? 2 : 3; });
+  const cheio = donos.map(i => occ[i].slice());
+  for (const i of resto.slice(n - 1)){
+    let melhor = -1, mv = 0;
+    cheio.forEach((a, c) => { let novo = 0; for (let k = 0; k < nb; k++) if (occ[i][k] && !a[k]) novo++; if (novo > mv){ mv = novo; melhor = c; } });
+    if (melhor < 0 || mv < nb * .06 || mv < tam[i] * .3) continue;
+    out[i] = 1 << melhor; pr[i] = 1;
+    for (let k = 0; k < nb; k++) if (occ[i][k]) cheio[melhor][k] = 1;
   }
-  $('verdict').textContent = tracks.length ? ('aproveitamento — esquerda ' + msg[0] + ' · direita ' + msg[1]) : '';
+  return out;
+}
+function computePresetN(p){
+  const n = esp.n;
+  prio = tracks.map(() => 0);
+  if (p === 'none') return tracks.map(() => 0);
+  if (p === 'faixas'){
+    const idx = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]) && tracks[i].notes.length)
+      .sort((x, y) => avgPitch(tracks[x]) - avgPitch(tracks[y]));
+    const a = tracks.map(() => 0);
+    idx.forEach((i, k) => a[i] = 1 << Math.min(n - 1, Math.floor(k * n / idx.length)));
+    return a;
+  }
+  return umPorFlyback(n);
+}
+const PRESETS_EST = [['bass', 'Baixo e melodia'], ['guitars', 'Guitarras somadas'], ['lead', 'Principal e acompanhamento'],
+  ['complement', 'Melodia inteira, resto sem atropelo'], ['split', 'Grave e agudo'], ['none', 'Desligar tudo']];
+const PRESETS_ESP = [['um', 'Um instrumento por flyback'], ['faixas', 'Grave para agudo'], ['none', 'Desligar tudo']];
+const LETRA_MASC = { O: 0, L: 1, R: 2, B: 3 };
+function preset(p, user){
+  assign = modo === 'esp' ? computePresetN(p) : computePreset(p).map(l => LETRA_MASC[l] || 0);
+  renderTracks(); reschedule(); if (user) saveCfg();
+}
+function renderPresets(){
+  const box = $('presets'); box.textContent = '';
+  (modo === 'esp' ? PRESETS_ESP : PRESETS_EST).forEach(([p, rot]) => {
+    const b = el('button', null, rot); b.onclick = () => preset(p, true); box.appendChild(b);
+  });
+  box.classList.toggle('hide', !tracks.length);
 }
 
-/* ---------- configuração por música: neste aparelho e no acervo ---------- */
-const CANAL_OUT = { O: 'desligada', L: 'esquerdo', R: 'direito', B: 'ambos' };
-const CANAL_IN = { desligada: 'O', esquerdo: 'L', direito: 'R', ambos: 'B', O: 'O', L: 'L', R: 'R', B: 'B' };
+function analyse(){
+  const msg = [], n = nCanais();
+  for (let i = 0; i < n; i++){
+    const bit = 1 << i, c = ch[i];
+    const sel = tracks.filter((t, k) => assign[k] & bit);
+    const noteTime = sel.reduce((s, t) => s + t.notes.reduce((a, x) => a + (x.t1 - x.t0), 0), 0);
+    const soundTime = c.segs.reduce((s, x) => s + (x.end - x.start), 0);
+    if (!sel.length){ c.stat = 'sem faixa'; msg.push('—'); }
+    else {
+      const used = noteTime ? Math.round(soundTime / noteTime * 100) : 0;
+      const busy = duration ? Math.round(soundTime / duration * 100) : 0;
+      c.stat = 'toca ' + used + '% das notas · ativo ' + busy + '% do tempo';
+      msg.push(used + '%');
+    }
+    if (c.sx) c.sx.stat.textContent = c.stat;
+  }
+  const rot = i => modo === 'esp' ? String(i + 1) : i ? 'direita' : 'esquerda';
+  $('verdict').textContent = tracks.length ? 'aproveitamento — ' + msg.map((m, i) => rot(i) + ' ' + m).join(' · ') : '';
+}
+
+/* ---------- configuração por música: neste navegador e no acervo ----------
+   Uma por modo: o roteamento para dois flybacks no P2 e para seis no ESP não têm nada a ver
+   um com o outro, e trocar de modo não pode apagar o ajuste do outro. O do estéreo continua
+   na chave de sempre ('cfg:'), e é o único que o .json do acervo descreve. */
+const MASC_NOME = ['desligada', 'esquerdo', 'direito', 'ambos'];
+const CANAL_IN = { desligada: 0, esquerdo: 1, direito: 2, ambos: 3, O: 0, L: 1, R: 2, B: 3 };
+const cfgChave = () => (modo === 'esp' ? 'cfgesp:' : 'cfg:') + current.key;
 function currentCfg(){
   return {
-    versao: 1,
+    versao: 2,
+    saida: modo,
     faixas: tracks.map((t, k) => {
-      const f = { nome: t.name, canal: CANAL_OUT[assign[k]] };
+      const f = { nome: t.name };
+      /* 'canal' continua sendo escrito no estéreo, para quem ler com a versão anterior do site */
+      if (modo === 'estereo') f.canal = MASC_NOME[assign[k] & 3];
+      f.saidas = canaisDe(assign[k]).map(i => i + 1);
       if (prio[k]) f.prioridade = prio[k];   /* só aparece quando um preset definiu quem ganha no choque */
       return f;
     }),
-    canais: ch.map((c, i) => ({
-      ganho: +$('gain' + i).value,
-      passaBaixa: Math.round(freqOf(+$('lp' + i).value)),
-      oitava: +$('oct' + i).value,
-      acorde: $('pick' + i).value === 'lo' ? 'grave' : 'agudo',
-      envelope: $('env' + i).value,
-      velocity: $('vel' + i).value === 'sim'
+    canais: ch.slice(0, nCanais()).map(c => ({
+      ganho: c.ctl.ganho,
+      passaBaixa: Math.round(freqOf(c.ctl.lp)),
+      oitava: c.ctl.oct,
+      acorde: c.ctl.pick === 'lo' ? 'grave' : 'agudo',
+      envelope: c.ctl.env,
+      velocity: c.ctl.vel
     }))
   };
 }
-function syncLabels(){
-  for (let i = 0; i < N; i++){
-    $('gainv' + i).textContent = $('gain' + i).value + '%';
-    const f = freqOf(+$('lp' + i).value);
-    $('lpv' + i).textContent = fmtF(f);
-    if (ch[i].filter) ch[i].filter.frequency.value = f;
-  }
-}
 function resetControls(){
-  /* Esquerda na nota mais grave, direita na mais aguda. A esquerda quase sempre fica com o
-     acompanhamento, e reduzir um acorde a nota mais aguda entrega a oitava ou a quinta em vez
-     da raiz — a harmonia sai errada e fina. Os arranjos do proprio projeto ja vinham com
-     'acorde: grave' a esquerda; o padrao do site e que estava fora de passo com eles. */
-  for (let i = 0; i < N; i++){ $('gain' + i).value = 70; $('lp' + i).value = 1000; $('oct' + i).value = '0';
-    $('pick' + i).value = i === 0 ? 'lo' : 'hi'; $('env' + i).value = 'medio'; $('vel' + i).value = 'sim'; }
-  syncLabels();
+  /* Estéreo: esquerda na nota mais grave, direita na mais aguda. A esquerda quase sempre fica
+     com o acompanhamento, e reduzir um acorde a nota mais aguda entrega a oitava ou a quinta em
+     vez da raiz — a harmonia sai errada e fina.
+     ESP: o canal 1 é o da linha de canto no preset "um por flyback", e vai na mais aguda; os
+     outros levam acompanhamento e baixo, e vão na mais grave pelo mesmo motivo. */
+  ch.forEach((c, i) => { c.ctl = Object.assign({}, CTL, { pick: modo === 'esp' ? (i ? 'lo' : 'hi') : (i ? 'hi' : 'lo') }); });
+  aplicarFiltros();
 }
 /* devolve false se nenhuma faixa casar pelo nome, ou seja, se a configuração é de outro arquivo */
 function applyCfg(cfg){
   if (!cfg || !Array.isArray(cfg.faixas)) return false;
   const byName = new Map();
   cfg.faixas.forEach(f => { if (f && typeof f.nome === 'string') byName.set(f.nome, f); });
+  const lim = mascara();
   let hit = 0;
   const a = [], pr = [];
   tracks.forEach(t => {
     const f = byName.get(t.name);
-    if (f){ hit++; a.push(CANAL_IN[f.canal] || 'O'); pr.push(Math.max(0, Math.min(15, Math.round(+f.prioridade) || 0))); }
-    else { a.push('O'); pr.push(0); }
+    if (!f){ a.push(0); pr.push(0); return; }
+    hit++;
+    let m = 0;
+    if (Array.isArray(f.saidas)) f.saidas.forEach(s => { s = Math.round(+s); if (s >= 1 && s <= MAX) m |= 1 << (s - 1); });
+    else m = CANAL_IN[f.canal] || 0;
+    a.push(m & lim); pr.push(Math.max(0, Math.min(15, Math.round(+f.prioridade) || 0)));
   });
   if (!hit) return false;
   assign = a; prio = pr;
   resetControls();
-  (Array.isArray(cfg.canais) ? cfg.canais : []).slice(0, N).forEach((c, i) => {
+  (Array.isArray(cfg.canais) ? cfg.canais : []).slice(0, nCanais()).forEach((c, i) => {
     if (!c) return;
-    if (isFinite(c.ganho)) $('gain' + i).value = Math.max(0, Math.min(150, +c.ganho));
-    if (isFinite(c.passaBaixa) && c.passaBaixa > 0) $('lp' + i).value = Math.max(0, Math.min(1000, sliderOf(+c.passaBaixa)));
-    if ([-2, -1, 0, 1, 2].includes(+c.oitava)) $('oct' + i).value = String(+c.oitava);
-    if (c.acorde) $('pick' + i).value = c.acorde === 'grave' ? 'lo' : 'hi';
-    if (c.envelope && ENVELOPES.hasOwnProperty(c.envelope)) $('env' + i).value = c.envelope;
-    if (typeof c.velocity === 'boolean') $('vel' + i).value = c.velocity ? 'sim' : 'nao';
+    const k = ch[i].ctl;
+    if (isFinite(c.ganho)) k.ganho = Math.max(0, Math.min(150, +c.ganho));
+    if (isFinite(c.passaBaixa) && c.passaBaixa > 0) k.lp = Math.max(0, Math.min(1000, sliderOf(+c.passaBaixa)));
+    if ([-2, -1, 0, 1, 2].includes(+c.oitava)) k.oct = +c.oitava;
+    if (c.acorde) k.pick = c.acorde === 'grave' ? 'lo' : 'hi';
+    if (c.envelope && ENVELOPES.hasOwnProperty(c.envelope)) k.env = c.envelope;
+    if (typeof c.velocity === 'boolean') k.vel = c.velocity;
   });
-  syncLabels(); renderTracks(); reschedule();
+  aplicarFiltros(); renderTracks(); renderStrips(); reschedule();
   return true;
 }
 function saveCfg(){
   if (!current) return;
-  if (store.set('cfg:' + current.key, currentCfg())) $('cfgMsg').textContent = 'Ajuste salvo neste aparelho.';
+  if (store.set(cfgChave(), currentCfg())) $('cfgMsg').textContent = 'Ajuste salvo neste navegador' + (modo === 'esp' ? ', para o modo ESP32.' : '.');
 }
 function initialCfg(){
-  const saved = store.get('cfg:' + current.key);
-  if (saved && applyCfg(saved)){ $('cfgMsg').textContent = 'Ajuste salvo neste aparelho.'; return; }
-  if (current.sidecar && applyCfg(current.sidecar)){ $('cfgMsg').textContent = 'Configuração que veio com a música no acervo.'; return; }
-  resetControls(); preset('bass', false);
-  $('cfgMsg').textContent = 'Padrão: baixo e melodia. Qualquer ajuste fica salvo neste aparelho.';
+  const saved = store.get(cfgChave());
+  if (saved && applyCfg(saved)){ $('cfgMsg').textContent = 'Ajuste salvo neste navegador' + (modo === 'esp' ? ', para o modo ESP32.' : '.'); return; }
+  /* o .json do acervo descreve dois canais; no ESP só vale se forem dois flybacks */
+  if (current.sidecar && nCanais() === 2 && applyCfg(current.sidecar)){ $('cfgMsg').textContent = 'Configuração que veio com a música no acervo.'; return; }
+  resetControls(); renderStrips();
+  if (modo === 'esp'){ preset('um', false); $('cfgMsg').textContent = 'Padrão: um instrumento por flyback. Qualquer ajuste fica salvo neste navegador.'; }
+  else { preset('bass', false); $('cfgMsg').textContent = 'Padrão: baixo e melodia. Qualquer ajuste fica salvo neste navegador.'; }
 }
-$('cfgReset').onclick = () => { if (!current) return; store.del('cfg:' + current.key); initialCfg(); };
+$('cfgReset').onclick = () => { if (!current) return; store.del(cfgChave()); initialCfg(); };
 $('cfgDown').onclick = () => {
   if (!current) return;
-  saveBlob(new Blob([JSON.stringify(currentCfg(), null, 2) + '\n'], { type: 'application/json' }), baseName(current.file) + '.json');
-  $('cfgMsg').textContent = 'Para deixar pronta no acervo, envie este .json para a pasta musicas junto com a música, com o mesmo nome.';
+  const nome = baseName(current.file) + (modo === 'esp' ? ' (esp32).json' : '.json');
+  saveBlob(new Blob([JSON.stringify(currentCfg(), null, 2) + '\n'], { type: 'application/json' }), nome);
+  $('cfgMsg').textContent = modo === 'esp'
+    ? 'Configuração do modo ESP32 baixada. O acervo só lê automaticamente a do estéreo; esta fica para guardar ou compartilhar.'
+    : 'Para deixar pronta no acervo, envie este .json para a pasta musicas junto com a música, com o mesmo nome.';
 };
 
+/* ---------- canais: um módulo de mixer por flyback ---------- */
+const OPC = {
+  oct: [['-2', '−2'], ['-1', '−1'], ['0', 'igual'], ['1', '+1'], ['2', '+2']],
+  pick: [['hi', 'mais aguda'], ['lo', 'mais grave']],
+  env: [['nenhum', 'nenhum (OOK)'], ['percussivo', 'percussivo'], ['medio', 'médio'], ['sustentado', 'sustentado']],
+  vel: [['sim', 'seguir a velocity'], ['nao', 'ignorar']]
+};
+function renderStrips(){
+  const box = $('strips'); box.textContent = '';
+  ch.forEach(c => { c.sx = null; });
+  for (let i = 0; i < nCanais(); i++){
+    const c = ch[i], k = c.ctl;
+    const s = el('section', { class: 'strip' + (soa(i) ? '' : ' mudo'), 'aria-label': nomeCanal(i) });
+    s.style.setProperty('--cor', CORES[i]);
+    const mudo = el('button', { 'aria-pressed': String(c.mudo), 'aria-label': 'Silenciar ' + nomeCanal(i), title: 'silenciar' }, 'M');
+    const solo = el('button', { 'aria-pressed': String(c.solo), 'aria-label': 'Ouvir só ' + nomeCanal(i), title: 'só este' }, 'S');
+    mudo.onclick = () => { c.mudo = !c.mudo; aplicarMudos(); };
+    solo.onclick = () => { c.solo = !c.solo; aplicarMudos(); };
+    const fontes = el('div', { class: 'fontes' });
+    const faixaCtl = (id, rot, input, val) => el('div', { class: 'ctl' },
+      el('div', { class: 'row' }, el('label', { for: id }, rot), val || null), input);
+    const ganho = el('input', { type: 'range', id: 'gain' + i, min: '0', max: '150' }); ganho.value = k.ganho;
+    const gv = el('span', { class: 'val' }, k.ganho + '%');
+    ganho.oninput = () => { k.ganho = +ganho.value; gv.textContent = k.ganho + '%'; };
+    ganho.onchange = () => { reschedule(); saveCfg(); };
+    const lp = el('input', { type: 'range', id: 'lp' + i, min: '0', max: '1000' }); lp.value = k.lp;
+    const lv = el('span', { class: 'val' }, fmtF(freqOf(k.lp)));
+    lp.oninput = () => { k.lp = +lp.value; const f = freqOf(k.lp); lv.textContent = fmtF(f); if (c.filter) c.filter.frequency.value = f; };
+    lp.onchange = saveCfg;
+    const sel = (id, opcoes, valor, fn) => {
+      const e = el('select', { id }); opcoes.forEach(([v, t]) => e.appendChild(new Option(t, v)));
+      e.value = valor; e.onchange = () => { fn(e.value); reschedule(); saveCfg(); }; return e;
+    };
+    /* oitava e acorde mudam a linha de notas; envelope e velocity só a síntese — os dois
+       casos passam por reschedule, que é barato */
+    const oct = sel('oct' + i, OPC.oct, String(k.oct), v => k.oct = +v);
+    const pick = sel('pick' + i, OPC.pick, k.pick, v => k.pick = v);
+    const env = sel('env' + i, OPC.env, k.env, v => k.env = v);
+    const vel = sel('vel' + i, OPC.vel, k.vel ? 'sim' : 'nao', v => k.vel = v === 'sim');
+    const stat = el('p', { class: 'stat' }, c.stat);
+    s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome' }, nomeCanal(i)), mudo, solo), fontes,
+      faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('lp' + i, 'Passa-baixa', lp, lv),
+      faixaCtl('oct' + i, 'Oitava', oct), faixaCtl('pick' + i, 'Em acorde, a nota', pick),
+      faixaCtl('env' + i, 'Envelope', env), faixaCtl('vel' + i, 'Dinâmica do MIDI', vel), stat);
+    box.appendChild(s);
+    c.sx = { root: s, fontes, stat, mudo, solo };
+  }
+  atualizarFontes();
+}
+/* Silenciar e solo são de sessão, como num mixer: não vão para a configuração salva e não
+   afetam o WAV. Valem para o som do computador e para a serial. */
+function aplicarMudos(){
+  for (let i = 0; i < nCanais(); i++){
+    const c = ch[i], s = soa(i);
+    if (c.sx){ c.sx.root.classList.toggle('mudo', !s); c.sx.mudo.setAttribute('aria-pressed', String(c.mudo)); c.sx.solo.setAttribute('aria-pressed', String(c.solo)); }
+    if (c.lx) c.lx.lane.classList.toggle('mudo', !s);
+  }
+  if (playing) start(position()); else idle = 2;
+}
+function atualizarFontes(){
+  for (let i = 0; i < nCanais(); i++){
+    const nomes = tracks.filter((t, k) => assign[k] >> i & 1).map(t => t.name);
+    const txt = nomes.length ? nomes.join(', ') : 'sem faixa';
+    const c = ch[i];
+    if (c.lx){ c.lx.fontes.textContent = txt; c.lx.fontes.title = txt; }
+    if (c.sx){ c.sx.fontes.textContent = txt; c.sx.fontes.title = txt; }
+  }
+}
+
+/* ---------- saídas: uma pista por flyback ---------- */
+function renderLanes(){
+  const box = $('lanes'); box.textContent = '';
+  ch.forEach(c => { c.lx = null; c.cur = null; });
+  for (let i = 0; i < nCanais(); i++){
+    const c = ch[i];
+    const lane = el('div', { class: 'lane' + (soa(i) ? '' : ' mudo') });
+    lane.style.setProperty('--cor', CORES[i]);
+    const sub = el('span', { class: 'sub' }, subCanal(i));
+    const nota = el('div', { class: 'nota' }, '—');
+    const fontes = el('div', { class: 'fontes' });
+    const escopo = el('canvas', { class: 'escopo', 'aria-hidden': 'true' });
+    const rolo = el('canvas', { class: 'rolo', 'aria-hidden': 'true' });
+    lane.append(el('div', { class: 'lane-h' }, el('div', { class: 'l1' }, el('span', { class: 'nome' }, nomeCanal(i)), sub), nota, fontes), escopo, rolo);
+    box.appendChild(lane);
+    c.lx = { lane, sub, nota, fontes, escopo, rolo, ge: escopo.getContext('2d'), gr: rolo.getContext('2d') };
+  }
+  atualizarFontes(); sizeCanvas();
+}
+function segEm(segs, p){
+  let lo = 0, hi = segs.length - 1, r = -1;
+  while (lo <= hi){ const m = (lo + hi) >> 1; if (segs[m].start <= p){ r = m; lo = m + 1; } else hi = m - 1; }
+  return r >= 0 && p < segs[r].end ? segs[r] : null;
+}
+const dpr = () => Math.min(devicePixelRatio || 1, 2);
+/* osciloscópio de cada pista: três ciclos da nota que está soando, disparado na borda de
+   subida, como no tom.html — sem isso a forma vira borrão nas notas agudas */
+function desenharEscopo(c, i){
+  const cv = c.lx.escopo, g = c.lx.ge, w = cv.width, h = cv.height;
+  if (w < 2 || h < 2) return;
+  g.fillStyle = '#041e3c'; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(160,200,240,.26)';
+  for (let x = 0; x <= 4; x++) for (let y = 0; y <= 10; y++) g.fillRect(Math.round(x * (w - 1) / 4), Math.round(y * (h - 1) / 10), 1, 1);
+  for (let y = 0; y <= 2; y++) for (let x = 0; x <= 24; x++) g.fillRect(Math.round(x * (w - 1) / 24), Math.round(y * (h - 1) / 2), 1, 1);
+  if (!c.an || !playing) return;
+  c.an.getFloatTimeDomainData(c.data);
+  const d = c.data, n = d.length, f = c.freqAgora;
+  const len = f > 0 ? Math.min(n >> 1, Math.max(16, Math.round(3 * actx.sampleRate / f))) : n >> 1;
+  let ini = 0;
+  for (let k = 1; k < n - len; k++) if (d[k - 1] < 0 && d[k] >= 0){ ini = k; break; }
+  const mid = h / 2, amp = h * .4;
+  g.beginPath();
+  for (let x = 0; x < w; x++){
+    const s = d[ini + Math.floor(x / w * len)], y = mid - Math.max(-1, Math.min(1, s)) * amp;
+    x ? g.lineTo(x, y) : g.moveTo(x, y);
+  }
+  g.strokeStyle = CORES[i]; g.lineWidth = 1.25 * dpr(); g.lineJoin = 'round'; g.stroke();
+}
+/* rolo da pista: a linha monofônica que o flyback toca, numa janela que corre com a música.
+   O cursor fica a um quarto da largura — dá para ver o que vem — e a altura é a faixa de notas
+   do canal na música inteira, fixa, para o desenho não pular. */
+function desenharRolo(c, i, p){
+  const cv = c.lx.rolo, g = c.lx.gr, w = cv.width, h = cv.height;
+  if (w < 2 || h < 2) return;
+  const d = dpr(), W = janela, t0 = p - W * .25, t1 = t0 + W;
+  g.fillStyle = '#041e3c'; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(160,200,240,.16)';
+  for (let s = Math.ceil(Math.max(0, t0)); s <= t1; s++){
+    const x = Math.round((s - t0) / W * w), forte = s % 5 === 0;
+    for (let y = 0; y < h; y += forte ? 2 * d : 4 * d) g.fillRect(x, y, 1, 1);
+  }
+  if (c.segs.length){
+    const lo = c.lo - 1, span = Math.max(4, c.hi + 1 - lo), pad = 4 * d;
+    const th = Math.max(2 * d, Math.min(6 * d, (h - 2 * pad) / span));
+    let k = 0, hi = c.segs.length - 1;
+    while (k < hi){ const m = (k + hi) >> 1; if (c.segs[m].end < t0) k = m + 1; else hi = m; }
+    g.fillStyle = CORES[i];
+    for (; k < c.segs.length && c.segs[k].start < t1; k++){
+      const s = c.segs[k];
+      if (s.end < t0) continue;
+      const x0 = (s.start - t0) / W * w, x1 = Math.max(x0 + 1, (s.end - t0) / W * w);
+      const y = pad + (1 - (s.n - lo) / span) * (h - 2 * pad - th);
+      const agora = playing && p >= s.start && p < s.end;
+      g.globalAlpha = s.end <= p ? .38 : 1;
+      g.fillRect(x0, agora ? y - th * .35 : y, x1 - x0, agora ? th * 1.7 : th);
+    }
+    g.globalAlpha = 1;
+  }
+  if (duration){
+    g.fillStyle = 'rgba(220,234,247,.85)'; g.fillRect(Math.round(w * .25), 0, Math.max(1, Math.round(d)), h);
+  }
+}
+
 /* ---------- abrir arquivos ---------- */
-const DROP_IDLE = 'abrir arquivo do aparelho · MIDI ou Guitar Pro';
 async function openBuffer(buf, info){
-  const el = $('drop');
   if (playing) stop();
   let list, title = '';
   const off = midiOffset(buf);
   if (off >= 0) list = parseMidi(off ? buf.slice(off) : buf);
-  else { el.textContent = 'abrindo partitura…'; const r = await scoreTracks(buf); list = r.list; title = r.title; }
+  else { $('libMsg').textContent = 'abrindo partitura…'; const r = await scoreTracks(buf); list = r.list; title = r.title; }
   if (!list.length) throw new Error('nenhuma faixa com notas');
   ensureCtx();
   tracks = list;
+  tracks.forEach(t => { t.uniao = uniao(t.notes); });
   let end = 0; tracks.forEach(t => t.notes.forEach(n => { if (n.t1 > end) end = n.t1; }));
   duration = end + .3;
   offset = 0;
   current = { key: info.key, file: info.file, title: info.title || title || baseName(info.file), sidecar: info.sidecar || null, lib: info.lib || null };
+  ch.forEach(c => { c.mudo = c.solo = false; });
   initialCfg();
-  $('panel').classList.remove('hide'); $('empty').style.display = 'none'; $('roll').classList.remove('hide');
-  ['play', 'stop', 'seek'].forEach(id => $(id).disabled = false);
-  wavReset(); sizeCanvas(); stop();
-  document.title = current.title + ' · flybacks';
+  ['play', 'stop', 'wavGo', 'cfgDown', 'cfgReset'].forEach(id => $(id).disabled = false);
+  wavReset(); renderTudo(); stop();
+  const tt = $('titulo'); tt.textContent = '';
+  tt.append(el('b', null, current.title), ' · ' + tracks.length + (tracks.length === 1 ? ' faixa' : ' faixas') + ' · ' + fmtT(duration));
+  tt.title = current.title;
+  document.title = current.title + ' · Flyback MIDI';
   return tracks.length;
 }
 async function loadFile(f){
   if (!f) return;
-  const el = $('drop'); el.textContent = 'lendo…'; el.classList.remove('has');
+  const msg = $('libMsg'); msg.textContent = 'lendo ' + f.name + '…';
   try {
     const n = await openBuffer(await f.arrayBuffer(), { key: 'arquivo:' + f.name + ':' + f.size, file: f.name });
-    el.textContent = f.name + ' · ' + n + ' faixas'; el.classList.add('has');
+    msg.textContent = f.name + ' · ' + n + ' faixas';
     if (ONLINE) history.replaceState(null, '', location.pathname);
     markLib(); showCredit(null);
-  } catch (e) { el.textContent = 'não deu para ler: ' + e.message; }
+  } catch (e) { msg.textContent = 'não deu para ler ' + f.name + ': ' + e.message; }
 }
 
 /* ---------- acervo: musicas/index.json, gerado pelo GitHub Actions a cada envio ---------- */
 const TIPOS = { mid: 'MIDI', midi: 'MIDI', kar: 'MIDI', rmi: 'MIDI', gp: 'GP', gp3: 'GP', gp4: 'GP', gp5: 'GP', gpx: 'GP', musicxml: 'XML', mxl: 'XML', xml: 'XML' };
-const LIMITE = 200;   /* itens desenhados de uma vez: milhares de botões pesam no celular */
+const LIMITE = 200;   /* itens desenhados de uma vez */
 let lib = [], pastas = [], filtrados = [];
 const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const libUrl = path => 'musicas/' + path.split('/').map(encodeURIComponent).join('/');
@@ -1014,10 +1329,10 @@ async function libFromGitHub(){
   const all = new Set(paths);
   return paths.map(p => itemFromPath(p, all)).filter(Boolean);
 }
-/* ---------- meus arquivos: MIDI guardado neste aparelho ----------
+/* ---------- meus arquivos: MIDI guardado neste navegador ----------
    Fica no IndexedDB, nao no localStorage: um MIDI passa facil de 100 KB e o localStorage nao
-   comporta. Nao vai para o repositorio nem para lugar nenhum — e deste aparelho. Aparece no
-   acervo como uma pasta a parte, para tocar pelo mesmo player, com os mesmos presets. */
+   comporta. Nao vai para o repositorio nem para lugar nenhum. Aparece no acervo como uma
+   pasta a parte, para tocar pelo mesmo player, com os mesmos presets. */
 const PASTA_MEUS = 'meus arquivos';
 const DB_NOME = 'flyback-meus', DB_LOJA = 'midis';
 function abrirDB(){
@@ -1029,9 +1344,9 @@ function abrirDB(){
     r.onerror = () => erro(r.error);
   });
 }
-function naLoja(modo, fn){
+function naLoja(modoDB, fn){
   return abrirDB().then(db => new Promise((ok, erro) => {
-    const req = fn(db.transaction(DB_LOJA, modo).objectStore(DB_LOJA));
+    const req = fn(db.transaction(DB_LOJA, modoDB).objectStore(DB_LOJA));
     req.onsuccess = () => ok(req.result);
     req.onerror = () => erro(req.error);
   }));
@@ -1083,7 +1398,7 @@ async function guardarMeus(arquivos){
     } catch (e) { msg.textContent = 'não deu para guardar ' + f.name + ': ' + e.message; }
   }
   await montarAcervo();
-  if (n) msg.textContent = n + (n === 1 ? ' arquivo guardado neste aparelho.' : ' arquivos guardados neste aparelho.');
+  if (n) msg.textContent = n + (n === 1 ? ' arquivo guardado neste navegador.' : ' arquivos guardados neste navegador.');
 }
 
 let libRemoto = [], pastasRemoto = [];
@@ -1094,7 +1409,7 @@ async function loadLibrary(){
     up.href = 'https://github.com/' + GH.owner + '/' + GH.repo + '/upload/main/musicas';
     up.classList.remove('hide');
   }
-  /* O acervo remoto pode faltar — aberto do disco, ou sem rede. Os arquivos deste aparelho
+  /* O acervo remoto pode faltar — aberto do disco, ou sem rede. Os arquivos deste navegador
      valem do mesmo jeito, entao a montagem acontece de qualquer forma. */
   if (ONLINE){
     let list = null, dados = null;
@@ -1115,7 +1430,7 @@ async function loadLibrary(){
       msg.textContent = 'Não foi possível carregar o acervo. Sem internet, só aparecem músicas guardadas antes.';
     }
   } else {
-    msg.textContent = 'O acervo online aparece pelo site publicado ou pelo servidor local (python tools/servir.py). Os arquivos deste aparelho continuam valendo.';
+    msg.textContent = 'O acervo online aparece pelo site publicado ou pelo servidor local (python tools/servir.py). Os arquivos deste navegador continuam valendo.';
   }
   await montarAcervo();
   if (libRemoto.length) msg.textContent = '';
@@ -1126,7 +1441,7 @@ async function loadLibrary(){
 /* Navegação do acervo em duas peças. Uma lista só de pastas não dá conta de 1.300 músicas:
    os botões escolhem o acervo (bandas, clássicos, folk russo, exemplos) e o seletor mostra o
    que há dentro dele — o artista, ou o compositor agrupado por região num <optgroup>. Assim
-   chegar no AC/DC são dois toques, em vez de rolar uma lista única.
+   chegar no AC/DC são dois cliques, em vez de rolar uma lista única.
    Um botão à parte reduz às mais ouvidas, que é o que serve para demonstrar o aparelho. */
 const TOPO = 60;
 /* 'vocal' vem do acervo e diz se a transcrição tem linha de canto: sem ela a música sai
@@ -1153,6 +1468,7 @@ function montarAcervos(){
     b.setAttribute('aria-pressed', acervo === valor);
     b.onclick = () => {
       acervo = valor; soTopo = soVoz = soBom = false;
+      ['libTop', 'libVoz', 'libBom'].forEach(id => $(id).setAttribute('aria-pressed', 'false'));
       store.set('pasta', valor);
       montarAcervos(); montarFiltro(); renderLib();
     };
@@ -1235,35 +1551,36 @@ function renderLib(){
 }
 function markLib(){
   document.querySelectorAll('#libList button').forEach(b => b.setAttribute('aria-current', !!(current && current.lib && current.lib.arquivo === b.dataset.path)));
-  if (lib.length) $('libCount').textContent = lib.length.toLocaleString('pt-BR') + (lib.length === 1 ? ' música' : ' músicas') + (current && current.lib ? ' · ' + current.title : '');
+  if (lib.length) $('libCount').textContent = lib.length.toLocaleString('pt-BR') + (lib.length === 1 ? ' música' : ' músicas');
 }
 /* crédito exigido pelas licenças Creative Commons: aparece junto das faixas */
 function showCredit(it){
-  const el = $('credito'); el.textContent = '';
-  if (!it || !(it.autor || it.licenca)) { el.classList.add('hide'); return; }
+  const e = $('credito'); e.textContent = '';
+  if (!it || !(it.autor || it.licenca)) { e.classList.add('hide'); return; }
   /* 'credito' já traz quem compôs e quem transcreveu nas músicas de banda; 'popularidade' diz
      de onde saiu a posição delas no acervo. Ver USO-EDUCACIONAL.md. */
   const VOZ = { sim: 'tem linha de canto', nao: 'sem linha de canto', talvez: 'linha de canto incerta' };
   const voz = it.vocal ? it.vocal.replace(/^(sim|nao|talvez)/, m => VOZ[m]) : null;
   const aprov = it.aproveitamento ? 'cabe em dois canais: ' + it.aproveitamento + '%' : null;
   const partes = [it.autor, it.instrumentos, it.estilo, it.licenca === 'deste projeto' ? null : it.licenca,
-                  it.credito, voz, aprov, it.popularidade].filter(Boolean);
-  el.appendChild(document.createTextNode(partes.join(' · ')));
+                  it.credito, it.transcricao && !String(it.credito || '').includes(it.transcricao) ? 'transcrição: ' + it.transcricao : null,
+                  voz, aprov, it.popularidade].filter(Boolean);
+  e.appendChild(document.createTextNode(partes.join(' · ')));
   if (/^https?:\/\//.test(it.fonte || '')){
     const a = document.createElement('a'); a.href = it.fonte; a.target = '_blank'; a.rel = 'noopener';
     a.textContent = new URL(it.fonte).hostname.replace(/^www\./, '');
-    el.append(' · ', a);
+    e.append(' · ', a);
   }
-  el.classList.remove('hide');
+  e.classList.remove('hide');
 }
 async function openLib(it){
-  const el = $('drop');
-  el.textContent = (it.local ? 'abrindo ' : 'baixando ') + it.titulo + '…'; el.classList.remove('has');
+  const msg = $('libMsg');
+  msg.textContent = (it.local ? 'abrindo ' : 'baixando ') + it.titulo + '…';
   try {
     let buf;
     if (it.local){
       const reg = await meusUm(it.nomeLocal);
-      if (!reg) throw new Error('o arquivo não está mais guardado neste aparelho');
+      if (!reg) throw new Error('o arquivo não está mais guardado neste navegador');
       buf = reg.dados;
     } else {
       const r = await fetch(libUrl(it.arquivo));
@@ -1273,35 +1590,21 @@ async function openLib(it){
     let sidecar = null;
     if (it.config){ try { const c = await fetch(libUrl(it.config)); if (c.ok) sidecar = await c.json(); } catch (e) {} }
     const n = await openBuffer(buf, { key: 'acervo:' + it.arquivo, file: it.arquivo.split('/').pop(), title: it.titulo, sidecar, lib: it });
-    el.textContent = DROP_IDLE;
-    history.replaceState(null, '', location.pathname + '?m=' + encodeURIComponent(it.arquivo));
+    if (ONLINE) history.replaceState(null, '', location.pathname + '?m=' + encodeURIComponent(it.arquivo));
     markLib(); showCredit(it);
-    $('libMsg').textContent = it.titulo + ' · ' + n + ' faixas';
-    if (matchMedia('(max-width:640px)').matches) $('lib').open = false;
-  } catch (e) { el.textContent = 'não deu para abrir ' + it.titulo + ': ' + e.message; }
+    msg.textContent = it.titulo + ' · ' + n + ' faixas';
+  } catch (e) { msg.textContent = 'não deu para abrir ' + it.titulo + ': ' + e.message; }
 }
 let buscaTimer = 0;
 $('libQ').addEventListener('input', () => { clearTimeout(buscaTimer); buscaTimer = setTimeout(renderLib, 120); });
 $('libF').addEventListener('change', renderLib);
-$('libTop').onclick = () => {
-  soTopo = !soTopo;
-  $('libTop').setAttribute('aria-pressed', String(soTopo));
-  renderLib();
-};
-$('libVoz').onclick = () => {
-  soVoz = !soVoz;
-  $('libVoz').setAttribute('aria-pressed', String(soVoz));
-  renderLib();
-};
-$('libBom').onclick = () => {
-  soBom = !soBom;
-  $('libBom').setAttribute('aria-pressed', String(soBom));
-  renderLib();
-};
+$('libTop').onclick = () => { soTopo = !soTopo; $('libTop').setAttribute('aria-pressed', String(soTopo)); renderLib(); };
+$('libVoz').onclick = () => { soVoz = !soVoz; $('libVoz').setAttribute('aria-pressed', String(soVoz)); renderLib(); };
+$('libBom').onclick = () => { soBom = !soBom; $('libBom').setAttribute('aria-pressed', String(soBom)); renderLib(); };
 $('libAdd').onclick = () => $('fileMeus').click();
 $('fileMeus').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) guardarMeus(fs); };
 $('libDel').onclick = async () => {
-  if (!confirm('Esquecer os arquivos MIDI guardados neste aparelho? O acervo online não muda.')) return;
+  if (!confirm('Esquecer os arquivos MIDI guardados neste navegador? O acervo online não muda.')) return;
   await meusLimpar();
   await montarAcervo();
   $('libMsg').textContent = 'arquivos esquecidos.';
@@ -1309,7 +1612,7 @@ $('libDel').onclick = async () => {
 $('libRnd').onclick = () => { const pool = filtrados.length ? filtrados : lib; if (pool.length) openLib(pool[Math.floor(Math.random() * pool.length)]); };
 $('libOff').onclick = async () => {
   const msg = $('libMsg'), b = $('libOff'), lista = filtrados.slice();
-  if (lista.length > 300 && !confirm('Guardar ' + lista.length.toLocaleString('pt-BR') + ' músicas neste aparelho para usar sem internet?')) return;
+  if (lista.length > 300 && !confirm('Guardar ' + lista.length.toLocaleString('pt-BR') + ' músicas neste navegador para usar sem internet?')) return;
   b.disabled = true;
   try {
     const cache = await caches.open('flyback-acervo');
@@ -1324,7 +1627,7 @@ $('libOff').onclick = async () => {
     };
     await Promise.all([trabalho(), trabalho(), trabalho(), trabalho()]);
     if (lista.some(it => it.tipo !== 'MIDI')){ try { await (await caches.open('flyback-cdn')).add(ALPHATAB_URL); } catch (e) {} }
-    msg.textContent = ok + ' de ' + lista.length + ' músicas guardadas neste aparelho para usar sem internet.';
+    msg.textContent = ok + ' de ' + lista.length + ' músicas guardadas neste navegador para usar sem internet.';
   } catch (e) { msg.textContent = 'este navegador não deixou guardar: ' + e.message; }
   b.disabled = false;
 };
@@ -1345,20 +1648,26 @@ function wavBlob(buf){
   }
   return new Blob([ab], { type: 'audio/wav' });
 }
-let wavUrl = null, wavFile = null;
+let wavUrl = null;
 function wavReset(){
   if (wavUrl) URL.revokeObjectURL(wavUrl);
-  wavUrl = wavFile = null;
-  $('wavSave').classList.add('hide'); $('wavShare').classList.add('hide'); $('wavMsg').textContent = '';
+  wavUrl = null;
+  $('wavSave').classList.add('hide'); $('wavMsg').textContent = '';
 }
+/* Um canal do arquivo por flyback, com a mesma separação dura do ao vivo: canal sem faixa sai
+   com amostras exatamente zero. No modo ESP sai com N canais, para uma interface de áudio
+   multicanal. Silenciar e solo não entram: o arquivo é a música para os flybacks. */
 async function renderWav(){
-  const sr = 44100, oc = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.ceil((duration + .3) * sr), sr);
-  const m = oc.createChannelMerger(2); m.connect(oc.destination);
-  ch.forEach((k, i) => {
-    const f = oc.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freqOf(+$('lp' + i).value); f.Q.value = .707;
+  const n = nCanais(), sr = 44100;
+  const oc = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(n, Math.ceil((duration + .3) * sr), sr);
+  try { oc.destination.channelInterpretation = 'discrete'; } catch (e) {}
+  const m = oc.createChannelMerger(n); m.connect(oc.destination);
+  for (let i = 0; i < n; i++){
+    const k = ch[i], f = oc.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = freqOf(k.ctl.lp); f.Q.value = .707;
     f.connect(m, 0, i);
-    scheduleVoice(oc, f, k.segs, 0, 0, volOf(i), envOf(i), velOf(i));
-  });
+    if (k.segs.length) scheduleVoice(oc, f, k.segs, 0, 0, volOf(i), envOf(i), velOf(i));
+  }
   return oc.startRendering();
 }
 $('wavGo').onclick = async () => {
@@ -1366,38 +1675,57 @@ $('wavGo').onclick = async () => {
   wavReset();
   const b = $('wavGo'); b.disabled = true; $('wavMsg').textContent = 'renderizando ' + fmtT(duration) + ' de áudio…';
   try {
-    const t = performance.now();
+    const t = performance.now(), n = nCanais();
     const blob = wavBlob(await renderWav());
-    const name = baseName(current.file) + ' - flybacks.wav';
+    const name = baseName(current.file) + (n === 2 ? ' - flybacks.wav' : ' - ' + n + ' flybacks.wav');
     wavUrl = URL.createObjectURL(blob);
-    wavFile = new File([blob], name, { type: 'audio/wav' });
     const a = $('wavSave'); a.href = wavUrl; a.download = name; a.classList.remove('hide');
-    if (navigator.canShare && navigator.canShare({ files: [wavFile] })) $('wavShare').classList.remove('hide');
     $('wavMsg').textContent = name + ' · ' + (blob.size / 1048576).toFixed(1).replace('.', ',') + ' MB · ' + Math.round(performance.now() - t) + ' ms';
   } catch (e) { $('wavMsg').textContent = 'não deu para gerar: ' + e.message; }
   b.disabled = false;
 };
-$('wavShare').onclick = () => { if (wavFile) navigator.share({ files: [wavFile], title: wavFile.name }).catch(() => {}); };
 
 /* ---------- saída serial (ESP32). Protocolo em docs/protocolo-serial.md ---------- */
 const LOOKAHEAD = .1;
 const ser = { port: null, writer: null, enc: new TextEncoder(), timer: 0, base: 0, at: 0, q: [], i: 0 };
-function serialWrite(line){ if (ser.writer) ser.writer.write(ser.enc.encode(line + '\n')).catch(() => serialClose(true)); }
+/* O registro das linhas funciona também sem ESP conectado, com o painel aberto: mostra o que
+   seria enviado, que é o que serve para escrever e conferir o firmware. */
+const logAberto = () => $('serLogBox').open;
+const serLinhas = []; let serLogT = 0;
+function registrar(linha){
+  serLinhas.push(linha);
+  if (serLinhas.length > 120) serLinhas.splice(0, serLinhas.length - 120);
+  if (!serLogT) serLogT = setTimeout(() => { serLogT = 0; mostrarLog(); }, 150);
+}
+function mostrarLog(){
+  if (!logAberto()) return;
+  const pre = $('serLog');
+  pre.textContent = serLinhas.length ? serLinhas.join('\n') : 'nada enviado ainda';
+  pre.scrollTop = pre.scrollHeight;
+}
+function serialWrite(line){
+  if (ser.writer) ser.writer.write(ser.enc.encode(line + '\n')).catch(() => serialClose(true));
+  if (ser.writer || logAberto()) registrar(line);
+}
+const serialAtivo = () => modo === 'esp' && (ser.writer || logAberto());
 function serialStart(at){
-  if (!ser.writer || !actx) return;
-  clearInterval(ser.timer);
+  clearInterval(ser.timer); ser.timer = 0;
+  if (!serialAtivo() || !actx) return;
   const ev = [];
-  ch.forEach((k, i) => k.segs.forEach((s, j) => {
-    if (s.end <= at) return;
-    ev.push({ t: Math.max(s.start, at), c: i, f: s.f });
-    const nx = k.segs[j + 1];
-    if (!nx || nx.start - s.end > .001) ev.push({ t: s.end, c: i, f: 0 });
-  }));
+  ch.forEach((k, i) => {
+    if (!soa(i)) return;
+    k.segs.forEach((s, j) => {
+      if (s.end <= at) return;
+      ev.push({ t: Math.max(s.start, at), c: i, f: s.f });
+      const nx = k.segs[j + 1];
+      if (!nx || nx.start - s.end > .001) ev.push({ t: s.end, c: i, f: 0 });
+    });
+  });
   ev.sort((a, b) => a.t - b.t);
   ser.q = ev; ser.i = 0; ser.at = at; ser.base = actx.currentTime;
   serialWrite('R');
   const pump = () => {
-    if (!playing || !ser.writer) return;
+    if (!playing || !serialAtivo()) return;
     const horizon = actx.currentTime + LOOKAHEAD;
     while (ser.i < ser.q.length){
       const e = ser.q[ser.i], tc = startedAt + (e.t - ser.at);
@@ -1409,7 +1737,18 @@ function serialStart(at){
   };
   pump(); ser.timer = setInterval(pump, 20);
 }
-function serialHalt(){ clearInterval(ser.timer); ser.timer = 0; serialWrite('X'); }
+function serialHalt(){ clearInterval(ser.timer); ser.timer = 0; if (modo === 'esp') serialWrite('X'); }
+/* Qual GPIO cada canal aciona. Vai a cada conexão e a cada mudança; canal acima do número de
+   flybacks vai com -1, que libera o pino. */
+function serialPinos(){
+  if (!serialAtivo()) return;
+  for (let c = 0; c < MAX; c++) serialWrite('P ' + c + ' ' + (c < esp.n ? esp.pinos[c] : -1));
+}
+function testar(i){
+  if (!ser.writer || playing) return;
+  serialWrite('R'); serialWrite('N ' + i + ' 0 440.00'); serialWrite('F ' + i + ' 600');
+}
+function atualizarTestes(){ document.querySelectorAll('#pinos button').forEach(b => b.disabled = !ser.writer || playing); }
 async function serialClose(lost){
   clearInterval(ser.timer); ser.timer = 0;
   const { port, writer } = ser; ser.port = ser.writer = null;
@@ -1417,91 +1756,193 @@ async function serialClose(lost){
   try { if (port) await port.close(); } catch (e) {}
   $('serGo').textContent = 'Conectar'; $('baud').disabled = false;
   $('serMsg').textContent = lost ? 'a porta serial caiu' : 'desconectado';
+  atualizarTestes(); renderModo();
 }
 if ('serial' in navigator){
   $('serGo').onclick = async () => {
     if (ser.port) return serialClose(false);
     try {
       const port = await navigator.serial.requestPort();
-      await port.open({ baudRate: +$('baud').value });
+      await port.open({ baudRate: esp.baud });
       ser.port = port; ser.writer = port.writable.getWriter();
       $('serGo').textContent = 'Desconectar'; $('baud').disabled = true;
-      $('serMsg').textContent = 'conectado a ' + $('baud').value + ' baud';
-      serialWrite('X');
+      $('serMsg').textContent = 'conectado a ' + esp.baud + ' baud';
+      serialWrite('X'); serialPinos();
       if (playing) serialStart(position());
+      atualizarTestes(); renderModo();
     } catch (e) { if (e && e.name !== 'NotFoundError') $('serMsg').textContent = 'não conectou: ' + e.message; }
   };
   navigator.serial.addEventListener('disconnect', e => { if (e.target === ser.port) serialClose(true); });
 } else {
   $('serGo').disabled = true; $('baud').disabled = true;
-  $('serMsg').textContent = 'Este navegador não tem Web Serial. Use Chrome ou Edge no computador.';
+  $('serMsg').textContent = 'Este navegador não tem Web Serial. Use Chrome ou Edge.';
 }
+$('serX').onclick = () => { if (playing) pause(); serialWrite('X'); };
+$('serLogBox').addEventListener('toggle', () => { mostrarLog(); if (playing) serialStart(position()); });
+$('baud').value = String(esp.baud);
+$('baud').onchange = e => { esp.baud = +e.target.value; salvarEsp(); };
+$('monitor').checked = esp.monitor;
+$('monitor').onchange = e => { esp.monitor = e.target.checked; salvarEsp(); ligarSaida(); };
+
+function renderPinos(){
+  const tb = $('pinos'); tb.textContent = '';
+  const placa = PLACAS[esp.placa], usados = {};
+  for (let i = 0; i < esp.n; i++) usados[esp.pinos[i]] = (usados[esp.pinos[i]] || 0) + 1;
+  for (let i = 0; i < esp.n; i++){
+    const tr = el('tr'); tr.style.setProperty('--cor', CORES[i]);
+    const sel = el('select', { 'aria-label': 'GPIO do canal ' + (i + 1) });
+    placa.pinos.forEach(p => sel.appendChild(new Option('GPIO ' + p, p)));
+    sel.value = String(esp.pinos[i]);
+    if (usados[esp.pinos[i]] > 1) sel.classList.add('dup');
+    sel.onchange = () => {
+      esp.pinos[i] = +sel.value; salvarEsp(); renderPinos(); serialPinos();
+      ch.forEach((c, k) => { if (c.lx) c.lx.sub.textContent = subCanal(k); });
+    };
+    const teste = el('button', { 'aria-label': 'Tocar um lá de teste no canal ' + (i + 1) }, 'testar');
+    teste.onclick = () => testar(i);
+    tr.append(el('td', null, 'Canal ' + (i + 1)), el('td', null, sel), el('td', null, teste));
+    tb.appendChild(tr);
+  }
+  atualizarTestes();
+  const dup = Object.values(usados).some(v => v > 1);
+  $('pinosMsg').textContent = dup
+    ? 'Dois canais no mesmo pino: um atropela o outro. Troque um deles.'
+    : 'Só aparecem pinos livres em módulo comum de ' + placa.nome + ': sem os de boot, da flash, da USB e da UART0. "Testar" toca um lá de 0,6 s naquele canal, para achar qual flyback é qual.';
+}
+$('espN').value = String(esp.n);
+$('espN').onchange = e => {
+  const n = +e.target.value;
+  if (n === esp.n) return;
+  if (playing) pause();
+  esp.n = n; salvarEsp();
+  ch.forEach(c => { c.mudo = c.solo = false; });
+  /* sem ajuste salvo para a música, o preset redistribui pelos flybacks novos; com ajuste,
+     só cortam as rotas para canais que deixaram de existir */
+  if (tracks.length){
+    if (store.get(cfgChave())){ assign = assign.map(m => m & mascara()); saveCfg(); }
+    else preset('um', false);
+  }
+  serialPinos(); renderTudo();
+};
+$('espPlaca').value = esp.placa;
+$('espPlaca').onchange = e => {
+  esp.placa = e.target.value; esp.pinos = PLACAS[esp.placa].padrao.slice(); salvarEsp();
+  renderPinos(); serialPinos(); ch.forEach((c, k) => { if (c.lx) c.lx.sub.textContent = subCanal(k); });
+};
+
+/* ---------- modo de saída ---------- */
+function renderModo(){
+  document.querySelectorAll('#modo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.modo === modo)));
+  $('modoEsp').textContent = 'ESP32 · ' + esp.n + (esp.n === 1 ? ' flyback' : ' flybacks');
+  $('saidaEst').classList.toggle('hide', modo !== 'estereo');
+  $('saidaEsp').classList.toggle('hide', modo !== 'esp');
+  $('saidaTit').textContent = modo === 'esp' ? 'Saída ESP32' : 'Saída estéreo';
+  $('saidasInfo').textContent = modo === 'esp'
+    ? esp.n + (esp.n === 1 ? ' flyback' : ' flybacks') + ' pelo ESP32 · ' + (ser.writer ? 'conectado' : 'desconectado')
+    : '2 flybacks pelo P2';
+  $('wavInfo').textContent = modo === 'esp'
+    ? 'WAV com ' + esp.n + (esp.n === 1 ? ' canal' : ' canais') + ', um por flyback, para uma interface de áudio multicanal.'
+    : 'WAV estéreo com os dois canais separados, para tocar em qualquer player pelo cabo P2.';
+}
+function renderTudo(){ renderModo(); renderPresets(); renderTracks(); renderStrips(); renderLanes(); renderPinos(); reschedule(); }
+function mudarModo(m){
+  if (m === modo) return;
+  if (playing) pause();
+  if (modo === 'esp') serialWrite('X');   /* saindo do ESP: nenhum flyback fica tocando sozinho */
+  modo = m; store.set('modo', m);
+  ch.forEach(c => { c.mudo = c.solo = false; });
+  ligarSaida(); wavReset();
+  if (tracks.length) initialCfg(); else resetControls();
+  renderTudo();
+}
+document.querySelectorAll('#modo button').forEach(b => b.onclick = () => mudarModo(b.dataset.modo));
 
 /* ---------- eventos ---------- */
-document.querySelectorAll('.presets button').forEach(b => b.onclick = () => preset(b.dataset.p, true));
-
-const drop = $('drop'), file = $('file');
-drop.onclick = () => file.click();
-drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); file.click(); } };
+const file = $('file');
+$('abrir').onclick = () => file.click();
 file.onchange = () => { loadFile(file.files[0]); file.value = ''; };
-drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
-drop.addEventListener('dragleave', () => drop.classList.remove('over'));
-drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
+/* arrastar um arquivo para qualquer ponto da janela abre */
+const temArquivo = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+let arrastes = 0;
+addEventListener('dragenter', e => { if (!temArquivo(e)) return; e.preventDefault(); arrastes++; $('solta').classList.remove('hide'); });
+addEventListener('dragover', e => { if (temArquivo(e)) e.preventDefault(); });
+addEventListener('dragleave', e => { if (!temArquivo(e)) return; if (--arrastes <= 0){ arrastes = 0; $('solta').classList.add('hide'); } });
+addEventListener('drop', e => { if (!temArquivo(e)) return; e.preventDefault(); arrastes = 0; $('solta').classList.add('hide'); loadFile(e.dataTransfer.files[0]); });
 
 $('play').onclick = () => playing ? pause() : start(Math.min(offset, Math.max(0, duration - .05)));
 $('stop').onclick = stop;
 $('loop').onclick = () => { loop = !loop; $('loop').setAttribute('aria-pressed', loop); };
-const seek = $('seek');
-seek.addEventListener('input', () => { scrubbing = true; scrubAt = seek.value / 1000 * duration; $('clock').textContent = fmtT(scrubAt) + ' / ' + fmtT(duration); drawRoll(); });
-seek.addEventListener('change', () => seekTo(seek.value / 1000 * duration));
+$('zoom').value = String(janela);
+$('zoom').onchange = e => { janela = +e.target.value; store.set('janela', janela); idle = 2; };
+/* espaço toca e pausa; setas andam 5 s; Home volta ao início — fora de campos de texto */
 document.addEventListener('keydown', e => {
-  if (e.code !== 'Space' || !tracks.length || e.target.closest('input,select,button,textarea,summary,a,[role=button],[role=slider]')) return;
-  e.preventDefault(); $('play').click();
+  if (!tracks.length || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest('input,select,textarea,[role=slider],[role=separator]')) return;
+  if (e.code === 'Space'){
+    if (e.target.closest('button,a,summary')) return;
+    e.preventDefault(); $('play').click();
+  } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+    e.preventDefault(); seekTo(position() + (e.key === 'ArrowRight' ? 5 : -5));
+  } else if (e.key === 'Home'){ e.preventDefault(); stop(); }
 });
 
-for (let i = 0; i < N; i++){
-  $('gain' + i).addEventListener('input', e => { $('gainv' + i).textContent = e.target.value + '%'; });
-  $('gain' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
-  $('lp' + i).addEventListener('input', e => { const f = freqOf(+e.target.value);
-    $('lpv' + i).textContent = fmtF(f); if (ch[i].filter) ch[i].filter.frequency.value = f; });
-  $('lp' + i).addEventListener('change', saveCfg);
-  $('oct' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
-  $('pick' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
-  /* envelope e velocity mudam so a sintese, nao a linha de notas: basta reagendar */
-  $('env' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
-  $('vel' + i).addEventListener('change', () => { reschedule(); saveCfg(); });
-}
+/* divisória entre a metade de cima e a doca, lembrada no navegador */
+(() => {
+  const sp = $('split'), topo = $('topo');
+  const lim = h => Math.max(150, Math.min(innerHeight - 230, h));
+  const salva = +store.get('topo');
+  if (salva > 0) topo.style.height = lim(salva) + 'px';
+  let y0 = 0, a0 = 0, drag = false;
+  const fixa = h => { topo.style.height = lim(h) + 'px'; };
+  const guarda = () => store.set('topo', Math.round(topo.getBoundingClientRect().height));
+  sp.addEventListener('pointerdown', e => { drag = true; y0 = e.clientY; a0 = topo.getBoundingClientRect().height; sp.setPointerCapture(e.pointerId); sp.classList.add('drag'); });
+  sp.addEventListener('pointermove', e => { if (drag) fixa(a0 + e.clientY - y0); });
+  const fim = () => { if (!drag) return; drag = false; sp.classList.remove('drag'); guarda(); };
+  sp.addEventListener('pointerup', fim); sp.addEventListener('pointercancel', fim);
+  sp.addEventListener('keydown', e => {
+    const d = e.key === 'ArrowUp' ? -24 : e.key === 'ArrowDown' ? 24 : 0;
+    if (!d) return;
+    e.preventDefault(); fixa(topo.getBoundingClientRect().height + d); guarda();
+  });
+  sp.addEventListener('dblclick', () => { topo.style.height = ''; store.del('topo'); });
+})();
 
 function tick(){
-  const p = position();
-  if (!scrubbing){ $('seek').value = duration ? Math.round(p / duration * 1000) : 0;
-    $('clock').textContent = fmtT(p) + ' / ' + fmtT(duration); }
-  ch.forEach((c, i) => { let lab = '';
-    if (playing) for (const s of c.segs) if (p >= s.start && p < s.end){ lab = nm(s.n); break; }
-    if (lab !== c.cur){ c.cur = lab; $('nota' + i).textContent = lab; } });
-  $('roll').setAttribute('aria-valuenow', duration ? Math.round(p / duration * 100) : 0);
+  const p = scrubbing ? scrubAt : position();
+  $('clock').textContent = fmtT(p) + ' / ' + fmtT(duration);
+  for (let i = 0; i < nCanais(); i++){
+    const c = ch[i], s = playing && soa(i) ? segEm(c.segs, p) : null;
+    c.freqAgora = s ? s.f : 0;
+    const lab = s ? nm(s.n) + ' · ' + fmtHz(s.f) : '—';
+    if (lab !== c.cur && c.lx){ c.cur = lab; c.lx.nota.textContent = lab; }
+  }
+  tracks.forEach(t => {
+    const on = playing && ativa(t, p);
+    if (on !== t.aceso && t.luz){ t.aceso = on; t.luz.classList.toggle('on', on); }
+  });
+  roll.setAttribute('aria-valuenow', duration ? Math.round(p / duration * 100) : 0);
   drawRoll();
   if (playing && p >= duration - .02){ if (loop) start(0); else stop(); }
 }
 
-/* ---------- linha do tempo ---------- */
+/* ---------- linha do tempo: a música inteira, uma faixa por saída ---------- */
 const roll = $('roll'), rg = roll.getContext('2d');
 let rollBase = null, rollDrag = false;
 function drawRollBase(){
-  const w = roll.width, h = roll.height;
-  if (w < 2 || h < 2 || !duration){ rollBase = null; return; }
+  const w = roll.width, h = roll.height, n = nCanais();
+  if (w < 2 || h < 2){ rollBase = null; return; }
   const oc = document.createElement('canvas'); oc.width = w; oc.height = h;
-  const x = oc.getContext('2d'), d = Math.min(devicePixelRatio || 1, 2), th = Math.max(1, Math.round(1.5 * d));
+  const x = oc.getContext('2d'), d = dpr(), th = Math.max(1, Math.round(1.2 * d)), lane = h / n;
   x.fillStyle = '#041e3c'; x.fillRect(0, 0, w, h);
-  x.fillStyle = 'rgba(140,190,235,.14)'; x.fillRect(0, Math.round(h / 2), w, 1);
-  ch.forEach((k, i) => {
+  x.fillStyle = 'rgba(140,190,235,.14)';
+  for (let i = 1; i < n; i++) x.fillRect(0, Math.round(i * lane), w, 1);
+  if (duration) ch.slice(0, n).forEach((k, i) => {
     if (!k.segs.length) return;
-    let lo = Infinity, hi = -Infinity; k.segs.forEach(s => { if (s.n < lo) lo = s.n; if (s.n > hi) hi = s.n; });
-    const top = i ? h / 2 : 0, lane = h / 2, pad = 3 * d, span = Math.max(1, hi - lo);
-    x.fillStyle = i ? '#43d3e6' : '#d6e33c';
+    const top = i * lane, pad = Math.min(2 * d, lane / 4), span = Math.max(1, k.hi - k.lo);
+    x.fillStyle = CORES[i];
     k.segs.forEach(s => {
       const x0 = s.start / duration * w, x1 = Math.max(x0 + 1, s.end / duration * w);
-      x.fillRect(x0, Math.round(top + pad + (1 - (s.n - lo) / span) * (lane - 2 * pad - th)), x1 - x0, th);
+      x.fillRect(x0, Math.round(top + pad + (1 - (s.n - k.lo) / span) * Math.max(0, lane - 2 * pad - th)), x1 - x0, th);
     });
   });
   rollBase = oc; drawRoll();
@@ -1510,53 +1951,39 @@ function drawRoll(){
   if (!rollBase) return;
   const w = roll.width, h = roll.height;
   rg.drawImage(rollBase, 0, 0);
+  if (!duration) return;
   const p = scrubbing ? scrubAt : position();
   rg.fillStyle = 'rgba(220,234,247,.9)'; rg.fillRect(Math.round(p / duration * w), 0, Math.max(1, Math.round(devicePixelRatio || 1)), h);
 }
 const rollAt = e => { const r = roll.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * duration; };
-roll.addEventListener('pointerdown', e => { if (!duration) return; rollDrag = true; roll.setPointerCapture(e.pointerId); scrubbing = true; scrubAt = rollAt(e); tickScrub(); });
-roll.addEventListener('pointermove', e => { if (!rollDrag) return; scrubAt = rollAt(e); tickScrub(); });
+roll.addEventListener('pointerdown', e => { if (!duration) return; rollDrag = true; roll.setPointerCapture(e.pointerId); scrubbing = true; scrubAt = rollAt(e); idle = 2; });
+roll.addEventListener('pointermove', e => { if (!rollDrag) return; scrubAt = rollAt(e); idle = 2; });
 roll.addEventListener('pointerup', e => { if (!rollDrag) return; rollDrag = false; seekTo(rollAt(e)); });
-roll.addEventListener('pointercancel', () => { rollDrag = false; scrubbing = false; tick(); });
+roll.addEventListener('pointercancel', () => { rollDrag = false; scrubbing = false; idle = 2; });
 roll.addEventListener('keydown', e => {
   const step = e.key === 'ArrowRight' ? 5 : e.key === 'ArrowLeft' ? -5 : 0;
   if (step && duration){ e.preventDefault(); seekTo(position() + step); }
 });
-function tickScrub(){ $('seek').value = Math.round(scrubAt / duration * 1000); $('clock').textContent = fmtT(scrubAt) + ' / ' + fmtT(duration); drawRoll(); }
 
-/* ---------- osciloscópio ---------- */
-const cv = $('cv'), g = cv.getContext('2d');
-let idle = 2;
+/* ---------- desenho ---------- */
 function sizeCanvas(){
-  const d = Math.min(devicePixelRatio || 1, 2);
-  [cv, roll].forEach(c => { const r = c.getBoundingClientRect(); c.width = Math.max(1, Math.round(r.width * d)); c.height = Math.max(1, Math.round(r.height * d)); });
+  const d = dpr();
+  const fit = c => { const r = c.getBoundingClientRect(), w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d)); if (c.width !== w || c.height !== h){ c.width = w; c.height = h; } };
+  fit(roll);
+  ch.forEach(c => { if (c.lx){ fit(c.lx.escopo); fit(c.lx.rolo); } });
   idle = 2; drawRollBase();
 }
-addEventListener('resize', sizeCanvas);
-function grid(w, h){
-  g.fillStyle = 'rgba(160,200,240,.30)';
-  for (let c = 0; c <= 10; c++) for (let r = 0; r <= 40; r++) g.fillRect(Math.round(c * w / 10), Math.round(r * h / 40), 1, 1);
-  for (let r = 0; r <= 8; r++) for (let c = 0; c <= 50; c++) g.fillRect(Math.round(c * w / 50), Math.round(r * h / 8), 1, 1);
-}
+let resizeQ = 0;
+const pedirTamanho = () => { if (!resizeQ) resizeQ = requestAnimationFrame(() => { resizeQ = 0; sizeCanvas(); }); };
+if ('ResizeObserver' in window){ const ro = new ResizeObserver(pedirTamanho); ro.observe($('lanes')); ro.observe(roll); }
+addEventListener('resize', pedirTamanho);
+/* parado, não redesenha: só alguns quadros depois de cada mudança */
 function draw(){
   requestAnimationFrame(draw);
-  if (playing) tick(); else if (idle > 0) idle--; else return;   /* parado, não gasta bateria redesenhando */
-  const w = cv.width, h = cv.height; if (!w || !h) return;
-  g.fillStyle = '#041e3c'; g.fillRect(0, 0, w, h); grid(w, h);
-  const d = Math.min(devicePixelRatio || 1, 2);
-  ch.forEach((c, i) => {
-    if (!c.an) return;
-    c.an.getFloatTimeDomainData(c.data);
-    const mid = h * (i === 0 ? .28 : .72), amp = h * .19, n = c.data.length;
-    g.beginPath();
-    for (let x = 0; x < w; x++){
-      const s = c.data[Math.floor(x / w * n)];
-      const y = mid - Math.max(-1, Math.min(1, s)) * amp;
-      x ? g.lineTo(x, y) : g.moveTo(x, y);
-    }
-    g.strokeStyle = i === 0 ? '#d6e33c' : '#43d3e6';
-    g.lineWidth = 1.5 * d; g.lineJoin = 'round'; g.stroke();
-  });
+  if (!playing && !scrubbing){ if (idle > 0) idle--; else return; }
+  tick();
+  const p = scrubbing ? scrubAt : position();
+  for (let i = 0; i < nCanais(); i++){ const c = ch[i]; if (!c.lx) continue; desenharEscopo(c, i); desenharRolo(c, i, p); }
 }
 
 /* ---------- início ---------- */
@@ -1570,7 +1997,8 @@ if (GH){
 const uso = document.createElement('a');
 uso.href = 'USO-EDUCACIONAL.md'; uso.textContent = 'uso educacional e atribuição';
 foot.appendChild(uso);
-sizeCanvas(); requestAnimationFrame(draw);
+resetControls(); renderTudo();
+requestAnimationFrame(draw);
 loadLibrary();
 if (ONLINE && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script>
