@@ -1,4 +1,4 @@
-"""Abre o index.html num Chrome de verdade e exercita o player: os dois modos de saída, o
+"""Abre o index.html num Chrome de verdade e exercita o player: 2 e 6 flybacks, o
 roteamento, a separação do WAV e a serial com uma porta simulada.
 
     python tools/testar_site.py            # roda tudo e diz o que falhou
@@ -61,7 +61,7 @@ def servir():
 
 def estado(pg):
     return pg.evaluate("""() => ({
-        modo, n: nCanais(), faixas: tracks.length, assign: assign.slice(), nomes: tracks.map(t => t.name),
+        n: nCanais(), faixas: tracks.length, assign: assign.slice(), nomes: tracks.map(t => t.name),
         segs: ch.slice(0, nCanais()).map(c => c.segs.length),
         pistas: document.querySelectorAll('#lanes .lane').length,
         canais: document.querySelectorAll('#strips .strip').length,
@@ -83,12 +83,12 @@ def player(nav, base, telas):
     pg.goto(base)
     pg.evaluate('localStorage.clear()')
 
-    print('estéreo')
+    print('dois flybacks, pelo P2')
     abrir(pg, base, 'exemplos/Korobeiniki.mid')
     e = estado(pg)
-    confere(e['modo'] == 'estereo' and e['pistas'] == 2 and e['canais'] == 2, 'abre no estéreo, duas pistas e dois canais')
+    confere(e['n'] == 2 and e['pistas'] == 2 and e['canais'] == 2, 'começa com dois flybacks, duas pistas e dois canais')
     confere(e['faixas'] == 4 and any(e['segs']), f'MIDI formato 0 separado por canal: {e["faixas"]} faixas')
-    confere(len(e['presets']) == 6, 'os seis presets do estéreo')
+    confere(len(e['presets']) == 6, 'os seis presets de dois canais')
     pg.click('#play'); time.sleep(1.5)
     e = estado(pg)
     confere(e['tocando'] and e['pos'] > 1, f'toca ({e["pos"]:.1f} s)')
@@ -101,9 +101,9 @@ def player(nav, base, telas):
         return [b.numberOfChannels, pico(0), pico(1)]; }""")
     confere(r[0] == 2 and r[1] > .1 and r[2] == 0, f'WAV estéreo com separação dura: o lado sem faixa sai zero ({r})')
 
-    print('ESP32')
+    print('seis flybacks')
     abrir(pg, base, 'transcritas/Borboletas.mid')
-    pg.click('#modo button[data-modo=esp]'); time.sleep(.3)
+    pg.select_option('#espN', '6'); time.sleep(.3)
     e = estado(pg)
     confere(e['pistas'] == 6 and e['canais'] == 6, 'seis pistas e seis canais')
     rotas = {e['nomes'][k]: [i + 1 for i in range(6) if m >> i & 1] for k, m in enumerate(e['assign'])}
@@ -115,10 +115,10 @@ def player(nav, base, telas):
     antes = e['assign'][1]
     pg.click('#tracks .trk:nth-child(2) .seg button:nth-child(5)')
     confere(estado(pg)['assign'][1] == antes | 8, 'uma faixa em dois canais')
-    pg.click('#modo button[data-modo=estereo]'); time.sleep(.2)
-    confere(all(m <= 3 for m in estado(pg)['assign']), 'estéreo tem configuração própria')
-    pg.click('#modo button[data-modo=esp]'); time.sleep(.2)
-    confere(estado(pg)['assign'][1] == antes | 8, 'ESP recupera a rota manual')
+    pg.select_option('#espN', '2'); time.sleep(.2)
+    confere(all(m <= 3 for m in estado(pg)['assign']), 'dois flybacks têm configuração própria')
+    pg.select_option('#espN', '4'); time.sleep(.2)
+    confere(estado(pg)['assign'][1] == antes | 8, 'voltar a quatro recupera a rota manual')
     pg.click('#strips .strip:nth-child(2) .strip-h button:nth-child(2)')
     confere(pg.evaluate('!soa(1) && soa(0)'), 'silenciar um canal')
     pg.click('#strips .strip:nth-child(2) .strip-h button:nth-child(2)')
@@ -159,7 +159,7 @@ def serial(nav, base):
     pg.on('pageerror', lambda e: erros.append(str(e)))
     pg.add_init_script(SERIAL_FALSA)
     pg.goto(base)
-    pg.evaluate("localStorage.clear(); localStorage.setItem('flyback:modo', JSON.stringify('esp'))")
+    pg.evaluate("localStorage.clear(); localStorage.setItem('flyback:esp', JSON.stringify({n: 6}))")
     abrir(pg, base, 'exemplos/Korobeiniki.mid')
     linhas = lambda: pg.evaluate('window.__serial.bytes').splitlines()
     confere(pg.is_disabled('#pinos button'), '"testar" desabilitado antes de conectar')
@@ -175,10 +175,12 @@ def serial(nav, base):
     t = [int(x.split()[2]) for x in l if x.startswith('N ')]
     confere(l[0] == 'R' and l[-1] == 'X' and len(t) > 5 and t == sorted(t), f'tocar: R, {len(t)} notas em ordem, X')
     pg.evaluate('window.__serial.bytes = ""')
-    pg.click('#modo button[data-modo=estereo]')
-    pg.click('#play'); time.sleep(.4); pg.click('#play')
-    confere(linhas() == ['X'], 'no estéreo nada vai pela serial além do X de saída')
-    pg.click('#modo button[data-modo=esp]')
+    pg.select_option('#espN', '2')
+    l = linhas()
+    confere('P 1 21' in l and 'P 2 -1' in l, 'com dois flybacks o mapa vai com os outros quatro canais liberados')
+    pg.click('#play'); time.sleep(.6); pg.click('#play')
+    canais = {int(x.split()[1]) for x in linhas() if x.startswith('N ')}
+    confere(canais and canais <= {0, 1}, f'com dois flybacks a serial continua, só nos canais 0 e 1 ({sorted(canais)})')
     pg.click('#serGo'); time.sleep(.2)
     confere(pg.evaluate('window.__serial.fechada'), 'desconectar fecha a porta')
     confere(not erros, 'nenhum erro na página')

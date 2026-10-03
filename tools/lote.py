@@ -185,7 +185,9 @@ def creditar(saida, arq, artista, musica, url, modelo, rel):
 
 def nome_livre(saida, artista, musica, vid, estado):
     """'Artista - Música', e com o id do vídeo se outro vídeo já usou o mesmo nome."""
-    limpo = lambda s: ''.join(c for c in s if c not in '\\/:*?"<>|').strip()
+    # barra vira hífen (AC/DC -> AC-DC, como na pasta de bandas; "War Pigs / Luke's Wall"), o
+    # resto que o Windows não aceita some, e espaço repetido vira um só
+    limpo = lambda s: re.sub(r'\s+', ' ', ''.join(c for c in s.replace('/', '-') if c not in '\\:*?"<>|')).strip()
     base = limpo(f'{artista} - {musica}')[:120]
     dono = next((k for k, v in estado.items() if v.get('titulo') == base and k != vid), None)
     return base if not dono else f'{base} ({vid})'

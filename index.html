@@ -17,8 +17,8 @@
   --fundo:#051a33; --field:#041e3c; --panel:#0a2e52; --chrome:#072744;
   --rule:rgba(140,190,235,.22); --soft:rgba(140,190,235,.10);
   --ink:#dceaf7; --dim:#7fa5c8;
-  /* um por flyback. 1 e 2 são o amarelo-fósforo e o ciano do osciloscópio de bancada: no modo
-     estéreo continuam sendo esquerdo e direito, como sempre foram */
+  /* um por flyback. 1 e 2 são o amarelo-fósforo e o ciano do osciloscópio de bancada: com dois
+     flybacks continuam sendo esquerdo e direito, como sempre foram */
   --c1:#d6e33c; --c2:#43d3e6; --c3:#f2994a; --c4:#c792ea; --c5:#7ee08a; --c6:#f27396;
   -webkit-text-size-adjust:100%; text-size-adjust:100%;
 }
@@ -55,7 +55,9 @@ h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;white-space:now
 /* o que fica parado no topo do painel enquanto só a lista rola */
 .fixo{flex:none;padding:10px 10px 0}
 .fixo+.pane-b{padding-top:6px}
-.bar .modo button{padding:4px 12px}
+.musica{margin:0 0 8px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.musica b{color:var(--ink);font-weight:600}
+.saida .tom{margin-left:auto}
 .transport #zoom{height:36px;font-size:12px}
 .filtros .abrir{margin-left:auto;color:var(--ink)}
 .saida .linha.sep{margin-top:8px;padding-top:8px;border-top:1px solid var(--soft)}
@@ -207,22 +209,11 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 </head>
 <body>
 <div class="app">
-  <header class="bar">
-    <h1>Flyback MIDI</h1>
-    <nav class="tabs" aria-label="Páginas">
-      <a href="./" aria-current="page">MIDI</a>
-      <a href="tom.html">Tom</a>
-    </nav>
-    <div class="seg modo" id="modo" role="group" aria-label="Saída para os flybacks">
-      <button data-modo="estereo" title="dois flybacks pelo cabo de áudio">Estéreo · P2</button>
-      <button data-modo="esp" id="modoEsp" title="até seis flybacks por um ESP32 na serial">ESP32 · serial</button>
-    </div>
-    <div class="titulo" id="titulo">nenhuma música aberta</div>
-  </header>
 
   <div class="topo" id="topo">
     <section class="pane faixas" aria-label="Faixas da música">
       <div class="fixo">
+        <p class="musica" id="titulo">nenhuma música aberta</p>
         <div class="presets hide" id="presets" role="group" aria-label="Distribuição automática"></div>
         <p class="verdict" id="verdict"></p>
       </div>
@@ -287,27 +278,24 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 
     <section class="pane saida" aria-label="Saída para os flybacks">
       <div class="pane-b">
-        <div id="saidaEst">
-          <p class="txt">Esquerdo no flyback 1 e direito no 2, pelo cabo P2, com separação dura: nada de um lado vaza para o outro. Para mais flybacks, use o ESP32.</p>
+        <div class="linha">
+          <label class="campo">Flybacks <select id="espN"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+          <label class="campo">Placa <select id="espPlaca"><option value="esp32">ESP32</option><option value="s3">ESP32-S3</option></select></label>
+          <a class="btn tom" href="tom.html" title="tom contínuo em cada flyback, para achar a ressonância e casar os arcos">Gerador de tom</a>
         </div>
-        <div id="saidaEsp" class="hide">
-          <div class="linha">
-            <select id="baud" aria-label="Velocidade da serial"><option>115200</option><option>230400</option><option>460800</option><option>921600</option></select>
-            <button id="serGo">Conectar</button>
-            <span class="estado mono" id="serMsg">desconectado</span>
-          </div>
-          <div class="linha">
-            <label class="campo">Flybacks <select id="espN"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
-            <label class="campo">Placa <select id="espPlaca"><option value="esp32">ESP32</option><option value="s3">ESP32-S3</option></select></label>
-          </div>
-          <div class="pinos" id="pinos"></div>
-          <p class="txt" id="pinosMsg"></p>
-          <div class="linha">
-            <button id="serX">Silenciar tudo</button>
-            <label class="chk"><input type="checkbox" id="monitor"> ouvir no computador</label>
-          </div>
-          <details class="log" id="serLogBox"><summary>Linhas enviadas</summary><pre id="serLog">nada enviado ainda</pre></details>
+        <p class="txt" id="saidaP2">Com 1 ou 2 flybacks o som também sai pelo P2: canal 1 no esquerdo, canal 2 no direito, com separação dura.</p>
+        <div class="linha">
+          <select id="baud" aria-label="Velocidade da serial"><option>115200</option><option>230400</option><option>460800</option><option>921600</option></select>
+          <button id="serGo">Conectar ESP32</button>
+          <span class="estado mono" id="serMsg">desconectado</span>
         </div>
+        <div class="pinos" id="pinos"></div>
+        <p class="txt" id="pinosMsg"></p>
+        <div class="linha">
+          <button id="serX">Silenciar tudo</button>
+          <label class="chk" id="monitorRot"><input type="checkbox" id="monitor"> ouvir no computador</label>
+        </div>
+        <details class="log" id="serLogBox"><summary>Linhas enviadas</summary><pre id="serLog">nada enviado ainda</pre></details>
         <div class="linha sep">
           <span class="rot">Áudio</span>
           <button id="wavGo" disabled>Gerar WAV</button>
@@ -533,13 +521,18 @@ function midiOffset(buf){
 }
 
 /* ---------- estado ----------
-   Dois modos de saída. 'estereo': dois canais pelo áudio do computador, separação dura, como o
-   site sempre foi. 'esp': de 1 a 6 canais pela serial, para um ESP32 com um flyback por pino; o
-   áudio do computador vira só monitor.
+   Uma saída só, comandada pelo número de flybacks (1 a 6). Já foram dois modos, estéreo e
+   ESP, e o de dois canais era o mesmo que o ESP com dois flybacks por outro caminho — o dono
+   do projeto apontou, e virou um só:
 
-   O roteamento de cada faixa é uma máscara de bits, um bit por canal. No estéreo os valores
-   possíveis são 0 (desligada), 1 (esquerdo), 2 (direito) e 3 (ambos), que são exatamente o
-   'O', 'L', 'R' e 'B' de antes; no ESP qualquer combinação dos seis vale. */
+   - com 1 ou 2 flybacks, o áudio do computador sai com separação dura, canal 1 no esquerdo e
+     canal 2 no direito: é o P2, como o site sempre foi;
+   - com 3 ou mais, o áudio é só monitor, somado nos dois lados;
+   - a serial vale sempre que houver ESP32 conectado, com qualquer número.
+
+   O roteamento de cada faixa é uma máscara de bits, um bit por canal. Com dois flybacks os
+   valores 0, 1, 2 e 3 são exatamente o desligada/esquerdo/direito/ambos de antes, e a
+   configuração é a de sempre — inclusive os .json do acervo. */
 const CTL = { ganho: 70, lp: 1000, oct: 0, pick: 'lo', env: 'medio', vel: true };
 const ch = Array.from({ length: MAX }, () => ({
   osc: null, gain: null, filter: null, an: null, out: null, data: null,
@@ -557,21 +550,25 @@ const PLACAS = {
   s3:    { nome: 'ESP32-S3', pinos: [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 38, 39, 40, 41, 42, 47, 48], padrao: [4, 5, 6, 7, 15, 16] }
 };
 const BAUDS = [115200, 230400, 460800, 921600];
-let modo = store.get('modo') === 'esp' ? 'esp' : 'estereo';
+/* quem usava o modo estéreo da versão anterior começa com dois flybacks; a chave antiga some */
+const modoAntigo = store.get('modo');
+if (modoAntigo) store.del('modo');
 const esp = (() => {
   const s = store.get('esp') || {};
   const placa = PLACAS[s.placa] ? s.placa : 's3';
   const ok = Array.isArray(s.pinos) && s.pinos.length === MAX && s.pinos.every(p => PLACAS[placa].pinos.includes(+p));
-  return { n: Math.max(1, Math.min(MAX, Math.round(+s.n) || MAX)), placa,
+  return { n: modoAntigo === 'estereo' ? 2 : Math.max(1, Math.min(MAX, Math.round(+s.n) || 2)), placa,
            pinos: ok ? s.pinos.map(Number) : PLACAS[placa].padrao.slice(),
            baud: BAUDS.includes(+s.baud) ? +s.baud : 115200, monitor: s.monitor !== false };
 })();
 const salvarEsp = () => store.set('esp', esp);
-const nCanais = () => modo === 'esp' ? esp.n : 2;
+const nCanais = () => esp.n;
+const pelaP2 = () => esp.n <= 2;          /* o áudio do computador aciona os flybacks */
+const dois = () => esp.n === 2;           /* presets e configuração clássicos, de dois lados */
 const mascara = () => (1 << nCanais()) - 1;
 const canaisDe = m => { const r = []; for (let i = 0; i < MAX; i++) if (m >> i & 1) r.push(i); return r; };
-const nomeCanal = i => modo === 'esp' ? 'Canal ' + (i + 1) : (i ? 'Direito' : 'Esquerdo');
-const subCanal = i => modo === 'esp' ? 'GPIO ' + esp.pinos[i] : 'flyback ' + (i + 1);
+const nomeCanal = i => 'Canal ' + (i + 1);
+const subCanal = i => (pelaP2() ? (i ? 'direito · ' : 'esquerdo · ') : '') + 'GPIO ' + esp.pinos[i];
 const algumSolo = () => ch.slice(0, nCanais()).some(c => c.solo);
 const soa = i => i < nCanais() && (algumSolo() ? ch[i].solo : !ch[i].mudo);
 
@@ -591,9 +588,9 @@ function ensureCtx(){
   ligarSaida();
   return actx;
 }
-/* No estéreo cada canal entra numa entrada própria do ChannelMerger: separação dura, sem
-   vazamento, porque cada lado vai para um flyback fisicamente distinto.
-   No ESP os flybacks são acionados pela serial, e o áudio do computador é só para ouvir: os
+/* Com 1 ou 2 flybacks cada canal entra numa entrada própria do ChannelMerger: separação dura,
+   sem vazamento, porque cada lado vai para um flyback fisicamente distinto pelo P2.
+   Com mais, os flybacks são acionados pela serial, e o áudio do computador é só para ouvir: os
    canais somam nos dois lados, com o ganho dividido para a soma de seis não saturar. O
    analisador fica antes desse ganho, então o osciloscópio de cada pista mostra o canal
    mesmo com o monitor desligado. */
@@ -602,8 +599,8 @@ function ligarSaida(){
   const n = nCanais();
   ch.forEach((c, i) => {
     c.out.disconnect();
-    if (modo === 'estereo'){
-      if (i < 2) c.out.connect(merger, 0, i);
+    if (pelaP2()){
+      if (i < n) c.out.connect(merger, 0, i);
       c.out.gain.value = 1;
     } else if (i < n){
       c.out.connect(merger, 0, 0); c.out.connect(merger, 0, 1);
@@ -793,15 +790,10 @@ function renderTracks(){
       if (cor){ b.classList.add('cor'); b.style.setProperty('--cor', cor); }
       b.onclick = fn; seg.appendChild(b);
     };
-    if (modo === 'esp'){
-      /* no ESP cada número liga e desliga aquele flyback para a faixa: uma faixa pode ir para
-         mais de um, como o "ambos" do estéreo */
-      botao('—', 'desligada', !assign[k], null, () => muda(0));
-      for (let i = 0; i < n; i++) botao(String(i + 1), 'canal ' + (i + 1), !!(assign[k] >> i & 1), CORES[i], () => muda(assign[k] ^ (1 << i)));
-    } else {
-      [['—', 0, 'desligada'], ['E', 1, 'canal esquerdo'], ['D', 2, 'canal direito'], ['ambos', 3, 'os dois canais']].forEach(([rot, m, desc]) =>
-        botao(rot, desc, assign[k] === m, m === 1 || m === 2 ? CORES[m - 1] : null, () => muda(m)));
-    }
+    /* cada número liga e desliga aquele flyback para a faixa: uma faixa pode ir para mais de
+       um, como o "ambos" de antes */
+    botao('—', 'desligada', !assign[k], null, () => muda(0));
+    for (let i = 0; i < n; i++) botao(String(i + 1), 'canal ' + (i + 1), !!(assign[k] >> i & 1), CORES[i], () => muda(assign[k] ^ (1 << i)));
     row.append(luz, name, seg); box.appendChild(row);
   });
   $('faixasVazio').classList.toggle('hide', tracks.length > 0);
@@ -997,12 +989,12 @@ const PRESETS_EST = [['bass', 'Baixo e melodia'], ['guitars', 'Guitarras somadas
 const PRESETS_ESP = [['um', 'Um instrumento por flyback'], ['faixas', 'Grave para agudo'], ['none', 'Desligar tudo']];
 const LETRA_MASC = { O: 0, L: 1, R: 2, B: 3 };
 function preset(p, user){
-  assign = modo === 'esp' ? computePresetN(p) : computePreset(p).map(l => LETRA_MASC[l] || 0);
+  assign = dois() ? computePreset(p).map(l => LETRA_MASC[l] || 0) : computePresetN(p);
   renderTracks(); reschedule(); if (user) saveCfg();
 }
 function renderPresets(){
   const box = $('presets'); box.textContent = '';
-  (modo === 'esp' ? PRESETS_ESP : PRESETS_EST).forEach(([p, rot]) => {
+  (dois() ? PRESETS_EST : PRESETS_ESP).forEach(([p, rot]) => {
     const b = el('button', null, rot); b.onclick = () => preset(p, true); box.appendChild(b);
   });
   box.classList.toggle('hide', !tracks.length);
@@ -1024,25 +1016,25 @@ function analyse(){
     }
     if (c.sx) c.sx.stat.textContent = c.stat;
   }
-  const rot = i => modo === 'esp' ? String(i + 1) : i ? 'direita' : 'esquerda';
+  const rot = i => String(i + 1);
   $('verdict').textContent = tracks.length ? 'aproveitamento — ' + msg.map((m, i) => rot(i) + ' ' + m).join(' · ') : '';
 }
 
 /* ---------- configuração por música: neste navegador e no acervo ----------
-   Uma por modo: o roteamento para dois flybacks no P2 e para seis no ESP não têm nada a ver
-   um com o outro, e trocar de modo não pode apagar o ajuste do outro. O do estéreo continua
-   na chave de sempre ('cfg:'), e é o único que o .json do acervo descreve. */
+   Duas por música: a de dois flybacks, na chave de sempre ('cfg:'), que é a única que o .json
+   do acervo descreve, e a de qualquer outro número ('cfgesp:'). Rotear para dois e para seis
+   não têm nada a ver um com o outro, e mudar o número não pode apagar o ajuste do outro. */
 const MASC_NOME = ['desligada', 'esquerdo', 'direito', 'ambos'];
 const CANAL_IN = { desligada: 0, esquerdo: 1, direito: 2, ambos: 3, O: 0, L: 1, R: 2, B: 3 };
-const cfgChave = () => (modo === 'esp' ? 'cfgesp:' : 'cfg:') + current.key;
+const cfgChave = () => (dois() ? 'cfg:' : 'cfgesp:') + current.key;
 function currentCfg(){
   return {
     versao: 2,
-    saida: modo,
+    saida: dois() ? 'estereo' : 'esp',
     faixas: tracks.map((t, k) => {
       const f = { nome: t.name };
-      /* 'canal' continua sendo escrito no estéreo, para quem ler com a versão anterior do site */
-      if (modo === 'estereo') f.canal = MASC_NOME[assign[k] & 3];
+      /* 'canal' continua sendo escrito com dois, para quem ler com a versão anterior do site */
+      if (dois()) f.canal = MASC_NOME[assign[k] & 3];
       f.saidas = canaisDe(assign[k]).map(i => i + 1);
       if (prio[k]) f.prioridade = prio[k];   /* só aparece quando um preset definiu quem ganha no choque */
       return f;
@@ -1058,12 +1050,12 @@ function currentCfg(){
   };
 }
 function resetControls(){
-  /* Estéreo: esquerda na nota mais grave, direita na mais aguda. A esquerda quase sempre fica
+  /* Dois: esquerda na nota mais grave, direita na mais aguda. A esquerda quase sempre fica
      com o acompanhamento, e reduzir um acorde a nota mais aguda entrega a oitava ou a quinta em
      vez da raiz — a harmonia sai errada e fina.
-     ESP: o canal 1 é o da linha de canto no preset "um por flyback", e vai na mais aguda; os
+     Outro número: o canal 1 é o da linha de canto no preset "um por flyback", e vai na mais aguda; os
      outros levam acompanhamento e baixo, e vão na mais grave pelo mesmo motivo. */
-  ch.forEach((c, i) => { c.ctl = Object.assign({}, CTL, { pick: modo === 'esp' ? (i ? 'lo' : 'hi') : (i ? 'hi' : 'lo') }); });
+  ch.forEach((c, i) => { c.ctl = Object.assign({}, CTL, { pick: dois() ? (i ? 'hi' : 'lo') : (i ? 'lo' : 'hi') }); });
   aplicarFiltros();
 }
 /* devolve false se nenhuma faixa casar pelo nome, ou seja, se a configuração é de outro arquivo */
@@ -1101,25 +1093,25 @@ function applyCfg(cfg){
 }
 function saveCfg(){
   if (!current) return;
-  if (store.set(cfgChave(), currentCfg())) $('cfgMsg').textContent = 'Ajuste salvo neste navegador' + (modo === 'esp' ? ', para o modo ESP32.' : '.');
+  if (store.set(cfgChave(), currentCfg())) $('cfgMsg').textContent = 'Ajuste salvo neste navegador, para ' + (dois() ? 'dois flybacks.' : 'esse número de flybacks.');
 }
 function initialCfg(){
   const saved = store.get(cfgChave());
-  if (saved && applyCfg(saved)){ $('cfgMsg').textContent = 'Ajuste salvo neste navegador' + (modo === 'esp' ? ', para o modo ESP32.' : '.'); return; }
-  /* o .json do acervo descreve dois canais; no ESP só vale se forem dois flybacks */
+  if (saved && applyCfg(saved)){ $('cfgMsg').textContent = 'Ajuste salvo neste navegador, para ' + (dois() ? 'dois flybacks.' : 'esse número de flybacks.'); return; }
+  /* o .json do acervo descreve dois canais: só vale com dois flybacks */
   if (current.sidecar && nCanais() === 2 && applyCfg(current.sidecar)){ $('cfgMsg').textContent = 'Configuração que veio com a música no acervo.'; return; }
   resetControls(); renderStrips();
-  if (modo === 'esp'){ preset('um', false); $('cfgMsg').textContent = 'Padrão: um instrumento por flyback. Qualquer ajuste fica salvo neste navegador.'; }
-  else { preset('bass', false); $('cfgMsg').textContent = 'Padrão: baixo e melodia. Qualquer ajuste fica salvo neste navegador.'; }
+  if (dois()){ preset('bass', false); $('cfgMsg').textContent = 'Padrão: baixo e melodia. Qualquer ajuste fica salvo neste navegador.'; }
+  else { preset('um', false); $('cfgMsg').textContent = 'Padrão: um instrumento por flyback. Qualquer ajuste fica salvo neste navegador.'; }
 }
 $('cfgReset').onclick = () => { if (!current) return; store.del(cfgChave()); initialCfg(); };
 $('cfgDown').onclick = () => {
   if (!current) return;
-  const nome = baseName(current.file) + (modo === 'esp' ? ' (esp32).json' : '.json');
+  const nome = baseName(current.file) + (dois() ? '.json' : ' (' + esp.n + ' flybacks).json');
   saveBlob(new Blob([JSON.stringify(currentCfg(), null, 2) + '\n'], { type: 'application/json' }), nome);
-  $('cfgMsg').textContent = modo === 'esp'
-    ? 'Configuração do modo ESP32 baixada. O acervo só lê automaticamente a do estéreo; esta fica para guardar ou compartilhar.'
-    : 'Para deixar pronta no acervo, envie este .json para a pasta musicas junto com a música, com o mesmo nome.';
+  $('cfgMsg').textContent = dois()
+    ? 'Para deixar pronta no acervo, envie este .json para a pasta musicas junto com a música, com o mesmo nome.'
+    : 'Configuração baixada. O acervo só lê automaticamente a de dois flybacks; esta fica para guardar ou compartilhar.';
 };
 
 /* ---------- canais: um módulo de mixer por flyback ---------- */
@@ -1468,7 +1460,7 @@ const cabe2 = it => (it.aproveitamento || 0) >= APROV_MIN;
 const cabe6 = it => cabe2(it) || (it.aproveitamento6 || 0) >= APROV6_MIN;
 /* o filtro segue a saída escolhida: no estéreo pergunta se cabe em dois; no ESP com três ou mais
    flybacks, se soa bem com um instrumento por flyback */
-const filtroSeis = () => modo === 'esp' && esp.n >= 3;
+const filtroSeis = () => esp.n >= 3;
 const soaBem = it => filtroSeis() ? cabe6(it) : cabe2(it);
 let acervo = '', soTopo = false, soVoz = false, soBom = false;
 const dentroDe = (it, p) => !p || it.pasta === p || it.pasta.startsWith(p + '/');
@@ -1673,7 +1665,7 @@ function wavReset(){
   $('wavSave').classList.add('hide'); $('wavMsg').textContent = '';
 }
 /* Um canal do arquivo por flyback, com a mesma separação dura do ao vivo: canal sem faixa sai
-   com amostras exatamente zero. No modo ESP sai com N canais, para uma interface de áudio
+   com amostras exatamente zero. Com mais de dois sai com N canais, para uma interface de áudio
    multicanal. Silenciar e solo não entram: o arquivo é a música para os flybacks. */
 async function renderWav(){
   const n = nCanais(), sr = 44100;
@@ -1725,7 +1717,7 @@ function serialWrite(line){
   if (ser.writer) ser.writer.write(ser.enc.encode(line + '\n')).catch(() => serialClose(true));
   if (ser.writer || logAberto()) registrar(line);
 }
-const serialAtivo = () => modo === 'esp' && (ser.writer || logAberto());
+const serialAtivo = () => !!ser.writer || logAberto();
 function serialStart(at){
   clearInterval(ser.timer); ser.timer = 0;
   if (!serialAtivo() || !actx) return;
@@ -1755,7 +1747,7 @@ function serialStart(at){
   };
   pump(); ser.timer = setInterval(pump, 20);
 }
-function serialHalt(){ clearInterval(ser.timer); ser.timer = 0; if (modo === 'esp') serialWrite('X'); }
+function serialHalt(){ clearInterval(ser.timer); ser.timer = 0; serialWrite('X'); }
 /* Qual GPIO cada canal aciona. Vai a cada conexão e a cada mudança; canal acima do número de
    flybacks vai com -1, que libera o pino. */
 function serialPinos(){
@@ -1833,15 +1825,18 @@ $('espN').onchange = e => {
   const n = +e.target.value;
   if (n === esp.n) return;
   if (playing) pause();
+  const antes = esp.n;
   esp.n = n; salvarEsp();
   ch.forEach(c => { c.mudo = c.solo = false; });
-  /* sem ajuste salvo para a música, o preset redistribui pelos flybacks novos; com ajuste,
-     só cortam as rotas para canais que deixaram de existir */
+  /* Entrar ou sair de dois troca de espaço de configuração (a de dois é a clássica, a do
+     acervo): carrega a daquele espaço. Dentro do mesmo espaço, sem ajuste salvo o preset
+     redistribui pelos flybacks novos; com ajuste, só cortam as rotas que deixaram de existir. */
   if (tracks.length){
-    if (store.get(cfgChave())){ assign = assign.map(m => m & mascara()); saveCfg(); }
-    else preset('um', false);
-  }
-  serialPinos(); renderTudo();
+    if ((antes === 2) !== (n === 2)) initialCfg();
+    else if (store.get(cfgChave())){ assign = assign.map(m => m & mascara()); saveCfg(); }
+    else preset(dois() ? 'bass' : 'um', false);
+  } else resetControls();
+  ligarSaida(); wavReset(); serialPinos(); renderTudo();
 };
 $('espPlaca').value = esp.placa;
 $('espPlaca').onchange = e => {
@@ -1849,30 +1844,17 @@ $('espPlaca').onchange = e => {
   renderPinos(); serialPinos(); ch.forEach((c, k) => { if (c.lx) c.lx.sub.textContent = subCanal(k); });
 };
 
-/* ---------- modo de saída ---------- */
+/* ---------- saída ---------- */
 function renderModo(){
-  document.querySelectorAll('#modo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.modo === modo)));
-  $('modoEsp').textContent = 'ESP32 · ' + esp.n + (esp.n === 1 ? ' flyback' : ' flybacks');
-  $('libBom').textContent = filtroSeis() ? 'só as boas no ESP' : 'só as que cabem em 2';
-  $('libBom').title = filtroSeis() ? 'soam bem com um instrumento por flyback' : 'soam bem já com dois flybacks, pelo P2';
-  $('saidaEst').classList.toggle('hide', modo !== 'estereo');
-  $('saidaEsp').classList.toggle('hide', modo !== 'esp');
-  $('wavGo').title = modo === 'esp'
-    ? 'WAV com ' + esp.n + (esp.n === 1 ? ' canal' : ' canais') + ', um por flyback, para uma interface de áudio multicanal.'
-    : 'WAV estéreo com os dois canais separados, para tocar em qualquer player pelo cabo P2.';
+  $('saidaP2').classList.toggle('hide', !pelaP2());
+  /* com 1 ou 2 o áudio É a saída para os flybacks: não há o que desligar */
+  $('monitorRot').classList.toggle('hide', pelaP2());
+  $('wavGo').title = 'WAV com ' + esp.n + (esp.n === 1 ? ' canal' : ' canais') + ', um por flyback'
+    + (esp.n === 2 ? ', para tocar em qualquer player pelo cabo P2' : esp.n > 2 ? ', para uma interface de áudio multicanal' : '');
+  $('libBom').textContent = filtroSeis() ? 'só as boas em ' + esp.n + ' flybacks' : 'só as que cabem em 2';
+  $('libBom').title = filtroSeis() ? 'soam bem com um instrumento por flyback' : 'soam bem já com dois flybacks';
 }
 function renderTudo(){ renderModo(); renderPresets(); renderTracks(); renderStrips(); renderLanes(); renderPinos(); reschedule(); if (soBom) renderLib(); }
-function mudarModo(m){
-  if (m === modo) return;
-  if (playing) pause();
-  if (modo === 'esp') serialWrite('X');   /* saindo do ESP: nenhum flyback fica tocando sozinho */
-  modo = m; store.set('modo', m);
-  ch.forEach(c => { c.mudo = c.solo = false; });
-  ligarSaida(); wavReset();
-  if (tracks.length) initialCfg(); else resetControls();
-  renderTudo();
-}
-document.querySelectorAll('#modo button').forEach(b => b.onclick = () => mudarModo(b.dataset.modo));
 
 /* ---------- eventos ---------- */
 const file = $('file');

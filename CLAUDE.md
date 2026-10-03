@@ -46,10 +46,13 @@ Consequências que já estão implementadas e não devem ser revertidas:
 - Faixas de percussão são detectadas (canal 10 do MIDI ou nome) e ficam fora dos presets automáticos, porque percussão não tem altura definida.
 - Separação estéreo é **dura**, via `ChannelMergerNode`, não `StereoPannerNode`. Cada lado vai para um flyback fisicamente distinto e não pode haver vazamento. Vale também para o WAV exportado: o teste confere que o canal sem faixa sai com amostras exatamente zero.
 
-Há dois modos de saída, e a separação dura vale para o que aciona flyback:
+A saída é uma só, comandada pelo **número de flybacks** (1 a 6), e a separação dura vale para o que aciona flyback. Já foram dois modos, estéreo e ESP; o dono do projeto notou que o estéreo era o ESP com dois flybacks por outro caminho, e virou um só:
 
-- **Estéreo · P2** — 2 canais pelo áudio do computador, esquerdo e direito, cada um num flyback. É como o site sempre foi.
-- **ESP32 · serial** — de 1 a 6 canais, um por pino de um ESP32. Os flybacks são acionados pela serial; o áudio do computador vira **monitor**, com os canais somados nos dois lados (e com o ganho dividido por √N para a soma não saturar). O monitor não aciona flyback nenhum, então a soma ali não fere a regra.
+- **1 ou 2 flybacks** — o áudio do computador sai com separação dura, canal 1 no esquerdo e canal 2 no direito: é o P2, como o site sempre foi. Presets e configuração são os clássicos de dois lados, inclusive os `.json` do acervo.
+- **3 a 6** — o áudio do computador vira **monitor**, com os canais somados nos dois lados (ganho dividido por √N para a soma não saturar). O monitor não aciona flyback nenhum, então a soma ali não fere a regra.
+- **A serial vale sempre** que houver ESP32 conectado, com qualquer número de flybacks.
+
+Quem usava o modo estéreo da versão anterior começa com dois flybacks (`modoAntigo` em `index.html`).
 
 `ch[i].segs` é uma lista de segmentos monofônicos `{start, end, n, f}` por canal, e é a mesma coisa que alimenta a síntese, o WAV e a serial.
 
@@ -234,7 +237,7 @@ O dono do projeto passou a usar só pelo computador, e o layout de coluna única
 
 A divisória entre as duas metades arrasta (e anda com as setas), e o tamanho fica lembrado; duplo clique volta ao padrão. O padrão dá à doca uma altura estável (`clamp(200px, 100vh − 480px, 70vh)` para a metade de cima), porque é a doca que precisa de altura para o acervo e o mixer caberem — com a metade de cima proporcional à tela, a 1366×768 o acervo mostrava uma música só. A pista esconde a linha de faixas quando fica baixa demais, por container query.
 
-Os botões de modo (Estéreo · P2 / ESP32) ficam na barra de cima, ao lado de MIDI | Tom. Trocar de modo pausa, silencia os flybacks (`X`) e carrega a configuração do outro modo.
+Não há barra no topo. O nome da música abre o painel de faixas; o número de flybacks, a placa, a conexão e o botão **Gerador de tom** (que leva ao `tom.html`, onde há o "voltar para MIDI") ficam no painel de saída. Mudar o número de flybacks pausa; entrar ou sair de dois troca o espaço de configuração (`cfg:` / `cfgesp:`) e carrega a daquele espaço.
 
 **Tudo numa janela.** O dono do projeto reclamou de ter de rolar cada painel. Os painéis não têm barra de título — o conteúdo diz o que são —, e em Faixas e no Acervo os controles ficam parados no topo (`.fixo`) e só a lista rola. O estado da serial fica na linha do Conectar; os pinos, em duas colunas; áudio e configuração, numa linha cada; nos módulos de canal, rótulo e seletor dividem a linha. Medido a 1920×945 (Chrome maximizado em tela 1080p), no modo ESP com seis flybacks e Borboletas aberta, nenhum painel rola além da lista do acervo. A janela de tempo das pistas foi para o fim do transporte.
 

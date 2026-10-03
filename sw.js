@@ -2,7 +2,7 @@
    Arquivos do próprio site: rede primeiro, cópia guardada se estiver sem conexão,
    assim uma música nova ou uma correção aparecem assim que houver rede.
    Fontes e bibliotecas de CDN (endereços com versão fixa): cópia guardada primeiro. */
-const SITE = 'flyback-site-v4';
+const SITE = 'flyback-site-v5';
 const MANTER = [SITE, 'flyback-acervo', 'flyback-cdn'];
 const BASE = ['./', 'index.html', 'tom.html', 'manifest.webmanifest',
   'icones/icone.svg', 'icones/icone-180.png', 'icones/icone-192.png', 'icones/icone-512.png'];

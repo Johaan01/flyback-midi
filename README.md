@@ -17,10 +17,10 @@ mixer com um módulo por canal e o painel da saída.
 
 ## O que o site faz
 
-- **Duas saídas.** **Estéreo · P2**: dois flybacks pelo cabo de áudio, esquerdo e direito.
-  **ESP32 · serial**: de 1 a 6 flybacks, um por pino de um ESP32 — escolha quantos, a placa e o
-  pino de cada canal, e use "testar" para achar qual flyback é qual. Cada modo guarda seu próprio
-  roteamento.
+- **De 1 a 6 flybacks.** Com 1 ou 2, o som sai pelo cabo de áudio, canal 1 no esquerdo e canal 2
+  no direito. Com um ESP32 conectado, vão até seis, um por pino: escolha a placa e o pino de cada
+  canal, e use "testar" para achar qual flyback é qual. O roteamento de dois flybacks e o de mais
+  ficam guardados à parte.
 - **Um instrumento por flyback.** No modo ESP, o preset padrão põe a voz no canal 1, o baixo no
   2 e os outros instrumentos um por canal, deixando a bateria de fora. É feito para os MIDIs
   separados por instrumento que o MuScriptor gera.

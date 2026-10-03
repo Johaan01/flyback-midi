@@ -12,8 +12,10 @@ mistura, onde só se ouve o instrumento dominante, mas em cada stem que o Demucs
 
 - voz: o **peso do stem de voz** na mistura, não o rótulo. O PANNs reconhece canto em quatro
   de cinco músicas, mas em Do Fundo da Grota dá 0,04 — o stem de voz vem cheio do acordeão. O
-  peso separa limpo: 0,48 a 0,61 com canto, 0,04 a 0,12 em instrumental;
-- baixo: "Bass guitar" no stem de baixo (0,60 a 0,91 quando há; 0,06 numa orquestra);
+  peso separa limpo: 0,48 a 0,61 com canto, 0,04 a 0,12 em instrumental. O corte é 0,2, e não
+  0,3 como começou: em Paranoid (remaster de 2012, guitarra muito à frente) a voz pesa 0,28;
+- baixo: "Bass guitar" no stem de baixo (0,60 a 0,91 quando há; 0,06 numa orquestra; 0,29 em
+  Paranoid, pelo mesmo motivo — corte também em 0,2);
 - bateria: "Drum kit" no stem de bateria (0,13 a 0,72; tímpano de orquestra fica em 0,08);
 - o resto: os rótulos do stem "other", traduzidos para os grupos do MuScriptor.
 
@@ -115,14 +117,14 @@ def detectar(stems, sr, mistura, dispositivo='cuda'):
 
     lista, prova = [], []
     v = medida['vocals']
-    if v['peso'] >= .3 and v['ativo'] >= .4:
+    if v['peso'] >= .2 and v['ativo'] >= .4:
         lista.append('voice')
     prova.append(f'voz: stem com peso {v["peso"]:.2f}, ativo em {v["ativo"]*100:.0f}% do tempo')
 
     baixo = m('bass', 'Bass guitar')
     if m('bass', 'Double bass') >= .15 and m('bass', 'Double bass') > baixo:
         lista.append('contrabass')
-    elif baixo >= .3:
+    elif baixo >= .2:
         lista.append('electric_bass')
     prova.append(f'baixo: "Bass guitar" {baixo:.2f}, "Double bass" {m("bass", "Double bass"):.2f}')
 
