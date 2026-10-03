@@ -217,9 +217,19 @@ Separação com o Hybrid Demucs que vem no torchaudio (`HDEMUCS_HIGH_MUSDB_PLUS`
 |---|---|---|---|---|
 | pYIN | 341 | 368 ms | 62% | 34% |
 | basic-pitch cru | 1837 | 106 ms | 97% | 44% |
-| **basic-pitch → raiz** | **329** | **596 ms** | **97%** | **17%** |
+| basic-pitch → raiz, grade | 329 | 596 ms | 98% | 17% |
+| basic-pitch → raiz, ataque | 670 | 280 ms | 94% | 38% |
+| **raiz: tempo do ataque, altura do que soa** | **333** | **578 ms** | **96%** | **9%** |
 
-Então o basic-pitch entra como **detector de acorde**, não como fonte de notas: `linha_de_raiz()` pega a nota mais grave a cada instante e só troca depois que ela se firma. Dá notas longas e linha coerente.
+Então o basic-pitch entra como **detector de acorde**, não como fonte de notas. Mas *como* reduzir tem duas respostas óbvias e as duas erram, e a tabela mostra por quê — o número que importa é o último, saltos maiores que a quinta, porque é o que faz a linha soar picotada no arco.
+
+A primeira versão amostrava a nota mais grave **ativa** numa grade de 40 ms. Boa nos números, ruim no ouvido: o basic-pitch inclui a ressonância na duração da nota, então a raiz do acorde anterior **ainda está soando** quando o seguinte ataca, e continua sendo a mais grave. Saíam notas de 5,4 s — bordão, não harmonia, e foi exatamente isso que se ouviu de estranho ("muitas notas se juntaram").
+
+A correção óbvia, tomar a mais grave de cada **ataque**, mata o bordão e estraga a linha: num dedilhado cada corda entra sozinha, viram acordes de uma nota só, e os saltos grandes vão de 17% para 38% — tão picotado quanto o basic-pitch cru.
+
+O que funciona é tirar as duas coisas de lugares diferentes. **O ataque diz quando trocar** (notas que entram dentro de 150 ms são um acorde só); **o conjunto que soa nesse instante diz qual nota é** (a mais grave dele, que é a raiz na maioria das posições de guitarra e teclado, e que se mantém firme mesmo quando a fundamental não rebate). Mais duas regras: repetir a mesma classe de altura une em vez de picotar, porque acorde rebatido não precisa virar duas notas no arco; e um teto de 1,5 s corta o bordão nos trechos sem ataque novo. Resultado: 9% de saltos grandes, metade do método de grade, e nota mais longa de 1,5 s em vez de 5,4 s.
+
+**`--guardar` e `--stems`.** A separação é a parte que estoura a VRAM e a única que precisa de GPU; transcrição e redução rodam em segundos. Ajustar a regra de harmonia e ouvir de novo não deveria custar uma separação nova, então `--guardar PASTA` deixa os stems em disco e `--stems PASTA` retoma deles. Foi assim que esta medição foi feita, sem reprocessar áudio.
 
 Quatro armadilhas que custaram caro e estão resolvidas no código, todas achadas medindo o funil de filtros em vez de adivinhar:
 

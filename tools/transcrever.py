@@ -206,55 +206,64 @@ def notas_polifonicas(onda, sr, cfg):
     return linha_de_raiz(sorted(notas), cfg) if cfg.get('raiz') else sorted(notas)
 
 
-def linha_de_raiz(notas, cfg, passo=.04, firmeza=.14):
-    """Reduz um acorde a uma linha de raiz, segurando a nota enquanto o acorde não muda.
+def linha_de_raiz(notas, cfg, janela=.15, maxima=1.5):
+    """Reduz acordes a uma linha de raiz: o tempo vem do ataque, a altura vem do que soa.
 
-    Transcrição polifônica escreve a representação certa, mas sozinha ela piora o resultado no
-    arco. O flyback toca uma nota por vez, e a regra de "ganha a nota mais recente" faz a linha
-    pular entre os membros do acorde conforme cada um entra: medido no mesmo trecho, as notas
-    caem de 368 ms para 106 ms e o salto mediano sobe de 5 para 7 semitons. Fica picotado.
+    O basic-pitch escreve a representação certa, mas usá-lo direto piora o resultado no arco: o
+    flyback toca uma nota por vez, e a regra de "ganha a nota mais recente" faz a linha saltar
+    entre os membros do acorde conforme cada um entra — as notas caem de 368 ms para 106 ms e o
+    salto mediano sobe de 5 para 7 semitons. Então ele entra como detector de acorde.
 
-    Então o basic-pitch entra como detector de acorde, não como fonte de notas: a cada instante
-    vale a nota mais grave entre as que soam, que é a raiz na maioria das posições de guitarra e
-    teclado, e ela só troca depois de se firmar por `firmeza` segundos. O resultado é uma linha
-    harmônica que acompanha a música em vez de brigar com ela.
+    Daí vêm duas tentações, e as duas erram. Amostrar a nota mais grave **ativa** numa grade
+    prende a linha, porque o basic-pitch inclui a ressonância na duração: a raiz do acorde
+    anterior ainda soa quando o seguinte ataca, e continua sendo a mais grave. Saíam notas de
+    cinco segundos — bordão, não harmonia. Já tomar a mais grave de cada **ataque** solta a
+    linha demais: num dedilhado cada corda entra sozinha, viram acordes de uma nota só e os
+    saltos maiores que a quinta vão de 17% para 38%, tão picotado quanto o basic-pitch cru.
+
+    Então as duas coisas vêm de lugares diferentes. O ataque diz **quando** trocar: notas que
+    entram dentro de `janela` são um acorde só. O conjunto que soa nesse instante diz **qual**
+    nota é — a mais grave dele, que é a raiz na maioria das posições de guitarra e teclado, e
+    que se mantém firme mesmo quando a fundamental não rebate. Repetir a mesma classe de altura
+    une em vez de picotar, porque acorde rebatido não precisa virar duas notas no arco, e
+    `maxima` corta o bordão nos trechos sem ataque novo. Medido no mesmo stem contra a versão
+    de grade: 9% de saltos grandes em vez de 17%, nota mais longa de 1,5 s em vez de 5,4 s,
+    cobertura 96%.
     """
     if not notas:
         return []
-    fim_total = max(b for _, b, _, _ in notas)
-    k = int(fim_total / passo) + 1
-    grave = [None] * k
-    forca = [0.0] * k
-    for a, b, n, v in notas:
-        for i in range(int(a / passo), min(k, int(b / passo) + 1)):
-            if grave[i] is None or n < grave[i]:
-                grave[i] = n
-                forca[i] = v
-    # só troca de nota depois que a nova se firma, para não seguir ruído de um quadro
-    firme, atual, desde = [], None, 0
-    espera = max(1, int(firmeza / passo))
-    for i in range(k):
-        n = grave[i]
-        if n != atual:
-            if n is not None and all(grave[j] == n for j in range(i, min(k, i + espera))):
-                atual, desde = n, i
-            elif n is None and all(grave[j] is None for j in range(i, min(k, i + espera))):
-                atual, desde = None, i
-        firme.append(atual)
+    ordenadas = sorted(notas)
+    grupos = []                                    # (ataque, [(altura, velocity, fim)])
+    for a, b, n, v in ordenadas:
+        if grupos and a - grupos[-1][0] <= janela:
+            grupos[-1][1].append((n, v, b))
+        else:
+            grupos.append((a, [(n, v, b)]))
 
-    saida, ini = [], None
-    for i in range(k + 1):
-        n = firme[i] if i < k else None
-        ant = firme[i - 1] if i else None
-        if ini is not None and n != ant:
-            dur = (i - ini) * passo
-            if dur >= cfg['min_dur'] and ant is not None:
-                v = int(max(28, min(127, max(forca[ini:i], default=70))))
-                saida.append((ini * passo, i * passo, int(ant), v))
-            ini = None
-        if n is not None and ini is None:
-            ini = i
-    return saida
+    # varredura para saber o que soa em cada ataque sem reexaminar a lista inteira
+    saida, prox, vivas = [], 0, []
+    for i, (a, membros) in enumerate(grupos):
+        agora = a + .02
+        while prox < len(ordenadas) and ordenadas[prox][0] <= agora:
+            vivas.append(ordenadas[prox])
+            prox += 1
+        vivas = [x for x in vivas if x[1] > agora]
+        n = min(x[2] for x in vivas) if vivas else min(m[0] for m in membros)
+        fim = max(m[2] for m in membros)
+        ate = grupos[i + 1][0] if i + 1 < len(grupos) else fim
+        b = min(ate, max(fim, a + cfg['min_dur']), a + maxima)
+        if b - a < cfg['min_dur']:
+            continue
+        saida.append((a, b, int(n), int(max(28, min(127, max(m[1] for m in membros))))))
+
+    unidas = []
+    for a, b, n, v in saida:
+        p = unidas[-1] if unidas else None
+        if p and p[2] % 12 == n % 12 and a - p[1] < .12 and b - p[0] <= maxima:
+            unidas[-1] = (p[0], b, p[2], max(p[3], v))
+        else:
+            unidas.append((a, b, n, v))
+    return unidas
 
 
 def notas_do_stem(onda, sr, cfg):
@@ -400,11 +409,76 @@ def escrever_midi(faixas, titulo):
 
 
 # ---------------------------------------------------------------- principal
+def faixas_de(stems, sr, so_mono):
+    """Transcreve cada stem já separado, na ordem em que as faixas entram no MIDI."""
+    faixas = []
+    for chave in ORDEM:
+        if chave not in stems:
+            continue
+        cfg = STEMS[chave]
+        poli = cfg['metodo'] == 'poli' and not so_mono
+        log(f'  transcrevendo {cfg["nome"]} ({"polifônico" if poli else "monofônico"})…')
+        try:
+            notas = notas_polifonicas(stems[chave], sr, cfg) if poli \
+                else notas_do_stem(stems[chave], sr, cfg)
+        except ImportError as e:
+            log(f'    (basic-pitch indisponível: {e}; caindo no rastreio monofônico)')
+            notas = notas_do_stem(stems[chave], sr, cfg)
+        log(f'    {len(notas)} notas')
+        if notas:
+            faixas.append((cfg['nome'], cfg['programa'], notas))
+    return faixas
+
+
+def gravar(faixas, titulo, saida_pedida):
+    """Escreve o MIDI e devolve o caminho."""
+    if not faixas:
+        sys.exit('não saiu nota nenhuma — o áudio é instrumental puro ou muito curto?')
+    saida = Path(saida_pedida) if saida_pedida else (RAIZ / 'musicas' / 'unsorted')
+    if not saida.is_absolute():
+        saida = RAIZ / saida
+    saida.mkdir(parents=True, exist_ok=True)
+    limpo = ''.join(c for c in titulo if c not in '\\/:*?"<>|').strip() or 'transcricao'
+    arq = saida / f'{limpo}.mid'
+    arq.write_bytes(escrever_midi(faixas, limpo))
+    total = sum(len(n) for _, _, n in faixas)
+    log(f'\npronto: {arq}  ({len(faixas)} faixas, {total} notas)')
+    return arq
+
+
+def de_stems(args, titulo):
+    """Retoma de stems já separados em disco, pulando download e separação.
+
+    A separação é a parte que estoura a VRAM e a única que precisa de GPU; a transcrição e a
+    redução rodam em segundos. Ajustar a regra de harmonia e ouvir o resultado de novo não
+    deveria custar uma nova separação, então `--stems` aponta para uma pasta com `vocals.wav`,
+    `bass.wav` e `other.wav` — é o que a própria ferramenta grava com `--guardar`.
+    """
+    import librosa
+    pasta = Path(args.stems)
+    if not pasta.is_dir():
+        sys.exit(f'não achei a pasta de stems: {pasta}')
+    stems, sr = {}, None
+    for chave in ORDEM:
+        arq = pasta / f'{chave}.wav'
+        if not arq.is_file():
+            continue
+        onda, sr = librosa.load(arq, sr=None, mono=True)   # a taxa do arquivo é a da separação
+        stems[chave] = onda
+    if not stems:
+        sys.exit(f'nenhum .wav conhecido em {pasta} (esperava {", ".join(ORDEM)})')
+    titulo = titulo or pasta.name
+    log(f'"{titulo}"  ·  stems guardados ({", ".join(stems)})')
+    return gravar(faixas_de(stems, sr, args.so_mono), titulo, args.saida)
+
+
 def transcrever(args):
     import torch
 
     tmp = Path(tempfile.mkdtemp(prefix='flyback-'))
     titulo = args.titulo or ''
+    if args.stems:
+        return de_stems(args, titulo)
     if args.url:
         if not titulo:
             titulo = titulo_de(args.url)
@@ -431,35 +505,14 @@ def transcrever(args):
                  f'Rode de novo apontando para ele, com uma destas:\n'
                  f'  --trecho 5   blocos menores, menos VRAM por vez\n'
                  f'  --cpu        sem GPU, bem mais lento mas sempre termina')
-    faixas = []
-    for chave in ORDEM:
-        if chave not in stems:
-            continue
-        cfg = STEMS[chave]
-        poli = cfg['metodo'] == 'poli' and not args.so_mono
-        log(f'  transcrevendo {cfg["nome"]} ({"polifônico" if poli else "monofônico"})…')
-        try:
-            notas = notas_polifonicas(stems[chave], sr, cfg) if poli \
-                else notas_do_stem(stems[chave], sr, cfg)
-        except ImportError as e:
-            log(f'    (basic-pitch indisponível: {e}; caindo no rastreio monofônico)')
-            notas = notas_do_stem(stems[chave], sr, cfg)
-        log(f'    {len(notas)} notas')
-        if notas:
-            faixas.append((cfg['nome'], cfg['programa'], notas))
-    if not faixas:
-        sys.exit('não saiu nota nenhuma — o áudio é instrumental puro ou muito curto?')
-
-    saida = Path(args.saida) if args.saida else (RAIZ / 'musicas' / 'unsorted')
-    if not saida.is_absolute():
-        saida = RAIZ / saida
-    saida.mkdir(parents=True, exist_ok=True)
-    limpo = ''.join(c for c in titulo if c not in '\\/:*?"<>|').strip() or 'transcricao'
-    arq = saida / f'{limpo}.mid'
-    arq.write_bytes(escrever_midi(faixas, limpo))
-    total = sum(len(n) for _, _, n in faixas)
-    log(f'\npronto: {arq}  ({len(faixas)} faixas, {total} notas)')
-    return arq
+    if args.guardar:
+        import soundfile as sf
+        g = Path(args.guardar)
+        g.mkdir(parents=True, exist_ok=True)
+        for chave, onda in stems.items():
+            sf.write(g / f'{chave}.wav', onda, sr)
+        log(f'  stems guardados em {g}')
+    return gravar(faixas_de(stems, sr, args.so_mono), titulo, args.saida)
 
 
 def main():
@@ -473,9 +526,11 @@ def main():
                    help='segundos de áudio por bloco na separação (padrão 10)')
     p.add_argument('--so-mono', action='store_true',
                    help='rastreio monofônico em tudo, sem basic-pitch')
+    p.add_argument('--guardar', help='pasta onde deixar os stems separados, para reaproveitar')
+    p.add_argument('--stems', help='pasta com stems já separados, pulando download e separação')
     args = p.parse_args()
-    if not args.audio and not args.url:
-        p.error('passe um arquivo de áudio ou --url')
+    if not args.audio and not args.url and not args.stems:
+        p.error('passe um arquivo de áudio, --url ou --stems')
     transcrever(args)
 
 
