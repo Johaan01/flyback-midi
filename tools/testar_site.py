@@ -107,8 +107,14 @@ def player(nav, base, telas):
     e = estado(pg)
     confere(e['pistas'] == 6 and e['canais'] == 6, 'seis pistas e seis canais')
     rotas = {e['nomes'][k]: [i + 1 for i in range(6) if m >> i & 1] for k, m in enumerate(e['assign'])}
-    confere(rotas.get('voice') == [1] and rotas.get('electric_bass') == [2] and rotas.get('drums') == [],
-            f'um por flyback: voz no 1, baixo no 2, bateria fora ({rotas})')
+    confere(rotas.get('voice') == [1] and rotas.get('electric_bass') == [2] and rotas.get('drums') == [6],
+            f'um por flyback: voz no 1, baixo no 2, bateria no flyback que sobra ({rotas})')
+    env = pg.evaluate("ch.slice(0, 6).map(c => c.ctl.env)")
+    confere(env[2] == 'corda' and env[5] == 'percussivo' and env[0] == 'medio',
+            f'envelopes do preset: violão em corda, bateria em batida, voz em médio ({env})')
+    ritmo = pg.evaluate("ch[5].segs.slice(0, 40).map(s => s.n)")
+    confere(ritmo and set(ritmo) <= {33, 40, 45, 50, 55, 60, 72, 86, 88, 91, 93},
+            f'bateria vira estouros nas alturas das peças ({sorted(set(ritmo))})')
     pg.select_option('#espN', '4'); time.sleep(.2)
     e = estado(pg)
     confere(e['pistas'] == 4 and all(m < 16 for m in e['assign']), 'quatro flybacks: nenhuma rota além do canal 4')
@@ -124,6 +130,17 @@ def player(nav, base, telas):
     pg.click('#strips .strip:nth-child(2) .strip-h button:nth-child(2)')
     n = pg.evaluate('(async () => (await renderWav()).numberOfChannels)()')
     confere(n == 4, f'WAV com um canal por flyback ({n})')
+
+    print('acorde em vários flybacks')
+    pg.select_option('#espN', '6')
+    abrir(pg, base, 'transcritas/AC-DC - Thunderstruck.mid')
+    r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name));
+        return { canais: canaisDe(assign[g]).map(i => i + 1), picks: canaisDe(assign[g]).map(i => ch[i].ctl.pick) }; }""")
+    confere(len(r['canais']) == 3 and sorted(r['picks']) == ['hi', 'lo', 'meio'],
+            f'a guitarra de acordes de três notas ocupa três flybacks: grave, do meio e aguda ({r})')
+    abrir(pg, base, 'transcritas/Black Sabbath - Iron Man.mid')
+    r = pg.evaluate("() => { const g = tracks.findIndex(t => /guitar/.test(t.name)); return canaisDe(assign[g]).length; }")
+    confere(r == 2, f'power chord, que tem duas notas, ocupa dois ({r})')
 
     print('outros arquivos')
     gp = pg.evaluate("lib.filter(it => it.tipo === 'GP').map(it => it.arquivo)")

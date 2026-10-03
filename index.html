@@ -57,7 +57,7 @@ h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;white-space:now
 .fixo+.pane-b{padding-top:6px}
 .musica{margin:0 0 8px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .musica b{color:var(--ink);font-weight:600}
-.saida .tom{margin-left:auto}
+
 .transport #zoom{height:36px;font-size:12px}
 .filtros .abrir{margin-left:auto;color:var(--ink)}
 .saida .linha.sep{margin-top:8px;padding-top:8px;border-top:1px solid var(--soft)}
@@ -281,7 +281,6 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
         <div class="linha">
           <label class="campo">Flybacks <select id="espN"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
           <label class="campo">Placa <select id="espPlaca"><option value="esp32">ESP32</option><option value="s3">ESP32-S3</option></select></label>
-          <a class="btn tom" href="tom.html" title="tom contínuo em cada flyback, para achar a ressonância e casar os arcos">Gerador de tom</a>
         </div>
         <p class="txt" id="saidaP2">Com 1 ou 2 flybacks o som também sai pelo P2: canal 1 no esquerdo, canal 2 no direito, com separação dura.</p>
         <div class="linha">
@@ -297,6 +296,10 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
         </div>
         <details class="log" id="serLogBox"><summary>Linhas enviadas</summary><pre id="serLog">nada enviado ainda</pre></details>
         <div class="linha sep">
+          <span class="rot">Tom</span>
+          <a class="btn" href="tom.html" title="tom contínuo em cada flyback, para achar a ressonância e casar os arcos">Gerador de tom</a>
+        </div>
+        <div class="linha">
           <span class="rot">Áudio</span>
           <button id="wavGo" disabled>Gerar WAV</button>
           <a id="wavSave" class="btn hide">Salvar WAV</a>
@@ -622,8 +625,9 @@ function buildSegs(i){
   if (!sel.length) return [];
   const pick = ch[i].ctl.pick, oct = ch[i].ctl.oct;
   const ev = [];
-  sel.forEach(([t, p]) => t.notes.forEach(n => {
-    const k = (n.n << 4) | p;                                    /* altura e prioridade numa chave so */
+  sel.forEach(([t, p]) => notasDe(t).forEach(n => {
+    /* altura e prioridade numa chave so; batida de bateria traz a prioridade da peca */
+    const k = (n.n << 4) | (n.p !== undefined ? n.p : p);
     ev.push({ t: n.t0, on: 1, k: k, v: n.v }); ev.push({ t: n.t1, on: 0, k: k });
   }));
   ev.sort((a, b) => a.t - b.t || a.on - b.on);
@@ -638,16 +642,21 @@ function buildSegs(i){
 
      A altura so decide quando duas notas comecam juntas, que e o caso do acorde — e ai o
      criterio do usuario (mais aguda ou mais grave) continua valendo como antes. */
+  /* "Do meio" e para espalhar um acorde por varios flybacks: a mesma faixa em tres canais, um
+     na grave, um na do meio e um na aguda, e o power chord sai inteiro. Escolhida entre as
+     notas que entraram juntas, como a aguda e a grave. */
   const best = () => {
-    let bk = null, bp = -1, bt = -1, bn = -1;
+    let bp = -1, bt = -1;
     for (const [k, o] of live){
-      const n = k >> 4, p = k & 15;
-      if (p > bp || (p === bp && (o.t > bt + 1e-9
-          || (Math.abs(o.t - bt) <= 1e-9 && (pick === 'hi' ? n > bn : n < bn))))){
-        bk = k; bp = p; bt = o.t; bn = n;
-      }
+      const p = k & 15;
+      if (p > bp || (p === bp && o.t > bt + 1e-9)){ bp = p; bt = o.t; }
     }
-    return bk === null ? null : { n: bn, v: live.get(bk).v };
+    if (bp < 0) return null;
+    const acorde = [];
+    for (const [k, o] of live) if ((k & 15) === bp && Math.abs(o.t - bt) <= 1e-9) acorde.push(k);
+    acorde.sort((a, b) => (a >> 4) - (b >> 4));
+    const k = pick === 'hi' ? acorde[acorde.length - 1] : pick === 'lo' ? acorde[0] : acorde[acorde.length >> 1];
+    return { n: k >> 4, v: live.get(k).v };
   };
   for (const e of ev){
     if (e.on){
@@ -661,6 +670,31 @@ function buildSegs(i){
   if (cur && cur.end === null){ cur.end = duration; if (cur.end > cur.start) segs.push(cur); }
   segs.forEach(s => { s.n += 12 * oct; s.f = hz(s.n); });
   return segs;
+}
+/* Bateria num arco. A transcricao escreve cada batida como uma nota de 10 ms na tecla do mapa
+   de percussao do General MIDI — 36 bumbo, 38 caixa, 42 prato —, e tocar isso como altura da
+   milhares de cliques em frequencias arbitrarias. Aqui cada peca vira um estouro de tom curto,
+   com altura e duracao pela peca: bumbo grave, caixa no meio, prato agudo e curtissimo. O arco
+   reproduz bem o estalo, e o resto e o envelope "batida" do canal.
+   Na disputa por um flyback so, bumbo e caixa (3) ganham dos tons (2), que ganham dos pratos
+   (1): no tempo forte toca o bumbo, e o chimbal preenche os intervalos. */
+const BATIDA = {
+  35: [33, .12, 3], 36: [33, .12, 3],                          /* bumbo: A1, 55 Hz */
+  37: [55, .06, 3], 38: [55, .09, 3], 40: [55, .09, 3],        /* caixa: G3, 196 Hz */
+  39: [60, .06, 3],                                            /* palma */
+  41: [40, .15, 2], 43: [40, .15, 2], 45: [45, .14, 2],        /* tons graves */
+  47: [45, .14, 2], 48: [50, .13, 2], 50: [50, .13, 2],        /* tons agudos */
+  42: [93, .03, 1], 44: [93, .03, 1], 46: [91, .15, 1],        /* chimbal fechado, pedal, aberto */
+  49: [88, .35, 1], 52: [88, .35, 1], 55: [88, .35, 1], 57: [88, .35, 1],   /* pratos de ataque */
+  51: [86, .12, 1], 53: [86, .12, 1], 59: [86, .12, 1]         /* condução */
+};
+function notasDe(t){
+  if (!isDrum(t)) return t.notes;
+  if (!t.batidas) t.batidas = t.notes.map(x => {
+    const b = BATIDA[x.n] || [72, .05, 1];
+    return { n: b[0], t0: x.t0, t1: x.t0 + b[1], v: x.v, p: b[2] };
+  });
+  return t.batidas;
 }
 function rebuild(){
   ch.forEach((c, i) => {
@@ -682,6 +716,11 @@ const ENVELOPES = {
   percussivo: { tau: .12, sus: .10 },
   medio:      { tau: .45, sus: .35 },
   sustentado: { tau: 1.2, sus: .70 },
+  /* corda: sem patamar — a nota vai apagando ate a proxima, como guitarra ou piano deixados
+     soar. Pedido de ouvido na introducao de Iron Man, onde cada nota dura quase 2 s e os outros
+     ficavam ou fortes e retos ou caidos num patamar. tau de 0,9 s: uma nota de 1,8 s chega ao
+     fim em ~13%, uma de 0,4 s em ~64%. */
+  corda:      { tau: .9,  sus: 0 },
 };
 const ATAQUE = .004;
 function scheduleVoice(c, dest, segs, at, t0, vol, env, usaVel){
@@ -969,8 +1008,49 @@ function umPorFlyback(n){
     out[i] = 1 << melhor; pr[i] = 1;
     for (let k = 0; k < nb; k++) if (occ[i][k]) cheio[melhor][k] = 1;
   }
+  /* Sobrou flyback — uma banda de rock tem voz, guitarra, baixo e bateria, e o MuScriptor põe
+     as duas guitarras numa faixa só. Primeiro a bateria, que em vez de ficar desligada toca como
+     estouros de tom (ver BATIDA). Depois, as outras notas do acorde da faixa mais polifônica: o
+     power chord da guitarra sai em dois ou três arcos, fundamental, quinta e oitava. */
+  let livre = donos.length;
+  const bateria = tracks.map((t, i) => i).filter(i => isDrum(tracks[i]) && tracks[i].notes.length);
+  if (livre < n && bateria.length){
+    bateria.forEach(i => { out[i] = 1 << livre; });
+    ajustes.push([livre, { env: 'percussivo', pick: 'hi' }]);
+    livre++;
+  }
+  const cheia = donos.map(i => [i, polifonia(tracks[i])]).filter(([, p]) => p >= 1.3).sort((a, b) => b[1] - a[1])[0];
+  if (cheia && livre < n){
+    const [i] = cheia, dono = donos.indexOf(i);
+    /* a voz do meio só existe em acorde de três notas ou mais; num power chord, que tem duas,
+       ela repetiria a aguda num terceiro arco */
+    const vozes = (dono === 0 ? ['lo'] : ['hi']).concat(acordesDeTres(tracks[i]) >= .25 ? ['meio'] : []);
+    ajustes.push([dono, { pick: dono === 0 ? 'hi' : 'lo' }]);
+    for (const v of vozes){
+      if (livre >= n) break;
+      out[i] |= 1 << livre;
+      /* as outras notas do acorde soam como a principal: mesmo envelope */
+      ajustes.push([livre, RX_CORDA.test(tracks[i].name) ? { pick: v, env: 'corda' } : { pick: v }]);
+      livre++;
+    }
+  }
+  /* Corda pinçada ou percutida apaga sozinha depois do ataque: o envelope "corda" é o que faz a
+     introdução de Iron Man soar como guitarra, cada nota esmaecendo até a próxima. Voz e sopro
+     ficam no médio. */
+  donos.forEach((i, c) => { if (RX_CORDA.test(tracks[i].name)) ajustes.push([c, { env: 'corda' }]); });
   return out;
 }
+const RX_CORDA = /guit|gtr|viol[aã]o|bass|baix|piano|harp|harpa|banjo|mandolin|ukulele|marimba|xylo|vibra|chromatic|celesta|bell/i;
+/* fração dos ataques de acorde (duas notas ou mais juntas) que têm três notas ou mais */
+function acordesDeTres(t){
+  const por = new Map();
+  t.notes.forEach(n => { const k = Math.round(n.t0 * 1000); por.set(k, (por.get(k) || 0) + 1); });
+  let dois = 0, tres = 0;
+  por.forEach(q => { if (q >= 2) dois++; if (q >= 3) tres++; });
+  return dois ? tres / dois : 0;
+}
+/* controles de canal que o último preset quer: [canal, {pick, env}] */
+let ajustes = [];
 function computePresetN(p){
   const n = esp.n;
   prio = tracks.map(() => 0);
@@ -989,7 +1069,10 @@ const PRESETS_EST = [['bass', 'Baixo e melodia'], ['guitars', 'Guitarras somadas
 const PRESETS_ESP = [['um', 'Um instrumento por flyback'], ['faixas', 'Grave para agudo'], ['none', 'Desligar tudo']];
 const LETRA_MASC = { O: 0, L: 1, R: 2, B: 3 };
 function preset(p, user){
+  ajustes = [];
   assign = dois() ? computePreset(p).map(l => LETRA_MASC[l] || 0) : computePresetN(p);
+  ajustes.forEach(([c, a]) => Object.assign(ch[c].ctl, a));
+  if (ajustes.length) renderStrips();
   renderTracks(); reschedule(); if (user) saveCfg();
 }
 function renderPresets(){
@@ -1005,7 +1088,8 @@ function analyse(){
   for (let i = 0; i < n; i++){
     const bit = 1 << i, c = ch[i];
     const sel = tracks.filter((t, k) => assign[k] & bit);
-    const noteTime = sel.reduce((s, t) => s + t.notes.reduce((a, x) => a + (x.t1 - x.t0), 0), 0);
+    /* a bateria conta pelos estouros que toca, não pelos 10 ms da transcrição */
+    const noteTime = sel.reduce((s, t) => s + notasDe(t).reduce((a, x) => a + (x.t1 - x.t0), 0), 0);
     const soundTime = c.segs.reduce((s, x) => s + (x.end - x.start), 0);
     if (!sel.length){ c.stat = 'sem faixa'; msg.push('—'); }
     else {
@@ -1117,8 +1201,8 @@ $('cfgDown').onclick = () => {
 /* ---------- canais: um módulo de mixer por flyback ---------- */
 const OPC = {
   oct: [['-2', '−2'], ['-1', '−1'], ['0', 'igual'], ['1', '+1'], ['2', '+2']],
-  pick: [['hi', 'aguda'], ['lo', 'grave']],
-  env: [['nenhum', 'OOK'], ['percussivo', 'percussivo'], ['medio', 'médio'], ['sustentado', 'sustentado']],
+  pick: [['hi', 'aguda'], ['meio', 'do meio'], ['lo', 'grave']],
+  env: [['nenhum', 'OOK'], ['percussivo', 'batida'], ['medio', 'médio'], ['sustentado', 'longo'], ['corda', 'corda']],
   vel: [['sim', 'segue'], ['nao', 'ignora']]
 };
 function renderStrips(){
@@ -1158,8 +1242,8 @@ function renderStrips(){
     s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome' }, nomeCanal(i)), mudo, solo), fontes,
       faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('lp' + i, 'Passa-baixa', lp, lv),
       linhaCtl('oct' + i, 'Oitava', oct, 'transpõe o canal'),
-      linhaCtl('pick' + i, 'Acorde', pick, 'que nota do acorde o arco toca'),
-      linhaCtl('env' + i, 'Envelope', env, 'OOK: o arco só liga e desliga, sem dinâmica'),
+      linhaCtl('pick' + i, 'Acorde', pick, 'que nota do acorde o arco toca. Para o acorde inteiro, ponha a mesma faixa em dois ou três flybacks, um em cada'),
+      linhaCtl('env' + i, 'Envelope', env, 'OOK: só liga e desliga · batida: cai rápido · médio · longo: quase reto · corda: vai apagando até a próxima nota'),
       linhaCtl('vel' + i, 'Dinâmica', vel, 'seguir ou não a intensidade (velocity) de cada nota do MIDI'), stat);
     box.appendChild(s);
     c.sx = { root: s, fontes, stat, mudo, solo };

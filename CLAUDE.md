@@ -87,6 +87,15 @@ No modo ESP os presets são outros, porque os de cima são pensados para dois la
 
 "Um por flyback" é o padrão do modo ESP e foi feito para a saída do MuScriptor, que já vem com voz, guitarra, piano e baixo separados: em Borboletas sai voz no 1, baixo no 2, violão no 3, pad no 4, piano no 5 e bateria desligada.
 
+**Flyback sobrando.** Uma banda de rock tem voz, guitarra, baixo e bateria, e o MuScriptor põe as duas guitarras numa faixa só (é uma classe por instrumento). Com seis flybacks sobram dois ou três, e o preset os usa:
+
+1. **Bateria**, que antes ficava desligada. A transcrição escreve cada batida como nota de 10 ms na tecla do mapa de percussão do GM, e tocar isso como altura dá cliques em frequências arbitrárias. `notasDe()` troca cada batida por um estouro de tom pela peça (`BATIDA`): bumbo A1 de 120 ms, caixa G3 de 90 ms, chimbal A6 de 30 ms, pratos E6 de 350 ms. Bumbo e caixa (prioridade 3) ganham dos tons (2), que ganham dos pratos (1). O canal vai com o envelope "batida".
+2. **As outras notas do acorde** da faixa mais polifônica: a mesma guitarra em mais canais, um na grave, outro na aguda — o power chord sai em dois arcos. A opção **"do meio"** de "Acorde" (`pick: 'meio'`, a nota do meio entre as que entraram juntas) só entra quando pelo menos 25% dos acordes da faixa têm três notas ou mais (`acordesDeTres`); num power chord de duas notas ela repetiria a aguda.
+
+E o preset põe o envelope **"corda"** (`tau` 0,9 s, sem patamar: a nota vai apagando até a próxima) nos instrumentos de corda pinçada ou percutida (`RX_CORDA`). Veio de ouvido, na introdução de Iron Man: cada nota dura ~1,8 s, e os envelopes que existiam ou caíam num patamar de 10% (percussivo) ou ficavam retos em 70% (sustentado); nenhum fazia a corda esmaecer. Os rótulos mudaram para dizer o que fazem — OOK, batida, médio, longo, corda — mantendo as chaves antigas na configuração.
+
+A troca no `best()` de `buildSegs` para aceitar "do meio" foi verificada contra a versão anterior: em 91 MIDIs do acervo, aguda e grave dão linhas idênticas, com e sem prioridade.
+
 **O preset "Melodia inteira, resto sem atropelo".** Era força bruta sobre 3^n atribuições minimizando sobreposição, o que tratava todas as faixas por igual e com frequência partia a melodia ao meio. Agora é dirigido:
 
 1. `scoreVoz()` escolhe a faixa principal, de preferência a voz. Pontua monofonia (`monofonia()`, fração de notas que entram sem nada mais soando na faixa — linha de canto fica perto de 1, naipe de acordes perto de 0), altura média, cobertura do tempo, mais um bônus para nome de voz ou melodia (`RX_VOZ`, que pega tanto nome de faixa quanto programa General MIDI: Choir Aahs, Voice Oohs, Lead 1…) e uma penalidade para baixo.
