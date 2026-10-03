@@ -8,7 +8,8 @@
   "fonte": "https://muscriptor.kyutai.org",
   "faixas": "distorted_electric_guitar, electric_bass, brass_section, drums, voice",
   "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 82
+  "aproveitamento": 82,
+  "aproveitamento6": 69
  },
  "Borboletas.mid": {
   "autor": "Victor & Leo",
@@ -19,7 +20,8 @@
   "fonte": "https://muscriptor.kyutai.org",
   "faixas": "acoustic_guitar, electric_bass, drums, voice, synth_pad, acoustic_piano",
   "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 46
+  "aproveitamento": 46,
+  "aproveitamento6": 64
  },
  "Do Fundo da Grota.mid": {
   "autor": "Baitaca",
@@ -30,7 +32,8 @@
   "fonte": "https://muscriptor.kyutai.org",
   "faixas": "acoustic_guitar, voice, organ, electric_bass, drums",
   "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 42
+  "aproveitamento": 42,
+  "aproveitamento6": 67
  },
  "Livin' On A Prayer.mid": {
   "autor": "Bon Jovi",
@@ -41,7 +44,8 @@
   "fonte": "https://muscriptor.kyutai.org",
   "faixas": "synth_pad, electric_bass, drums, voice",
   "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 72
+  "aproveitamento": 72,
+  "aproveitamento6": 75
  },
  "So Far Away.mid": {
   "autor": "Avenged Sevenfold",
@@ -52,6 +56,7 @@
   "fonte": "https://muscriptor.kyutai.org",
   "faixas": "electric_bass, drums, voice, distorted_electric_guitar",
   "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 73
+  "aproveitamento": 73,
+  "aproveitamento6": 66
  }
 }

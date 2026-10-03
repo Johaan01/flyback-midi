@@ -506,6 +506,63 @@ def aproveitamento(faixas, dur):
     return .55 * guardado + .45 * ativo
 
 
+def aproveitamento_n(faixas, dur, n=6):
+    """Como aproveitamento(), para n flybacks, pelo preset "um instrumento por flyback" do site.
+
+    Mesmo espelho do de dois canais: a medida tem de bater com o que o site faz ao tocar. A
+    linha de canto vai sozinha para o canal 1, o baixo para o 2, as faixas de maior ocupação uma
+    por canal, e o que sobra entra nas brechas do canal onde mais traz tempo novo.
+
+    Os dois termos não são os do de dois canais, e não podem ser. Lá, "ativo" é a fração do
+    tempo em que cada canal soa — com um instrumento por flyback, cada parte sozinha tem muita
+    pausa, o que no arco é normal, e o termo afundava justamente as peças boas: a Gruta do Rei
+    da Montanha tirava 83% em dois canais e 44% em seis. Mais flybacks nunca deviam piorar uma
+    música. Então, em N canais:
+
+    - guardado: quanto da duração de todas as notas da música (fora a bateria) chega a soar
+      depois da redução — faixa que ficou sem canal conta como perdida, acorde reduzido a uma
+      nota conta como perda, que é o que se ouve de pobre no arco;
+    - cobertura: do tempo em que há música, quanto algum flyback está tocando.
+    """
+    occ, nb = _ocupacao(faixas, dur)
+    tam = [sum(a) for a in occ]
+    cand = [i for i, f in enumerate(faixas)
+            if f.chan != 9 and not (not f.gm and GM_BATERIA.search(f.nome)) and f.notas]
+    if not cand:
+        return 0.0
+    li = max(cand, key=lambda i: nota_lead(medir_faixa(faixas[i], dur)))
+    if not nota_lead(medir_faixa(faixas[li], dur)):
+        li = max(cand, key=lambda i: tam[i])
+    resto = sorted([i for i in cand if i != li], key=lambda i: -tam[i])
+    eh_baixo = lambda f: (bool(RX_BAIXO.search(f.nome)) and not RX_NAO_BAIXO.search(f.nome)) or 32 <= f.prog <= 39
+    grave = next((i for i in resto if eh_baixo(faixas[i])), None)
+    if grave is not None:
+        resto.remove(grave)
+        resto.insert(0, grave)
+    donos = [li] + resto[:n - 1]
+    atrib, pr = [None] * len(faixas), [0] * len(faixas)
+    for c, i in enumerate(donos):
+        atrib[i], pr[i] = c, (3 if c == 0 else 2)
+    cheio = [bytearray(occ[i]) for i in donos]
+    for i in resto[n - 1:]:
+        novos = [sum(1 for k in range(nb) if occ[i][k] and not ch[k]) for ch in cheio]
+        c = max(range(len(cheio)), key=lambda c: novos[c])
+        if novos[c] < nb * .06 or novos[c] < tam[i] * .3:
+            continue
+        atrib[i], pr[i] = c, 1
+        for k in range(nb):
+            if occ[i][k]:
+                cheio[c][k] = 1
+    soando = sum(_linha(faixas, atrib, pr, c, dur)[0] for c in range(len(donos)))
+    total = sum(t1 - t0 for i in cand for t0, t1, _ in faixas[i].notas)
+    guardado = min(1.0, soando / total) if total else 0.0
+    # cobertura pela grade de ocupação: algum canal com nota, sobre algum instrumento com nota
+    com_musica = sum(1 for k in range(nb) if any(occ[i][k] for i in cand))
+    com_canal = sum(1 for k in range(nb) if any(ch[k] for ch in cheio))
+    cobertura = com_canal / com_musica if com_musica else 0.0
+    return .55 * guardado + .45 * cobertura
+
+
 # ---------------------------------------------------------------- curadoria
 def destaque(titulo):
     t = sem_acento(titulo)

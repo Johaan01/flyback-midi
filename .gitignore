@@ -12,3 +12,6 @@ musicas/index.json
 # pastas de entrada dos baixadores: o conteúdo é movido para o acervo pelo organizar_bandas
 musicas/*(unsorted)/
 musicas/unsorted/
+
+# estado do lote de transcricao (tools/lote.py)
+.lote.json

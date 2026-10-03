@@ -1454,7 +1454,17 @@ const temVoz = it => typeof it.vocal === 'string' && it.vocal.startsWith('sim');
    Montanha' tira 83%, Korobeiniki 61% e ambas soam excelentes; 'Back in Black', cheia de
    acorde, tira 34% e soa pobre. O corte fica logo abaixo do Korobeiniki. */
 const APROV_MIN = 58;
-const soaBem = it => (it.aproveitamento || 0) >= APROV_MIN;
+/* 'aproveitamento6' é a mesma pergunta para seis flybacks, pelo preset "um instrumento por
+   flyback". Corte provisório, até haver seis arcos para ouvir: deixa dentro as transcrições do
+   MuScriptor e os arranjos do projeto, e fora a transcrição de fã de Back in Black, cheia de
+   acorde. Ver tools/medir_canais.py. Música que cabe em dois cabe em seis. */
+const APROV6_MIN = 62;
+const cabe2 = it => (it.aproveitamento || 0) >= APROV_MIN;
+const cabe6 = it => cabe2(it) || (it.aproveitamento6 || 0) >= APROV6_MIN;
+/* o filtro segue a saída escolhida: no estéreo pergunta se cabe em dois; no ESP com três ou mais
+   flybacks, se soa bem com um instrumento por flyback */
+const filtroSeis = () => modo === 'esp' && esp.n >= 3;
+const soaBem = it => filtroSeis() ? cabe6(it) : cabe2(it);
 let acervo = '', soTopo = false, soVoz = false, soBom = false;
 const dentroDe = (it, p) => !p || it.pasta === p || it.pasta.startsWith(p + '/');
 const contar = p => lib.reduce((s, it) => s + (dentroDe(it, p) ? 1 : 0), 0);
@@ -1538,7 +1548,10 @@ function renderLib(){
     const tag = document.createElement('span'); tag.className = 'tag';
     /* o marcador por linha e o que permite enxergar de relance quais transcricoes trazem
        a linha de canto, sem precisar abrir uma a uma */
-    tag.textContent = it.tipo + (it.config ? ' · pronta' : '') + (temVoz(it) ? ' · vocal' : '');
+    /* "cabe em 2" soa bem já com dois flybacks; "pede 6" só soa bem com um instrumento por
+       flyback, que é o que separa o repertório de cada montagem */
+    tag.textContent = it.tipo + (it.config ? ' · pronta' : '') + (temVoz(it) ? ' · vocal' : '')
+      + (cabe2(it) ? ' · cabe em 2' : cabe6(it) ? ' · pede 6' : '');
     b.append(t, tag); b.dataset.path = it.arquivo; b.onclick = () => openLib(it);
     li.appendChild(b); ul.appendChild(li);
   });
@@ -1561,7 +1574,8 @@ function showCredit(it){
      de onde saiu a posição delas no acervo. Ver USO-EDUCACIONAL.md. */
   const VOZ = { sim: 'tem linha de canto', nao: 'sem linha de canto', talvez: 'linha de canto incerta' };
   const voz = it.vocal ? it.vocal.replace(/^(sim|nao|talvez)/, m => VOZ[m]) : null;
-  const aprov = it.aproveitamento ? 'cabe em dois canais: ' + it.aproveitamento + '%' : null;
+  const aprov = it.aproveitamento ? 'aproveitamento em dois flybacks: ' + it.aproveitamento + '%'
+    + (it.aproveitamento6 ? ', em seis: ' + it.aproveitamento6 + '%' : '') : null;
   const partes = [it.autor, it.instrumentos, it.estilo, it.licenca === 'deste projeto' ? null : it.licenca,
                   it.credito, it.transcricao && !String(it.credito || '').includes(it.transcricao) ? 'transcrição: ' + it.transcricao : null,
                   voz, aprov, it.popularidade].filter(Boolean);
@@ -1834,6 +1848,8 @@ $('espPlaca').onchange = e => {
 function renderModo(){
   document.querySelectorAll('#modo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.modo === modo)));
   $('modoEsp').textContent = 'ESP32 · ' + esp.n + (esp.n === 1 ? ' flyback' : ' flybacks');
+  $('libBom').textContent = filtroSeis() ? 'só as boas no ESP' : 'só as que cabem em 2';
+  $('libBom').title = filtroSeis() ? 'soam bem com um instrumento por flyback' : 'soam bem já com dois flybacks, pelo P2';
   $('saidaEst').classList.toggle('hide', modo !== 'estereo');
   $('saidaEsp').classList.toggle('hide', modo !== 'esp');
   $('saidaTit').textContent = modo === 'esp' ? 'Saída ESP32' : 'Saída estéreo';
@@ -1844,7 +1860,7 @@ function renderModo(){
     ? 'WAV com ' + esp.n + (esp.n === 1 ? ' canal' : ' canais') + ', um por flyback, para uma interface de áudio multicanal.'
     : 'WAV estéreo com os dois canais separados, para tocar em qualquer player pelo cabo P2.';
 }
-function renderTudo(){ renderModo(); renderPresets(); renderTracks(); renderStrips(); renderLanes(); renderPinos(); reschedule(); }
+function renderTudo(){ renderModo(); renderPresets(); renderTracks(); renderStrips(); renderLanes(); renderPinos(); reschedule(); if (soBom) renderLib(); }
 function mudarModo(m){
   if (m === modo) return;
   if (playing) pause();

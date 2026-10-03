@@ -448,11 +448,12 @@ def por_muscriptor(audio, titulo, args):
     Os pesos são CC BY-NC 4.0 e exigem aceitar a licença numa conta do HuggingFace — o código
     é MIT, mas os pesos não vêm sem isso, e não há como contornar de fora.
     """
-    from muscriptor import TranscriptionModel
-
-    instrumentos = None
-    if args.instrumentos:
-        instrumentos = [x.strip() for x in args.instrumentos.split(',') if x.strip()]
+    import time
+    inicio = time.time()
+    pedido = (args.instrumentos or 'auto').strip()
+    instrumentos, prova = None, []
+    if pedido not in ('auto', 'nenhum'):
+        instrumentos = [x.strip() for x in pedido.split(',') if x.strip()]
         ruins = [x for x in instrumentos if x not in INSTRUMENTOS]
         if ruins:
             sys.exit(f'instrumento desconhecido: {", ".join(ruins)}\n'
@@ -464,11 +465,30 @@ def por_muscriptor(audio, titulo, args):
     # float16 cabe com folga. Nas outras variantes float32 cabe e é mais preciso.
     dtype = args.dtype or ('float16' if disp == 'cuda' and args.modelo == 'large' else None)
     log(f'"{titulo}"  ·  MuScriptor {args.modelo}  ·  {disp}{" " + dtype if dtype else ""}')
+
+    if pedido == 'auto':
+        # A lista vem de outra IA, o PANNs, aplicada aos stems do Demucs: ver instrumentos.py.
+        # A separação roda antes de carregar o MuScriptor, e a memória dela é devolvida, para as
+        # duas coisas não disputarem a placa ao mesmo tempo.
+        import librosa
+        import instrumentos as detector
+        log('  descobrindo os instrumentos…')
+        stems, sr = separar(audio, disp, args.trecho)
+        mistura, _ = librosa.load(str(audio), sr=sr, mono=True)
+        instrumentos, prova = detector.detectar(stems, sr, mistura, disp)
+        for linha in prova:
+            log('    ' + linha)
+        del stems, mistura
+        if disp == 'cuda':
+            torch.cuda.empty_cache()
+        if not instrumentos:
+            log('    (nada firme; segue sem lista)')
+            instrumentos = None
     if instrumentos:
         log(f'  instrumentos: {", ".join(instrumentos)}')
 
     try:
-        modelo = TranscriptionModel.load_model(args.modelo, device=disp, dtype=dtype)
+        modelo = carregar_muscriptor(args.modelo, disp, dtype)
     except Exception as e:
         if 'gated' in str(e).lower() or '401' in str(e):
             sys.exit('os pesos do MuScriptor são CC BY-NC 4.0 e pedem licença aceita.\n'
@@ -486,7 +506,63 @@ def por_muscriptor(audio, titulo, args):
     arq = saida / f'{limpo}.mid'
     arq.write_bytes(midi)
     log(f'\npronto: {arq}  ({len(midi) // 1024} KB)')
+    if args.relatorio:
+        import json
+        Path(args.relatorio).write_text(json.dumps({
+            'arquivo': str(arq), 'modelo': args.modelo, 'instrumentos': instrumentos or [],
+            'deteccao': prova, 'segundos': round(time.time() - inicio)}, ensure_ascii=False, indent=1),
+            encoding='utf-8')
     return arq
+
+
+def carregar_muscriptor(nome, disp, dtype):
+    """Carrega o MuScriptor, com pouca memória quando é para rodar em meia precisão na placa.
+
+    O `load_model` do pacote monta o modelo inteiro em float32 **na placa** e carrega por cima
+    outra cópia float32 dos pesos, e só então converte para float16. No `large` são ~11 GB de
+    pico num lugar que tem 6: o driver da NVIDIA transborda para a RAM, e numa máquina de 16 GB a
+    RAM livre bateu 0,1 GB — a primeira tentativa foi derrubada por isso. Rodando sozinho, num
+    lote de várias músicas, isso não pode acontecer.
+
+    Aqui o modelo já nasce em float16 (o tipo padrão do torch é trocado só durante a montagem) e
+    os pesos são lidos do arquivo um tensor de cada vez, convertidos no caminho. Pico de ~2,8 GB
+    na placa e outro tanto na RAM. O resto repete o `load_model`: o condicionamento (mel e
+    classes) volta para float32, porque o log-mel de trecho baixo some em float16.
+
+    Usa funções internas do pacote (`_build_model` e companhia). Se uma versão nova do
+    muscriptor mudar isso, cai no `load_model` comum, que funciona com a máquina folgada.
+    """
+    import torch
+    from muscriptor import TranscriptionModel
+    if disp != 'cuda' or dtype not in ('float16', 'bfloat16'):
+        return TranscriptionModel.load_model(nome, device=disp, dtype=dtype)
+    try:
+        import muscriptor.transcription_model as tm
+        from safetensors import safe_open
+        alvo, dispositivo = getattr(torch, dtype), torch.device(disp)
+        origem = tm._resolve_source(nome)
+        pesos = tm.download_if_necessary(origem)
+        cfg = tm._resolve_config(origem, pesos)
+        padrao = torch.get_default_dtype()
+        torch.set_default_dtype(alvo)
+        try:
+            rede = tm._build_model(dispositivo, cfg)
+        finally:
+            torch.set_default_dtype(padrao)
+        rede.eval()
+        estado = {}
+        with safe_open(str(pesos), framework='pt', device='cpu') as f:
+            for chave in f.keys():
+                estado[chave] = f.get_tensor(chave).to(alvo)
+        rede.load_state_dict(tm._remap_single_codebook_keys(estado))
+        del estado
+        rede.to(alvo)
+        rede.condition_provider.float()
+        tok = tm.MT3Tokenizer(instrument_vocabulary='MT3_FULL_PLUS', max_shift_steps=1001)
+        return TranscriptionModel(model=rede, tokenizer=tok, device=dispositivo)
+    except (AttributeError, ImportError, TypeError) as e:
+        log(f'  (carregamento econômico indisponível nesta versão do muscriptor: {e}; usando o comum)')
+        return TranscriptionModel.load_model(nome, device=disp, dtype=dtype)
 
 
 # ---------------------------------------------------------------- principal
@@ -631,9 +707,12 @@ def main():
                         'stems: separação + rastreio de altura, sem pesos sob licença')
     p.add_argument('--modelo', choices=('small', 'medium', 'large'), default='medium',
                    help='tamanho do MuScriptor (padrão medium)')
-    p.add_argument('--instrumentos',
-                   help='os instrumentos que a música TEM, separados por vírgula: o modelo passa a '
-                        'esperá-los e proíbe o resto. Lista errada piora o resultado')
+    p.add_argument('--instrumentos', default='auto',
+                   help='"auto" (padrão) descobre sozinho, com o PANNs nos stems; "nenhum" roda sem '
+                        'lista; ou os instrumentos que a música tem, separados por vírgula. O modelo '
+                        'passa a esperá-los e proíbe o resto: lista errada piora o resultado')
+    p.add_argument('--relatorio', help='grava um .json com o arquivo gerado, o modelo e os '
+                                       'instrumentos usados (é o que o lote.py lê)')
     p.add_argument('--dtype', choices=('float32', 'float16', 'bfloat16'),
                    help='precisão do transformer (padrão: float16 no large em GPU)')
     p.add_argument('--beam', type=int, default=1,

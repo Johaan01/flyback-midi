@@ -2,48 +2,66 @@
  "Cânone em Ré (rock).mid": {
   "autor": "arranjo rock de J. Pachelbel",
   "licenca": "deste projeto",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 88,
+  "aproveitamento6": 85
  },
  "Für Elise (rock).mid": {
   "autor": "arranjo rock de L. van Beethoven, WoO 59",
   "licenca": "deste projeto",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 91,
+  "aproveitamento6": 79
  },
  "Greensleeves (balada metal).mid": {
   "autor": "arranjo metal da canção tradicional inglesa",
   "licenca": "deste projeto",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 70,
+  "aproveitamento6": 81
  },
  "Korobeiniki (metal).mid": {
   "autor": "arranjo metal de Korobeiniki, canção popular russa de 1861 (tema do Tetris)",
   "licenca": "deste projeto",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 88,
+  "aproveitamento6": 79
  },
  "Korobeiniki.mid": {
   "autor": "Tradicional russo",
   "licenca": "Domínio público",
   "credito": "melodia tradicional sobre poema de Nikolai Nekrasov (1861); MIDI formato 0, usado como caso de teste do parser",
-  "fonte": "https://pt.wikipedia.org/wiki/Korobeiniki"
+  "fonte": "https://pt.wikipedia.org/wiki/Korobeiniki",
+  "aproveitamento": 61,
+  "aproveitamento6": 78
  },
  "Na Gruta do Rei da Montanha (metal).mid": {
   "autor": "arranjo metal de E. Grieg, Peer Gynt",
   "licenca": "deste projeto",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 83,
+  "aproveitamento6": 87
  },
  "Ode à Alegria.mid": {
   "autor": "L. van Beethoven",
   "licenca": "Domínio público",
   "credito": "tema da Nona Sinfonia (1824); arranjo de banda em 7 faixas deste projeto, usado como caso de teste",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 88,
+  "aproveitamento6": 69
  },
  "Quinta de Beethoven (metal).mid": {
   "autor": "arranjo metal de L. van Beethoven, Sinfonia nº 5",
   "licenca": "deste projeto",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 91,
+  "aproveitamento6": 77
  },
  "Tocata em Ré menor (metal).mid": {
   "autor": "arranjo metal de J. S. Bach, BWV 565",
   "licenca": "deste projeto",
-  "fonte": "tools/compor_rock.py"
+  "fonte": "tools/compor_rock.py",
+  "aproveitamento": 64,
+  "aproveitamento6": 79
  }
 }
