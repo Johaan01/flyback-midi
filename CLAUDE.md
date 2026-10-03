@@ -318,6 +318,16 @@ quiser"). Com a lista, o `large` ganha 7 pontos na voz e empata no resto, levand
 do tempo. O `medium` com a lista certa é o padrão razoável; o `large` vale quando a voz importa
 muito e a máquina está livre.
 
+**Orientação (`cfg_coef`): por que não é padrão.** Medido em Borboletas contra o Mirelo, com a lista dele (voz, violão, baixo, piano, pad, bateria) e o `medium`:
+
+| orientação | voz | pad | piano | todas |
+|---|---|---|---|---|
+| 1 (padrão) | 60% | 25 notas | 0 | 80% |
+| 2 | 61% | **200 notas** (Mirelo: 223) | 0 | 77% |
+| 3 | 2% — desanda | | | 8% |
+
+Com 2, instrumento listado que o modelo deixaria de fora aparece. Mas com instrumento **errado** na lista ele inventa e o canto vai junto: Borboletas com órgão e metais listados (não tem nenhum dos dois) saiu com 473 notas de "metais" — o canto — e a voz caiu de 524 para 88 notas. Como o detector automático erra justamente o "resto" (em BLOODY STREAM viu órgão no lugar da guitarra), 2 só vale com lista conhecida: `--orientacao 2 --instrumentos ...` no `transcrever.py`. Com a lista certa de Livin' On A Prayer, o synth apareceu com 332 notas (Mirelo: 962) e a voz ficou igual. O piano de Borboletas não aparece em orientação nenhuma: é o limite do modelo local.
+
 **Memória do `large`.** O `load_model` monta o modelo inteiro em float32 **na placa** e carrega
 outra cópia float32 dos pesos antes de converter para float16 — pico de ~11 GB num lugar que tem 6.
 No Windows o driver transborda para a RAM compartilhada: numa máquina de 16 GB a RAM livre bateu

@@ -498,7 +498,7 @@ def por_muscriptor(audio, titulo, args):
         raise
 
     log('  transcrevendo…')
-    midi = modelo.transcribe_to_midi(audio, instruments=instrumentos,
+    midi = modelo.transcribe_to_midi(audio, instruments=instrumentos, cfg_coef=args.orientacao,
                                      beam_size=args.beam, detect_tempo='best-effort')
 
     saida = pasta_saida(args.saida)
@@ -725,6 +725,11 @@ def main():
                                        'instrumentos usados (é o que o lote.py lê)')
     p.add_argument('--dtype', choices=('float32', 'float16', 'bfloat16'),
                    help='precisão do transformer (padrão: float16 no large em GPU)')
+    p.add_argument('--orientacao', type=float, default=1.0,
+                   help='quanto o modelo segue a lista de instrumentos (cfg_coef; padrão 1). 2 faz '
+                        'aparecer instrumento listado que ele deixaria de fora — o pad de Borboletas '
+                        'volta —, mas com instrumento errado na lista ele inventa e põe o canto nele. '
+                        'Só com uma lista que você sabe que está certa. 3 desanda')
     p.add_argument('--beam', type=int, default=1,
                    help='largura da busca em feixe; 1 é guloso (padrão)')
     args = p.parse_args()
