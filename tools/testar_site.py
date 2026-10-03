@@ -143,14 +143,19 @@ def player(nav, base, telas):
 
     print('acorde em vários flybacks')
     pg.select_option('#espN', '6')
-    abrir(pg, base, 'transcritas/AC-DC - Thunderstruck.mid')
+    abrir(pg, base, 'transcritas/AC-DC - Back In Black.mid')
     r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name));
         return { canais: canaisDe(assign[g]).map(i => i + 1), picks: canaisDe(assign[g]).map(i => ch[i].ctl.pick) }; }""")
     confere(len(r['canais']) == 3 and sorted(r['picks']) == ['hi', 'lo', 'meio'],
-            f'a guitarra de acordes de três notas ocupa três flybacks: grave, do meio e aguda ({r})')
+            f'acorde bem abaixo da voz espalha a guitarra por três flybacks ({r})')
     abrir(pg, base, 'transcritas/Black Sabbath - Iron Man.mid')
     r = pg.evaluate("() => { const g = tracks.findIndex(t => /guitar/.test(t.name)); return canaisDe(assign[g]).length; }")
-    confere(r == 2, f'power chord, que tem duas notas, ocupa dois ({r})')
+    confere(r == 1, f'topo do acorde na altura da voz não entra, para não mascarar o canto ({r} flyback)')
+    abrir(pg, base, 'transcritas/Borboletas.mid')
+    pg.click('#presets button:nth-child(1)')      # Montagem fixa, por cima do ajuste salvo antes
+    r = pg.evaluate("() => tracks.filter((t, k) => assign[k] >> 4 & 1).map(t => [t.name, prio[tracks.indexOf(t)]])")
+    dono = max(r, key=lambda x: x[1])[0] if r else None
+    confere(dono == 'acoustic_piano', f'no teclado manda a faixa com mais ataques, o piano, não o pad ({r})')
 
     print('origem')
     pg.click('#libIA')

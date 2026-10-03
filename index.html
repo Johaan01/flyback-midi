@@ -1012,13 +1012,41 @@ function computePreset(p){
 const PAPEIS = ['voz', 'baixo', 'guitarra', 'bateria', 'teclado', 'extra'];
 const PICK_PAPEL = ['hi', 'lo', 'lo', 'hi', 'lo', 'hi'];
 const RX_TECLADO = /piano|keys|teclad|organ|[oó]rg[aã]o|synth|sint|pad\b|rhodes|clav|harpsi|cravo|accord|acorde[aã]o|sanfona|celesta|marimba|vibra|xylo|chromatic/i;
+/* O nome que quem transcreveu deu à faixa vale antes do programa General MIDI: numa transcrição
+   de fã, "Vocals" com programa de guitarra é a voz, e "Lead 6 (voice)" é canto, não teclado.
+   Faixa sem nome (o nome veio do programa, t.gm) vai só pelo programa. */
 function familia(t){
   if (isDrum(t)) return 'bateria';
-  if (isBass(t) || (t.prog >= 32 && t.prog <= 39)) return 'baixo';
-  if (isGuitar(t) || (t.prog >= 24 && t.prog <= 31)) return 'guitarra';
-  if (RX_TECLADO.test(t.name) || (t.prog >= 0 && t.prog <= 23) || (t.prog >= 80 && t.prog <= 95)) return 'teclado';
-  if (RX_CANTO.test(t.name) || [52, 53, 54, 85].includes(t.prog)) return 'voz';
+  if (!t.gm){
+    if (isBass(t)) return 'baixo';
+    if (RX_CANTO.test(t.name) && !RX_INSTRUM.test(t.name)) return 'voz';
+    if (isGuitar(t)) return 'guitarra';
+    if (RX_TECLADO.test(t.name)) return 'teclado';
+  }
+  if (t.prog >= 32 && t.prog <= 39) return 'baixo';
+  if (t.prog >= 24 && t.prog <= 31) return 'guitarra';
+  if ([52, 53, 54, 85].includes(t.prog)) return 'voz';
+  if ((t.prog >= 0 && t.prog <= 23) || (t.prog >= 80 && t.prog <= 95)) return 'teclado';
   return 'extra';
+}
+/* Ataques: instantes em que a faixa começa nota, com o acorde contando como um só (20 ms).
+   É o critério para escolher a dona do flyback quando a família tem mais de uma faixa — nem
+   "mais notas" (acorde de três conta três; uma guitarra abafada tem 1.132 notas e 412 ataques)
+   nem "mais tempo" (escolhe o bordão: em Borboletas ganhava o pad, de notas de 1,7 s em acorde,
+   sobre o piano). Mais ataques é a parte que mais se mexe, a mais reconhecível numa nota por vez:
+   em Borboletas, o piano (210 contra 77). Bateria conta pelas batidas que tocam (sem pratos). */
+function ataques(t){
+  if (t._ataques === undefined) t._ataques = new Set(notasDe(t).map(n => Math.round(n.t0 * 50))).size;
+  return t._ataques;
+}
+/* altura típica da nota de cima (ou do meio) dos acordes da faixa */
+function alturaDoAcorde(t, qual){
+  const por = new Map();
+  t.notes.forEach(n => { const k = Math.round(n.t0 * 50); (por.get(k) || por.set(k, []).get(k)).push(n.n); });
+  const alt = [];
+  por.forEach(l => { if (l.length < 2) return; l.sort((a, b) => a - b); alt.push(qual === 'hi' ? l[l.length - 1] : l[l.length >> 1]); });
+  alt.sort((a, b) => a - b);
+  return alt.length ? alt[alt.length >> 1] : 0;
 }
 function umPorFlyback(n){
   const occ = occupancy(), nb = occ.length ? occ[0].length : 0;
@@ -1040,7 +1068,7 @@ function umPorFlyback(n){
     if (!sc.get(li)){ const v = melod.filter(i => fam.get(i) === 'voz'); li = (v.length ? v : melod).reduce((a, b) => tam[b] > tam[a] ? b : a); }
     out[li] = 1; pr[li] = 3; dono[0] = li; ocupa(li, 0);
   }
-  const resto = com.filter(i => i !== li).sort((a, b) => tam[b] - tam[a]);
+  const resto = com.filter(i => i !== li).sort((a, b) => ataques(tracks[b]) - ataques(tracks[a]) || tam[b] - tam[a]);
   for (const i of resto){
     const c = PAPEIS.indexOf(fam.get(i));
     if (c >= n) continue;
@@ -1056,10 +1084,15 @@ function umPorFlyback(n){
   if (cheia){
     const [i] = cheia, base = dono.indexOf(i);
     const vozes = [base === 0 ? 'lo' : 'hi'].concat(acordesDeTres(tracks[i]) >= .25 ? ['meio'] : []);
+    /* A nota de cima do acorde que cai na altura da voz compete com ela, e a voz parece mais
+       baixa — o dono do projeto ouviu isso. Só entra a voz do acorde que fica pelo menos uma
+       quarta abaixo do canto; se não, o flyback fica vazio, que é melhor que mascarar a voz. */
+    const teto = li >= 0 && li !== i ? avgPitch(tracks[li]) - 5 : Infinity;
+    const cabem = vozes.filter(v => v === 'lo' || alturaDoAcorde(tracks[i], v) <= teto);
     for (const c of [5, 4]){
-      if (!vozes.length || c >= n || dono[c] >= 0) continue;
+      if (!cabem.length || c >= n || dono[c] >= 0) continue;
       out[i] |= 1 << c; dono[c] = i;
-      ajustes.push([c, { pick: vozes.shift() }]);
+      ajustes.push([c, { pick: cabem.shift() }]);
     }
   }
   return out;
