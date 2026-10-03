@@ -28,7 +28,10 @@ Arquivos de apoio, fora das páginas:
 | `tools/transcrever.py` | Gera MIDI a partir de uma gravação: separa os stems e transcreve cada um. **A única ferramenta que precisa de pacotes além da biblioteca padrão** (torch, torchaudio, librosa, basic-pitch) — é opcional, e nada no site depende dela |
 | `tools/instrumentos.py` | Descobre a instrumentação de uma gravação para condicionar o MuScriptor: PANNs (AudioSet) aplicado a cada stem do Demucs. Voz pelo peso do stem de voz, baixo e bateria pelos rótulos, o resto traduzido para os grupos do MuScriptor |
 | `tools/lote.py` | Transcreve uma playlist do YouTube sozinho, retomável: `large` com instrumentos automáticos, segunda tentativa com a separação em blocos menores, e o que ainda falhar vai para `para-o-mirelo.md` com os instrumentos a marcar. Credita cada música no `creditos.json` |
-| `tools/medir_canais.py` | Mede o aproveitamento de todo o acervo em 2 e em 6 flybacks e grava no `creditos.json` — é o que o site usa para "cabe em 2" e "pede 6" |
+| `tools/medir_canais.py` | Mede o aproveitamento de todo o acervo em 2 e em 6 flybacks e grava no `creditos.json` — é o que o site usa nos filtros "2 canais" e "+ de 2 canais" |
+| `tools/servidor.py` | O outro lado da janela "Baixar músicas": busca no YouTube, fila, download, transcrição na GPU daqui ou no Mirelo, crédito e push para o GitHub, com o andamento de cada etapa. Só biblioteca padrão; chama `lote.py` e `mirelo.py` |
+| `tools/mirelo.py` | Transcrição pela API do Mirelo: sobe o áudio, pede a detecção de instrumentos, cria o job e baixa o MIDI. A chave fica só na máquina do servidor |
+| `tools/generos.py` | Preenche o gênero (`estilo`) de bandas e transcritas pelo MusicBrainz, uma consulta por artista; o que ele não classifica vai em `MANUAL` |
 | `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
 | `tools/testar_site.py` | Abre o `index.html` num Chrome de verdade (Playwright) e exercita os dois modos de saída, o roteamento, o WAV e a serial com porta simulada. Opcional; precisa de `pip install playwright` |
@@ -87,7 +90,7 @@ No modo ESP os presets são outros, porque os de cima são pensados para dois la
 
 "Um por flyback" é o padrão do modo ESP e foi feito para a saída do MuScriptor, que já vem com voz, guitarra, piano e baixo separados: em Borboletas sai voz no 1, baixo no 2, violão no 3, pad no 4, piano no 5 e bateria desligada.
 
-**Origem: IA ou pessoa.** `gerar_acervo.py` marca `origem: "ia"` em toda música cujo crédito cita o MuScriptor, e o site mostra "· IA" na lista e tem o botão "só IA". É campo, não pasta, de propósito: pasta serve para achar (artista, compositor), origem é uma característica, e a mesma música pode existir nas duas versões. A montagem fixa vale para as duas — numa amostra de 40 transcrições de fã, a melodia caiu no flyback 1 em 39, o baixo no 2 em 35, a guitarra no 3 em 34 e a bateria no 4 em 38, porque ela lê o programa General MIDI, que essas transcrições trazem. O que difere é a densidade: as de fã têm 9,7 faixas em média (uma de Queen tem cinco guitarras), e 46% delas ficam sem flyback; as da IA têm de 4 a 6.
+**Origem: quem transcreveu.** `gerar_acervo.py` grava `origem` no índice a partir do crédito: `muscriptor` quando a transcrição foi rodada aqui, na GPU (o crédito diz "rodado localmente"), `mirelo` quando veio do Mirelo, pela interface ou pela API; sem o campo, é MIDI nativo, escrito por uma pessoa. O site mostra isso em cada linha — "MIDI · nativo", "MIDI · MuScriptor", "MIDI · Mirelo" — e a busca acha pelas três palavras. É campo, não pasta, de propósito: pasta serve para achar (artista, compositor), origem é uma característica, e a mesma música pode existir nas versões. A montagem fixa vale para todas — numa amostra de 40 transcrições de fã, a melodia caiu no flyback 1 em 39, o baixo no 2 em 35, a guitarra no 3 em 34 e a bateria no 4 em 38, porque ela lê o programa General MIDI, que essas transcrições trazem. O que difere é a densidade: as de fã têm 9,7 faixas em média (uma de Queen tem cinco guitarras), e 46% delas ficam sem flyback; as da IA têm de 4 a 6.
 
 **Montagem fixa (3 a 6 flybacks).** Cada família de instrumento cai sempre no mesmo flyback, em toda música: 1 voz, 2 baixo, 3 guitarra, 4 bateria, 5 teclado, 6 extra (`PAPEIS`, `familia()`). Pedido do dono do projeto: duas músicas de rock têm de sair com os mesmos instrumentos nos mesmos arcos. A ordem é a de importância — com 4 flybacks ficam voz, baixo, guitarra e bateria. Na família, a faixa que mais ocupa a música é a dona; as outras entram nas brechas (6% e 30%). O 1 é da melodia principal pela detecção de canto; numa instrumental pode ser a guitarra solo. Os flybacks que sobram vazios — o 6 quase sempre, o 5 quando não há teclado — recebem as outras notas do acorde da faixa mais polifônica: uma banda de rock tem voz, guitarra, baixo e bateria, e o MuScriptor põe as duas guitarras numa faixa só; o power chord sai em dois arcos, e acorde de três notas em três, com a opção **"do meio"** de "Acorde" (só quando pelo menos 25% dos acordes têm três notas, `acordesDeTres`).
 
@@ -144,13 +147,14 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
-O acervo tem 1.363 músicas em quatro pastas de primeiro nível:
+O acervo tem 1.901 músicas em cinco pastas de primeiro nível:
 
 | Pasta | Quantas | O que é |
 |---|---|---|
-| `bandas` | 718 | transcrições de fã, **uma pasta por artista** (110 deles) |
+| `bandas` | 1.239 | transcrições de fã, **uma pasta por artista** (122 deles) |
 | `classicos` | 590 | Mutopia, em `<região>/<compositor>/` |
 | `folk russo` | 45 | tradicional e soviético, pasta plana |
+| `transcritas` | 17 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo; o grupo é o artista, do crédito |
 | `exemplos` | 10 | arranjos do projeto para dois flybacks, mais casos de teste |
 
 Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o filtro inútil: a lista era um balaio só. `tools/curar_acervo.py` resolveu as duas coisas ao mesmo tempo.
@@ -161,14 +165,17 @@ Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o 
 
 ### Navegação do acervo
 
-Um seletor só, com todas as pastas numa lista, não dá conta de 1.363 músicas. São **duas peças**:
+O dono do projeto achou o menu "poluidíssimo": seis botões de filtro sempre à mostra (só as mais ouvidas, só com vocal, cabe em 2, pede 6, só IA, sortear) mais um botão por pasta. Ficou assim:
 
-- `montarAcervos()` desenha um **botão por pasta de primeiro nível**, mais "tudo". Escolher um deles define `acervo`.
-- `montarFiltro()` desenha o **seletor do que há dentro** do acervo escolhido. O grupo é sempre a **pasta mais funda**, e a de cima, quando existe, vira cabeçalho de `<optgroup>`: em `bandas` saem 107 artistas numa lista rasa, em `classicos` saem 139 compositores agrupados pelas 9 regiões. Pasta plana (`folk russo`, `exemplos`) não tem o que desdobrar, e o seletor se esconde.
+- **Três vistas** (`VISTAS`, `naVista()`): **tudo**, **antigas** (tudo que não é `transcritas`) e **transcritas**; "meus" aparece quando há arquivo aberto do computador guardado. É a separação legado × modelo que o dono pediu, por campo de pasta e não por mudança de pasta.
+- **Grupo e gênero**, dois seletores (`montarFiltro()`). Nas transcritas o grupo é o **artista** do crédito (valor `a:` + nome dobrado), porque a pasta é uma só; no resto é a **pasta mais funda** (`p:`), com a de cima como `<optgroup>` — os 122 artistas de `bandas`, os 139 compositores de `classicos` pelas 9 regiões. O gênero sai de `estilo`, traduzido por `ESTILO_PT` (o Mutopia escreve em inglês), e se esconde quando a vista tem menos de dois; aí a busca ocupa o lugar dele.
+- **Filtros**, um menu que abre e fecha (`#libPop`; fecha com Esc ou clique fora): **com voz**, **2 canais** (`cabe2`, aproveitamento em 2 ≥ `APROV_MIN`), **+ de 2 canais** (`precisaMais`: não cabe em 2 e aproveitamento em 6 ≥ `APROV6_MIN`), **mais ouvidas** (`posicao <= TOPO`, só se o acervo tiver o campo) e **sortear uma**. O botão mostra quantos estão ligados.
 
-`prefixo()` devolve o que está de fato selecionado — o grupo quando há um, senão o acervo inteiro — e é o que `filtrar()` e `renderLib()` usam. O botão **só as mais ouvidas** filtra por `posicao <= TOPO` (60) e só aparece se o acervo carregado tiver esse campo.
+"Pede 6" saiu por pedido: muita música que não cabe em dois fica boa com quatro, e o nome mentia. "+ de 2 canais" diz o que o número mede.
 
-A busca cobre título, pasta, autor, artista, instrumentos e estilo. Continuam valendo: acervo lembrado no aparelho, no máximo `LIMITE` (200) botões por vez, "Sortear uma" e "Guardar para usar sem internet" dentro do filtro atual.
+A busca cobre título, pasta, autor, artista, instrumentos, estilo, "vocal" e a origem. Continuam valendo: vista lembrada no aparelho, no máximo `LIMITE` (200) botões por vez e "Guardar para usar sem internet" dentro do filtro atual.
+
+**Gênero.** Bandas e transcritas não tinham `estilo`; `tools/generos.py` consulta o MusicBrainz por artista (`artista_mb` em `lote.py`, que o lote também usa ao creditar) e agrupa os gêneros em poucos nomes (`GENEROS`): Rock, Metal, Pop, Soul... Duas armadilhas: nome sozinho é ambíguo ("Coda" achava um produtor de eletrônica), então primeiro procura a gravação com o artista e exige o mesmo nome; e o MusicBrainz responde 503 por limite de taxa mesmo a uma consulta por segundo — na primeira rodada isso deixou AC/DC, Black Sabbath, KISS e Scorpions sem gênero, e `_mb()` agora tenta de novo. Sobram 4 músicas sem gênero.
 
 `creditos.json` numa pasta dá os campos de `CAMPOS` em `gerar_acervo.py` — `autor`, `artista`, `instrumentos`, `estilo`, `licenca`, `credito`, `transcricao`, `popularidade`, `posicao` e `fonte` — dos arquivos dela; o gerador copia para o índice e o site mostra o crédito abaixo de "Faixas encontradas". É o que cumpre a atribuição pedida pelas licenças CC BY e CC BY-SA do Mutopia, e é também onde a pasta `bandas` declara quem compôs e quem transcreveu.
 
@@ -216,7 +223,7 @@ Internamente o roteamento de cada faixa é uma **máscara de bits**, um bit por 
 
 `saidas` é a lista de canais, contando de 1. `canal` (`desligada`, `esquerdo`, `direito` ou `ambos`) continua sendo escrito no modo estéreo, e é lido quando `saidas` falta — é assim que os `.json` da versão 1 que estão no acervo continuam valendo. Faixas casam pelo nome; se nenhuma casar, a configuração é ignorada.
 
-**Uma configuração por modo**, em chaves separadas: `cfg:` para o estéreo (a de sempre) e `cfgesp:` para o ESP. O roteamento para dois flybacks no P2 e para seis no ESP não têm nada a ver um com o outro, e trocar de modo não pode apagar o ajuste do outro. Prioridade ao abrir: ajuste salvo no navegador para o modo atual; depois o `.json` do acervo, que descreve dois canais e por isso só vale no estéreo ou no ESP com dois flybacks; depois o preset padrão do modo. Mudar o número de flybacks redistribui pelo preset se a música não tem ajuste salvo, e só corta as rotas para canais que deixaram de existir se tem.
+**Uma configuração por modo**, em chaves separadas: `cfg:` para dois flybacks (a de sempre) e `cfgmont:` para qualquer outro número. O roteamento para dois flybacks no P2 e para seis no ESP não têm nada a ver um com o outro, e trocar de modo não pode apagar o ajuste do outro. Prioridade ao abrir: ajuste salvo no navegador para o modo atual; depois o `.json` do acervo, que descreve dois canais e por isso só vale no estéreo ou no ESP com dois flybacks; depois o preset padrão do modo. Mudar o número de flybacks redistribui pelo preset se a música não tem ajuste salvo, e só corta as rotas para canais que deixaram de existir se tem.
 
 Silenciar e solo (M e S em cada canal) são de sessão, como num mixer: não vão para a configuração e não afetam o WAV.
 
@@ -249,11 +256,11 @@ O dono do projeto passou a usar só pelo computador, e o layout de coluna única
 - **Em cima, à esquerda — Faixas.** As faixas da música aberta, cada uma com uma luz que acende quando ela tem nota soando e o seletor de saída (E/D/ambos no estéreo, 1 a N no ESP). Os presets, o aproveitamento por canal e o crédito ficam aqui.
 - **Em cima, à direita — Saídas.** Uma pista por flyback: nome, pino ou lado, nota e frequência que está soando, de onde vem (as faixas roteadas), um osciloscópio com três ciclos da nota disparado na borda de subida, e um rolo com a linha monofônica correndo numa janela de 5 a 40 s, com o cursor a um quarto da largura para mostrar o que vem.
 - **Transporte**, entre as duas metades, com a linha do tempo da música inteira (uma faixa por saída) que serve de busca.
-- **Embaixo — a doca**, três painéis lado a lado: **Acervo**, **Canais** (um módulo de mixer por flyback, com M e S, ganho, passa-baixa, oitava, acorde, envelope e dinâmica) e **Saída** (o painel do modo: no estéreo, a explicação do P2; no ESP, a conexão e os pinos; nos dois, WAV e configuração).
+- **Embaixo — a doca**, três painéis lado a lado: **Acervo**, **Canais** (um módulo de mixer por flyback, com M e S, ganho, agudo máx, oitava, acorde, envelope e dinâmica) e **Saída** (o painel do modo: no estéreo, a explicação do P2; no ESP, a conexão e os pinos; nos dois, WAV e configuração).
 
 A divisória entre as duas metades arrasta (e anda com as setas), e o tamanho fica lembrado; duplo clique volta ao padrão. O padrão dá à doca uma altura estável (`clamp(200px, 100vh − 480px, 70vh)` para a metade de cima), porque é a doca que precisa de altura para o acervo e o mixer caberem — com a metade de cima proporcional à tela, a 1366×768 o acervo mostrava uma música só. A pista esconde a linha de faixas quando fica baixa demais, por container query.
 
-Não há barra no topo. O nome da música abre o painel de faixas; o número de flybacks, a placa, a conexão e o botão **Gerador de tom** (que leva ao `tom.html`, onde há o "voltar para MIDI") ficam no painel de saída. Mudar o número de flybacks pausa; entrar ou sair de dois troca o espaço de configuração (`cfg:` / `cfgesp:`) e carrega a daquele espaço.
+Não há barra no topo. O nome da música abre o painel de faixas; o número de flybacks, a placa, a conexão e o botão **Gerador de tom** (que leva ao `tom.html`, onde há o "voltar para MIDI") ficam no painel de saída. Mudar o número de flybacks pausa; entrar ou sair de dois troca o espaço de configuração (`cfg:` / `cfgmont:`) e carrega a daquele espaço.
 
 **Tudo numa janela.** O dono do projeto reclamou de ter de rolar cada painel. Os painéis não têm barra de título — o conteúdo diz o que são —, e em Faixas e no Acervo os controles ficam parados no topo (`.fixo`) e só a lista rola. O estado da serial fica na linha do Conectar; os pinos, em duas colunas; áudio e configuração, numa linha cada; nos módulos de canal, rótulo e seletor dividem a linha. Medido a 1920×945 (Chrome maximizado em tela 1080p), no modo ESP com seis flybacks e Borboletas aberta, nenhum painel rola além da lista do acervo. A janela de tempo das pistas foi para o fim do transporte.
 
@@ -331,9 +338,9 @@ Com 2, instrumento listado que o modelo deixaria de fora aparece. Mas com instru
 **Memória do `large`.** O `load_model` monta o modelo inteiro em float32 **na placa** e carrega
 outra cópia float32 dos pesos antes de converter para float16 — pico de ~11 GB num lugar que tem 6.
 No Windows o driver transborda para a RAM compartilhada: numa máquina de 16 GB a RAM livre bateu
-0,1 GB no carregamento, e a primeira tentativa foi derrubada por isso. Funciona com a máquina sem
-outras coisas pesadas abertas. Se precisar ficar robusto, o caminho é montar o modelo já em
-float16 e ler os pesos tensor a tensor (pico ~3 GB) — não implementado.
+0,1 GB no carregamento, e a primeira tentativa foi derrubada por isso. `carregar_muscriptor()`
+resolve: monta o modelo já em float16 e copia os pesos tensor a tensor para dentro dele, e só no
+fim vai para a placa (pico ~2,8 GB). Verificado contra o carregador oficial: mesma saída.
 
 A bateria, quando sai, são milhares de notas de exatamente 10 ms em meia dúzia de "alturas" que são
 teclas do mapa de percussão do GM — 36 bumbo, 38 caixa, 42 prato — e não alturas de verdade. Num arco
@@ -403,6 +410,40 @@ Quatro armadilhas que custaram caro e estão resolvidas no código, todas achada
 Instalação: o `basic-pitch` fixa dependências antigas demais para o Python 3.13 (`resampy<0.4.3` arrasta um numpy que não compila), então vai com `pip install --no-deps basic-pitch` mais `onnxruntime pretty_midi mir_eval resampy`. O backend é ONNX; TensorFlow não entra.
 
 Numa RTX 2060, cerca de 1min40 para uma música de cinco minutos, download incluído. Se a área de trabalho estiver usando VRAM, a separação pode falhar mesmo com memória livre — daí `--trecho 5` ou `--cpu`, e o áudio baixado fica preservado para não repetir o download.
+
+### Baixar músicas: a janela e o servidor
+
+Pedido do dono do projeto para fechar o processo: da página, mandar uma playlist, uma música ou
+só um nome, escolher e mandar transcrever, vendo o andamento, e a música aparecer no acervo
+sozinha. O site é estático, então a janela (`#dlgBaixar` em `index.html`) só conversa com um
+servidor que roda no computador da GPU: `tools/servidor.py`.
+
+- **Biblioteca padrão só** (`ThreadingHTTPServer`), porta 8790. A primeira execução cria
+  `~/.flyback-servidor.json` com uma chave aleatória e a imprime; todo pedido, menos `/ping`, exige
+  a chave no cabeçalho `X-Chave`. Sem ela, qualquer página aberta no navegador poderia usar a GPU e
+  o push para o GitHub. CORS aberto e `Access-Control-Allow-Private-Network`, porque o site vem do
+  GitHub Pages e o servidor é `localhost`. De fora de casa: túnel (`cloudflared tunnel --url ...`).
+- **Rotas**: `GET /estado` (tem chave do Mirelo?), `POST /buscar` (link de playlist ou música, ou
+  texto, que vira `ytsearch10:`; marca o que já está no acervo), `POST /fila` com os itens e o
+  motor (`local` ou `mirelo`), `GET /fila`, `DELETE /fila/<id>` e `GET /arquivo?nome=`, que
+  devolve o MIDI pronto para o botão "abrir" tocar sem esperar o GitHub Pages.
+- **Um trabalho por vez**, numa thread: metadados, download, transcrição (`large` com instrumentos
+  automáticos, duas tentativas, como no lote) ou Mirelo, crédito (`creditar` do `lote.py`, que
+  também busca o gênero), `.lote.json` e `git add/commit/push` só dos arquivos daquela música, com
+  `pull --rebase --autostash` antes. O andamento de cada etapa (as porcentagens do yt-dlp, do
+  Demucs e do MuScriptor, lidas da saída) vira uma porcentagem só por `PESO`.
+- **`--sem-publicar`** deixa tudo local; é como se testa sem encher o repositório.
+
+**Mirelo pela API** (`tools/mirelo.py`): o mp3 sobe como asset (`POST /v3/assets`, multipart com o
+arquivo por último), a detecção de instrumentos do próprio Mirelo escolhe a lista (grátis até 10
+por dia) e o job roda até `succeeded`; o MIDI vem de um link temporário. 2,5 créditos por segundo
+de áudio. A chave fica no `~/.flyback-servidor.json` (campo `"mirelo"`) ou em `MIRELO_API_KEY`,
+**nunca no site**; sem ela a janela esconde o botão. Escrito pela documentação pública e
+**testado só até a autenticação** (chave inválida devolve 401 "Invalid API key"): o resto do
+fluxo só se confirma com uma chave de verdade.
+
+Testado de ponta a ponta com a GPU: busca, fila, Highway to Hell transcrita em 4min21s com o
+andamento na janela, e "abrir" tocando o MIDI do servidor.
 
 ## Convenções
 

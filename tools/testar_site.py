@@ -158,10 +158,22 @@ def player(nav, base, telas):
     confere(dono == 'acoustic_piano', f'no teclado manda a faixa com mais ataques, o piano, não o pad ({r})')
 
     print('origem')
-    pg.click('#libIA')
+    pg.click('#libA button[data-vista=transcritas]')
     ia = pg.eval_on_selector_all('#libList button .tag', 'x => x.map(e => e.textContent)')
-    confere(ia and all(' · IA' in t for t in ia), f'"só IA" mostra só as transcritas por IA ({len(ia)})')
-    pg.click('#libIA')
+    confere(ia and all(' · MuScriptor' in t or ' · Mirelo' in t for t in ia),
+            f'a vista "transcritas" mostra só as feitas por IA ({sum("MuScriptor" in t for t in ia)} MuScriptor, '
+            f'{sum("Mirelo" in t for t in ia)} Mirelo)')
+    artistas = pg.eval_on_selector_all('#libF option', 'x => x.map(o => o.textContent)')
+    confere(any('AC/DC' in a for a in artistas), f'seletor de artista nas transcritas ({len(artistas) - 1} artistas)')
+    pg.click('#libFiltros'); pg.check('#fVoz')
+    voz = pg.eval_on_selector_all('#libList button .tag', 'x => x.map(e => e.textContent)')
+    confere(voz and all('vocal' in t for t in voz), f'filtro "com voz" no menu ({len(voz)})')
+    pg.uncheck('#fVoz'); pg.keyboard.press('Escape')
+    confere(pg.is_hidden('#libPop'), 'o menu de filtros fecha com Esc')
+    pg.click('#libA button[data-vista=antigas]')
+    antigas = pg.eval_on_selector_all('#libList button .tag', 'x => x.map(e => e.textContent)')
+    confere(antigas and all(' · nativo' in t for t in antigas), f'as antigas aparecem como MIDI nativo ({len(antigas)})')
+    pg.click('#libA button[data-vista=""]')
 
     print('outros arquivos')
     gp = pg.evaluate("lib.filter(it => it.tipo === 'GP').map(it => it.arquivo)")

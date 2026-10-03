@@ -59,7 +59,34 @@ h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;white-space:now
 .musica b{color:var(--ink);font-weight:600}
 
 .transport #zoom{height:36px;font-size:12px}
-.filtros .abrir{margin-left:auto;color:var(--ink)}
+/* acervo: três vistas, filtros num menu que só abre quando pedido */
+.lib-topo{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}
+.vistas button{padding:4px 11px}
+.menu{position:relative}
+.pop{position:absolute;z-index:10;top:calc(100% + 4px);left:0;min-width:190px;display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--chrome);border:1px solid var(--rule);border-radius:3px}
+.pop .chk{color:var(--ink)}
+.lib-topo #baixarMus{margin-left:auto}
+.lib-linha select.hide{display:none}
+/* janela de baixar músicas */
+.dlg{width:min(880px,94vw);max-height:88vh;padding:0;border:1px solid var(--rule);border-radius:4px;background:var(--field);color:var(--ink)}
+.dlg::backdrop{background:rgba(2,10,20,.72)}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--chrome);border-bottom:1px solid var(--rule)}
+.dlg-h h2{font-size:14px;margin:0}
+.dlg-b{padding:12px 14px;overflow:auto;max-height:calc(88vh - 46px)}
+.dlg input[type=url],.dlg input[type=password],.dlg input[type=search]{font:inherit;font-size:12.5px;color:var(--ink);background:var(--chrome);border:1px solid var(--rule);border-radius:3px;padding:4px 8px}
+.dlg #srvEnd{flex:1 1 220px}
+.dlg #srvChave{flex:0 1 200px}
+.dlg #bxTexto{flex:1}
+.dlg code{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink)}
+.bx-lista,.bx-fila{list-style:none;margin:0 0 8px;padding:0;border-top:1px solid var(--soft)}
+.bx-lista:empty{display:none}
+.bx-lista li,.bx-fila li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:5px 2px;border-bottom:1px solid var(--soft)}
+.bx-lista label{display:contents;cursor:pointer}
+.bx-lista .sub,.bx-fila .sub{display:block;font-size:11.5px;color:var(--dim)}
+.bx-lista .dur,.bx-fila .pct{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--dim)}
+.bx-fila progress{width:100%;height:6px;accent-color:var(--c2)}
+.bx-fila .acoes{display:flex;gap:4px}
+.bx-fila .falhou .sub{color:var(--ink)}
 .saida .linha.sep{margin-top:8px;padding-top:8px;border-top:1px solid var(--soft)}
 .saida .linha{margin-bottom:6px}
 .saida .txt{margin-bottom:4px}
@@ -158,8 +185,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 .acervos{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
 .acervos button{color:var(--dim)}
 .acervos button[aria-pressed=true]{color:var(--ink)}
-.lib-linha{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:6px;margin:0 0 8px}
-.lib-linha select.hide+input{grid-column:1/-1}
+.lib-linha{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,10rem) minmax(0,1.2fr);gap:6px;margin:0 0 8px}
+.lib-linha #libG.hide+input{grid-column:2/-1}
 .filtros{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
 .filtros button{padding:2px 9px;font-size:12px;color:var(--dim)}
 .filtros button[aria-pressed=true]{color:var(--ink)}
@@ -248,26 +275,31 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
   <div class="doca">
     <section class="pane acervo" aria-label="Acervo">
       <div class="fixo">
-        <div class="hide" id="libTools">
-          <div class="acervos" id="libA" role="group" aria-label="Acervo"></div>
-          <div class="lib-linha">
-            <select id="libF" aria-label="Grupo dentro do acervo"></select>
-            <input type="search" id="libQ" placeholder="buscar título, artista, compositor" aria-label="Buscar no acervo" autocomplete="off">
+        <div class="lib-topo">
+          <div class="seg vistas" id="libA" role="group" aria-label="Acervo"></div>
+          <div class="menu">
+            <button id="libFiltros" aria-haspopup="true" aria-expanded="false">Filtros</button>
+            <div class="pop hide" id="libPop" role="group" aria-label="Filtros">
+              <label class="chk"><input type="checkbox" id="fVoz"> com voz</label>
+              <label class="chk" title="soam bem já com dois flybacks"><input type="checkbox" id="f2"> 2 canais</label>
+              <label class="chk" title="só soam bem com mais de dois flybacks, um instrumento por arco"><input type="checkbox" id="fMais"> + de 2 canais</label>
+              <label class="chk hide" id="fTopoRot" title="as 60 mais conhecidas das bandas"><input type="checkbox" id="fTopo"> mais ouvidas</label>
+              <button id="libRnd">sortear uma</button>
+            </div>
           </div>
+          <button id="baixarMus" title="buscar no YouTube e transcrever na sua GPU ou no Mirelo">Baixar músicas…</button>
         </div>
-        <div class="filtros">
-          <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
-          <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
-          <button id="libIA" class="hide" aria-pressed="false" title="transcritas por IA (MuScriptor), com uma faixa por instrumento">só IA</button>
-          <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
-          <button id="libRnd" class="hide">sortear uma</button>
-          <button id="abrir" class="abrir">Abrir arquivo…</button>
+        <div class="lib-linha hide" id="libTools">
+          <select id="libF" aria-label="Artista ou grupo"></select>
+          <select id="libG" aria-label="Gênero"></select>
+          <input type="search" id="libQ" placeholder="buscar título, artista, compositor" aria-label="Buscar no acervo" autocomplete="off">
         </div>
       </div>
       <div class="pane-b">
         <ul class="liblist" id="libList"></ul>
         <p class="note-line" id="libMsg">carregando…</p>
         <div class="lib-acoes">
+          <button id="abrir">Abrir arquivo…</button>
           <button id="libAdd">Guardar MIDI neste navegador…</button>
           <button id="libDel" class="hide">Esquecer os meus</button>
           <button id="libOff" class="hide">Guardar para usar sem internet</button>
@@ -320,6 +352,31 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
     </section>
   </div>
 </div>
+<dialog class="dlg" id="dlgBaixar" aria-labelledby="dlgTit">
+  <div class="dlg-h"><h2 id="dlgTit">Baixar músicas</h2><button id="dlgFechar">fechar</button></div>
+  <div class="dlg-b">
+    <div class="linha">
+      <input type="url" id="srvEnd" placeholder="http://localhost:8790" aria-label="Endereço do servidor">
+      <input type="password" id="srvChave" placeholder="chave do servidor" aria-label="Chave do servidor" autocomplete="off">
+      <button id="srvGo">Conectar</button>
+      <span class="estado mono" id="srvMsg">desconectado</span>
+    </div>
+    <p class="txt" id="srvAjuda">No computador da GPU, rode <code>python tools/servidor.py</code>: ele mostra a chave. Fora de casa, abra um túnel com <code>cloudflared tunnel --url http://localhost:8790</code> e cole aqui o endereço https que aparecer.</p>
+    <div class="linha">
+      <input type="search" id="bxTexto" placeholder="nome da música, link do YouTube ou de playlist" aria-label="O que baixar" disabled>
+      <button id="bxBuscar" disabled>Buscar</button>
+    </div>
+    <ul class="bx-lista" id="bxLista"></ul>
+    <div class="linha">
+      <button id="bxGPU" disabled>Transcrever na minha GPU</button>
+      <button id="bxMirelo" class="hide" disabled title="usa créditos do Mirelo: 2,5 por segundo de áudio">Transcrever no Mirelo</button>
+      <span class="txt" id="bxSel"></span>
+    </div>
+    <h3>Fila</h3>
+    <ul class="bx-fila" id="bxFila"><li class="txt">vazia</li></ul>
+    <p class="txt">Cada música pronta vai para o GitHub sozinha e aparece no acervo em cerca de um minuto. "Abrir" toca na hora, direto do servidor.</p>
+  </div>
+</dialog>
 <div class="solta hide" id="solta">solte para abrir · MIDI ou Guitar Pro</div>
 <input type="file" id="file">
 <input type="file" id="fileMeus" multiple accept=".mid,.midi,.kar,.rmi">
@@ -1533,23 +1590,16 @@ function meusComoItens(regs){
 async function montarAcervo(){
   const meus = meusComoItens(await meusTodos());
   lib = libRemoto.concat(meus);
-  lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.artista, it.instrumentos, it.estilo, temVoz(it) ? 'vocal' : '', it.origem === 'ia' ? 'ia' : ''].join(' ')); });
-  pastas = pastasRemoto.slice();
-  if (meus.length) pastas.push({ nome: PASTA_MEUS, musicas: meus.length });
-  const salva = store.get('pasta');
-  /* o ajuste guardado pode ser de um acervo que não existe mais: só vale se ainda bater */
-  acervo = salva && pastas.some(p => p.nome === salva) ? salva : '';
+  lib.forEach(it => { it.pasta = it.pasta || ''; it._busca = fold([it.titulo, it.pasta, it.autor, it.artista, it.instrumentos, it.estilo, temVoz(it) ? 'vocal' : '', origemDe(it)].join(' ')); });
+  temMeus = meus.length > 0;
+  const salva = store.get('vista');
+  vista = VISTAS.some(([v]) => v === salva) && (salva !== 'meus' || temMeus) ? salva : '';
   montarAcervos();
   montarFiltro();
   $('libTools').classList.toggle('hide', lib.length < 7);
-  $('libA').classList.toggle('hide', pastas.length < 2);
-  $('libTop').classList.toggle('hide', !lib.some(it => it.posicao > 0));
-  $('libVoz').classList.toggle('hide', !lib.some(it => it.vocal));
-  $('libIA').classList.toggle('hide', !lib.some(it => it.origem === 'ia'));
-  $('libBom').classList.toggle('hide', !lib.some(it => it.aproveitamento));
+  $('fTopoRot').classList.toggle('hide', !lib.some(it => it.posicao > 0));
   $('libDel').classList.toggle('hide', !meus.length);
   $('libDel').textContent = 'Esquecer os meus (' + meus.length + ')';
-  $('libRnd').classList.toggle('hide', !lib.length);
   if ('caches' in window && lib.length) $('libOff').classList.remove('hide');
   renderLib();
 }
@@ -1627,51 +1677,66 @@ const APROV_MIN = 58;
 const APROV6_MIN = 62;
 const cabe2 = it => (it.aproveitamento || 0) >= APROV_MIN;
 const cabe6 = it => cabe2(it) || (it.aproveitamento6 || 0) >= APROV6_MIN;
-/* o filtro segue a saída escolhida: no estéreo pergunta se cabe em dois; no ESP com três ou mais
-   flybacks, se soa bem com um instrumento por flyback */
-const filtroSeis = () => esp.n >= 3;
-const soaBem = it => filtroSeis() ? cabe6(it) : cabe2(it);
-let acervo = '', soTopo = false, soVoz = false, soBom = false, soIA = false;
-const dentroDe = (it, p) => !p || it.pasta === p || it.pasta.startsWith(p + '/');
-const contar = p => lib.reduce((s, it) => s + (dentroDe(it, p) ? 1 : 0), 0);
+/* Acervo em três vistas — tudo, antigas, transcritas — no lugar de um botão por pasta: o dono do
+   projeto achou o menu poluído, e a pergunta que importa é se a música foi transcrita por uma
+   pessoa (antiga, de 8 a 16 faixas) ou pela IA (uma faixa por instrumento). Dentro da vista,
+   um seletor de artista ou grupo, um de gênero e a busca; os filtros ficam num menu que só abre
+   quando pedido. "Meus" aparece só para quem guardou arquivos neste navegador. */
+const VISTAS = [['', 'tudo'], ['antigas', 'antigas'], ['transcritas', 'transcritas'], ['meus', 'meus']];
+let vista = '', temMeus = false;
+/* quem transcreveu: MuScriptor na GPU daqui, Mirelo (interface ou API) ou, sem campo, MIDI
+   nativo, escrito por uma pessoa. Arquivo aberto do computador não tem como saber. */
+const ORIGEM = { muscriptor: 'MuScriptor', mirelo: 'Mirelo' };
+const origemDe = it => ORIGEM[it.origem] || (it.pasta === PASTA_MEUS ? '' : 'nativo');
+const ehTranscrita = it => it.pasta === 'transcritas' || it.pasta.startsWith('transcritas/');
+const naVista = (it, v = vista) => v === 'transcritas' ? ehTranscrita(it)
+  : v === 'meus' ? it.pasta === PASTA_MEUS
+  : v === 'antigas' ? !ehTranscrita(it) && it.pasta !== PASTA_MEUS : true;
+/* "+ de 2 canais": só soa bem com mais de dois flybacks — cabe em seis e não cabe em dois */
+const precisaMais = it => !cabe2(it) && (it.aproveitamento6 || 0) >= APROV6_MIN;
+const filtro = () => ({ voz: $('fVoz').checked, dois: $('f2').checked, mais: $('fMais').checked, topo: $('fTopo').checked });
+/* gêneros do acervo em português; os dos clássicos vêm do Mutopia, em inglês */
+const ESTILO_PT = { Romantic: 'Romântico', Classical: 'Clássico', Baroque: 'Barroco', Renaissance: 'Renascentista',
+  Modern: 'Moderno', Folk: 'Folclórico', Hymn: 'Hino', Medieval: 'Medieval', Popular: 'Popular', March: 'Marcha', Song: 'Canção' };
+const estiloDe = it => it.estilo ? (ESTILO_PT[it.estilo] || it.estilo) : '';
+const artistaDe = it => it.artista || it.autor || '';
 const nBR = v => v.toLocaleString('pt-BR');
 
 function montarAcervos(){
   const box = $('libA'); box.textContent = '';
-  const faz = (rotulo, valor) => {
-    const b = document.createElement('button');
-    b.textContent = rotulo + ' (' + nBR(contar(valor)) + ')';
-    b.setAttribute('aria-pressed', acervo === valor);
-    b.onclick = () => {
-      acervo = valor; soTopo = soVoz = soBom = false;
-      soIA = false;
-      ['libTop', 'libVoz', 'libBom', 'libIA'].forEach(id => $(id).setAttribute('aria-pressed', 'false'));
-      store.set('pasta', valor);
-      montarAcervos(); montarFiltro(); renderLib();
-    };
+  VISTAS.forEach(([v, rot]) => {
+    if (v === 'meus' && !temMeus) return;
+    const n = lib.reduce((s, it) => s + (naVista(it, v) ? 1 : 0), 0);
+    const b = el('button', { 'data-vista': v, 'aria-pressed': String(vista === v), title: n + ' músicas' }, rot);
+    b.onclick = () => { vista = v; store.set('vista', v); montarAcervos(); montarFiltro(); renderLib(); };
     box.appendChild(b);
-  };
-  faz('tudo', '');
-  pastas.forEach(p => faz(p.nome, p.nome));
+  });
 }
 
+/* Seletor de artista ou grupo. Nas transcritas, o artista do crédito; nas antigas, a pasta mais
+   funda (artista nas bandas, compositor nos clássicos, com a região como cabeçalho). Seletor de
+   gênero ao lado, escondido quando a vista tem menos de dois. */
 function montarFiltro(){
-  const sel = $('libF'); sel.textContent = '';
-  const dentro = lib.filter(it => dentroDe(it, acervo));
-  /* o grupo é a pasta mais funda; a de cima, quando existe, vira cabeçalho do <optgroup> */
+  const sel = $('libF'), selG = $('libG');
+  const antes = sel.value, antesG = selG.value;
+  sel.textContent = ''; selG.textContent = '';
+  const dentro = lib.filter(it => naVista(it));
   const grupos = new Map();
   dentro.forEach(it => {
-    const resto = acervo ? it.pasta.slice(acervo.length + 1) : it.pasta;
-    if (!resto) return;
-    const corte = resto.lastIndexOf('/');
-    const g = grupos.get(it.pasta) || { rotulo: corte < 0 ? resto : resto.slice(corte + 1),
-                                        acima: corte < 0 ? '' : resto.slice(0, corte), n: 0 };
-    g.n++; grupos.set(it.pasta, g);
+    let k, rotulo, acima;
+    if (ehTranscrita(it)){
+      const a = artistaDe(it) || 'sem artista';
+      k = 'a:' + fold(a); rotulo = a; acima = vista === 'transcritas' ? '' : 'transcritas';
+    } else {
+      const corte = it.pasta.lastIndexOf('/');
+      k = 'p:' + it.pasta; rotulo = corte < 0 ? it.pasta : it.pasta.slice(corte + 1);
+      acima = corte < 0 ? '' : it.pasta.slice(0, corte).replace(/\//g, ' › ');
+    }
+    if (!rotulo) return;
+    const g = grupos.get(k) || { rotulo, acima, n: 0 };
+    g.n++; grupos.set(k, g);
   });
-  const esconde = !acervo || grupos.size < 2;
-  sel.classList.toggle('hide', esconde);
-  if (esconde) return;
-  sel.appendChild(new Option('tudo em ' + acervo + ' (' + nBR(dentro.length) + ')', acervo));
+  sel.appendChild(new Option((vista === 'transcritas' ? 'todos os artistas' : 'todos os grupos') + ' (' + nBR(dentro.length) + ')', ''));
   const chave = k => fold(grupos.get(k).acima) + '\u0000' + fold(grupos.get(k).rotulo);
   let og = null, atual = null;
   [...grupos.keys()].sort((a, b) => chave(a).localeCompare(chave(b))).forEach(k => {
@@ -1683,51 +1748,51 @@ function montarFiltro(){
     }
     (og || sel).appendChild(new Option(g.rotulo + ' (' + nBR(g.n) + ')', k));
   });
-}
-/* o que está realmente selecionado: o grupo quando há um, senão o acervo inteiro */
-function prefixo(){
-  const sel = $('libF');
-  return sel.classList.contains('hide') ? acervo : (sel.value || acervo);
+  sel.value = [...sel.options].some(o => o.value === antes) ? antes : '';
+  const generos = new Map();
+  dentro.forEach(it => { const e = estiloDe(it); if (e) generos.set(e, (generos.get(e) || 0) + 1); });
+  selG.appendChild(new Option('todos os gêneros', ''));
+  [...generos.keys()].sort((a, b) => fold(a).localeCompare(fold(b))).forEach(e => selG.appendChild(new Option(e + ' (' + nBR(generos.get(e)) + ')', e)));
+  selG.value = [...selG.options].some(o => o.value === antesG) ? antesG : '';
+  selG.classList.toggle('hide', generos.size < 2);
 }
 function filtrar(){
-  const ws = fold($('libQ').value.trim()).split(/\s+/).filter(Boolean), p = prefixo();
-  return lib.filter(it => dentroDe(it, p)
-    && (!soTopo || (it.posicao > 0 && it.posicao <= TOPO))
-    && (!soVoz || temVoz(it))
-    && (!soIA || it.origem === 'ia')
-    && (!soBom || soaBem(it))
+  const ws = fold($('libQ').value.trim()).split(/\s+/).filter(Boolean);
+  const g = $('libF').value, gen = $('libG').classList.contains('hide') ? '' : $('libG').value, f = filtro();
+  return lib.filter(it => naVista(it)
+    && (!g || (g.startsWith('a:') ? ehTranscrita(it) && fold(artistaDe(it) || 'sem artista') === g.slice(2)
+                                  : it.pasta === g.slice(2) || it.pasta.startsWith(g.slice(2) + '/')))
+    && (!gen || estiloDe(it) === gen)
+    && (!f.voz || temVoz(it))
+    && (!(f.dois || f.mais) || (f.dois && cabe2(it)) || (f.mais && precisaMais(it)))
+    && (!f.topo || (it.posicao > 0 && it.posicao <= TOPO))
     && ws.every(w => it._busca.includes(w)));
 }
 function renderLib(){
   filtrados = filtrar();
-  const ul = $('libList'), p = prefixo(), add = (cls, txt) => { const li = document.createElement('li'); li.className = cls; li.textContent = txt; ul.appendChild(li); };
+  const ul = $('libList'), add = (cls, txt) => { const li = document.createElement('li'); li.className = cls; li.textContent = txt; ul.appendChild(li); };
   ul.textContent = '';
-  let folder = null;
+  const f = filtro(), ativos = [f.voz, f.dois, f.mais, f.topo].filter(Boolean).length;
+  $('libFiltros').textContent = ativos ? 'Filtros (' + ativos + ')' : 'Filtros';
+  $('libFiltros').setAttribute('aria-pressed', String(ativos > 0));
+  let grupo = null;
   filtrados.slice(0, LIMITE).forEach(it => {
-    if (it.pasta !== folder){
-      folder = it.pasta;
-      const g = p ? folder.slice(p.length + 1) : folder;
-      if (g) add('grp', g.replace(/\//g, ' › '));
-    }
+    /* cabeçalho por grupo: a pasta nas antigas, o artista nas transcritas */
+    const cab = ehTranscrita(it) ? 'transcritas › ' + (artistaDe(it) || 'sem artista') : it.pasta.replace(/\//g, ' › ');
+    if (cab !== grupo){ grupo = cab; if (cab) add('grp', cab); }
     const li = document.createElement('li'), b = document.createElement('button');
     const t = document.createElement('span'); t.className = 't'; t.textContent = it.titulo;
-    const sub = it.instrumentos || it.autor;
+    const sub = [it.instrumentos || artistaDe(it), estiloDe(it)].filter(Boolean).join(' · ');
     if (sub){ const s = document.createElement('span'); s.className = 'sub'; s.textContent = sub; t.appendChild(s); }
     const tag = document.createElement('span'); tag.className = 'tag';
-    /* o marcador por linha e o que permite enxergar de relance quais transcricoes trazem
-       a linha de canto, sem precisar abrir uma a uma */
-    /* "cabe em 2" soa bem já com dois flybacks; "pede 6" só soa bem com um instrumento por
-       flyback, que é o que separa o repertório de cada montagem */
-    /* IA: transcrita pelo MuScriptor, com uma faixa por instrumento — é o que a montagem fixa
-       espera; as outras são transcrições de pessoas, mais densas, de 8 a 16 faixas */
-    tag.textContent = it.tipo + (it.origem === 'ia' ? ' · IA' : '') + (it.config ? ' · pronta' : '') + (temVoz(it) ? ' · vocal' : '')
-      + (cabe2(it) ? ' · cabe em 2' : cabe6(it) ? ' · pede 6' : '');
+    /* origem (nativo, MuScriptor, Mirelo); pronta: tem .json de ajuste; vocal: tem linha de canto */
+    tag.textContent = [it.tipo, origemDe(it), it.config ? 'pronta' : '', temVoz(it) ? 'vocal' : ''].filter(Boolean).join(' · ');
     b.append(t, tag); b.dataset.path = it.arquivo; b.onclick = () => openLib(it);
     li.appendChild(b); ul.appendChild(li);
   });
   const n = filtrados.length;
   if (!n && lib.length) add('grp', 'nada encontrado');
-  else if (n > LIMITE) add('grp', 'mais ' + (n - LIMITE).toLocaleString('pt-BR') + ' — busque pelo nome ou escolha uma pasta');
+  else if (n > LIMITE) add('grp', 'mais ' + (n - LIMITE).toLocaleString('pt-BR') + ' — busque pelo nome ou escolha um grupo');
   $('libOff').textContent = n === lib.length ? 'Guardar tudo para usar sem internet' : 'Guardar estas ' + n.toLocaleString('pt-BR') + ' para usar sem internet';
   $('libOff').disabled = !n;
   markLib();
@@ -1781,10 +1846,18 @@ async function openLib(it){
 let buscaTimer = 0;
 $('libQ').addEventListener('input', () => { clearTimeout(buscaTimer); buscaTimer = setTimeout(renderLib, 120); });
 $('libF').addEventListener('change', renderLib);
-$('libTop').onclick = () => { soTopo = !soTopo; $('libTop').setAttribute('aria-pressed', String(soTopo)); renderLib(); };
-$('libVoz').onclick = () => { soVoz = !soVoz; $('libVoz').setAttribute('aria-pressed', String(soVoz)); renderLib(); };
-$('libIA').onclick = () => { soIA = !soIA; $('libIA').setAttribute('aria-pressed', String(soIA)); renderLib(); };
-$('libBom').onclick = () => { soBom = !soBom; $('libBom').setAttribute('aria-pressed', String(soBom)); renderLib(); };
+$('libG').addEventListener('change', renderLib);
+['fVoz', 'f2', 'fMais', 'fTopo'].forEach(id => $(id).addEventListener('change', renderLib));
+/* o menu de filtros abre e fecha no botão; clique fora ou Esc fecha */
+$('libFiltros').onclick = e => {
+  e.stopPropagation();
+  const abrir = $('libPop').classList.contains('hide');
+  $('libPop').classList.toggle('hide', !abrir);
+  $('libFiltros').setAttribute('aria-expanded', String(abrir));
+};
+$('libPop').addEventListener('click', e => e.stopPropagation());
+document.addEventListener('click', () => { $('libPop').classList.add('hide'); $('libFiltros').setAttribute('aria-expanded', 'false'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ $('libPop').classList.add('hide'); $('libFiltros').setAttribute('aria-expanded', 'false'); } });
 $('libAdd').onclick = () => $('fileMeus').click();
 $('fileMeus').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) guardarMeus(fs); };
 $('libDel').onclick = async () => {
@@ -2024,10 +2097,131 @@ function renderModo(){
   $('monitorRot').classList.toggle('hide', pelaP2());
   $('wavGo').title = 'WAV com ' + esp.n + (esp.n === 1 ? ' canal' : ' canais') + ', um por flyback'
     + (esp.n === 2 ? ', para tocar em qualquer player pelo cabo P2' : esp.n > 2 ? ', para uma interface de áudio multicanal' : '');
-  $('libBom').textContent = filtroSeis() ? 'só as boas em ' + esp.n + ' flybacks' : 'só as que cabem em 2';
-  $('libBom').title = filtroSeis() ? 'soam bem com um instrumento por flyback' : 'soam bem já com dois flybacks';
 }
-function renderTudo(){ renderModo(); renderPresets(); renderTracks(); renderStrips(); renderLanes(); renderPinos(); reschedule(); if (soBom) renderLib(); }
+function renderTudo(){ renderModo(); renderPresets(); renderTracks(); renderStrips(); renderLanes(); renderPinos(); reschedule(); }
+
+/* ---------- baixar músicas: conversa com o tools/servidor.py da máquina da GPU ----------
+   O site publicado não executa nada; quem busca no YouTube, transcreve e publica é o servidor,
+   no computador de casa — direto, ou por um túnel do Cloudflare quando se está fora. Endereço e
+   chave ficam neste navegador. A fila é do servidor: fechar a janela não para nada. */
+const srv = { end: store.get('srvEnd') || 'http://localhost:8790', chave: store.get('srvChave') || '', ok: false, timer: 0, itens: [] };
+async function srvPedir(caminho, corpo, metodo){
+  const r = await fetch(srv.end.replace(/\/+$/, '') + caminho, {
+    method: metodo || (corpo ? 'POST' : 'GET'),
+    headers: Object.assign({ 'X-Chave': srv.chave }, corpo ? { 'Content-Type': 'application/json' } : {}),
+    body: corpo ? JSON.stringify(corpo) : undefined });
+  const json = (r.headers.get('Content-Type') || '').includes('json');
+  const d = json ? await r.json() : await r.arrayBuffer();
+  if (!r.ok) throw new Error((json && d.erro) || ('o servidor respondeu ' + r.status));
+  return d;
+}
+function srvHabilitar(){
+  ['bxTexto', 'bxBuscar'].forEach(id => $(id).disabled = !srv.ok);
+  const marcados = srv.itens.filter(it => it.marcado).length;
+  $('bxGPU').disabled = $('bxMirelo').disabled = !srv.ok || !marcados;
+  $('bxSel').textContent = srv.itens.length ? marcados + ' de ' + srv.itens.length + ' escolhidas' : '';
+}
+async function srvConectar(){
+  srv.end = $('srvEnd').value.trim() || 'http://localhost:8790';
+  srv.chave = $('srvChave').value.trim();
+  store.set('srvEnd', srv.end); store.set('srvChave', srv.chave);
+  $('srvMsg').textContent = 'conectando…';
+  try {
+    const e = await srvPedir('/estado');
+    srv.ok = true;
+    $('srvMsg').textContent = 'conectado · ' + e.gpu + (e.publicar ? ' · publica no GitHub' : ' · sem publicar');
+    $('bxMirelo').classList.toggle('hide', !e.mirelo);
+    $('srvAjuda').classList.add('hide');
+    atualizarFila();
+  } catch (err) {
+    srv.ok = false;
+    $('srvMsg').textContent = /fetch|network/i.test(err.message) ? 'servidor não encontrado nesse endereço' : err.message;
+    $('srvAjuda').classList.remove('hide');
+  }
+  srvHabilitar();
+}
+const fmtDur = s => s ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : '';
+function mostrarAchados(){
+  const ul = $('bxLista'); ul.textContent = '';
+  srv.itens.forEach(it => {
+    const caixa = el('input', { type: 'checkbox', 'aria-label': it.titulo });
+    caixa.checked = !!it.marcado;
+    caixa.onchange = () => { it.marcado = caixa.checked; srvHabilitar(); };
+    const nome = el('span', null, it.titulo, el('span', { class: 'sub' }, [it.canal, it.ja ? 'já está no acervo' : ''].filter(Boolean).join(' · ')));
+    ul.appendChild(el('li', null, el('label', null, caixa, nome, el('span', { class: 'dur' }, fmtDur(it.duracao)))));
+  });
+  srvHabilitar();
+}
+async function buscarMusicas(){
+  const texto = $('bxTexto').value.trim();
+  if (!texto || !srv.ok) return;
+  $('bxBuscar').disabled = true; $('bxSel').textContent = 'buscando…';
+  try {
+    const r = await srvPedir('/buscar', { texto });
+    /* link de música ou playlist: tudo marcado; busca por nome: nada, para escolher */
+    const link = /^https?:\/\//.test(texto);
+    srv.itens = r.itens.map(it => Object.assign(it, { marcado: link && !it.ja }));
+    mostrarAchados();
+    if (!srv.itens.length) $('bxSel').textContent = 'nada encontrado';
+  } catch (err) { $('bxSel').textContent = 'não deu para buscar: ' + err.message; }
+  $('bxBuscar').disabled = !srv.ok;
+}
+async function enfileirar(motor){
+  const itens = srv.itens.filter(it => it.marcado).map(it => ({ id: it.id, titulo: it.titulo }));
+  if (!itens.length) return;
+  try {
+    await srvPedir('/fila', { itens, motor });
+    srv.itens.forEach(it => { it.marcado = false; });
+    mostrarAchados(); atualizarFila();
+  } catch (err) { $('bxSel').textContent = 'não deu para pôr na fila: ' + err.message; }
+}
+const SITUACAO = { aguardando: 'na fila', rodando: '', pronto: 'pronta', falhou: 'falhou' };
+async function atualizarFila(){
+  if (!srv.ok) return;
+  let r;
+  try { r = await srvPedir('/fila'); } catch (err) { $('srvMsg').textContent = 'perdeu a conexão: ' + err.message; srv.ok = false; srvHabilitar(); return; }
+  const ul = $('bxFila'); ul.textContent = '';
+  if (!r.fila.length) ul.appendChild(el('li', { class: 'txt' }, 'vazia'));
+  r.fila.slice().reverse().forEach(j => {
+    const barra = el('progress', { max: '100' }); barra.value = j.total || 0;
+    const sub = j.situacao === 'falhou' ? j.erro : j.situacao === 'rodando' ? j.etapa : SITUACAO[j.situacao] + (j.motor === 'mirelo' ? ' · Mirelo' : '');
+    const acoes = el('span', { class: 'acoes' });
+    if (j.situacao === 'pronto' && j.arquivo){
+      const abrir = el('button', null, 'abrir');
+      abrir.onclick = async () => {
+        try {
+          const buf = await srvPedir('/arquivo?nome=' + encodeURIComponent(j.arquivo));
+          $('dlgBaixar').close();
+          await openBuffer(buf, { key: 'acervo:transcritas/' + j.arquivo, file: j.arquivo, title: j.titulo });
+        } catch (err) { abrir.textContent = 'não abriu'; }
+      };
+      acoes.appendChild(abrir);
+    }
+    if (j.situacao !== 'rodando'){
+      const tirar = el('button', { 'aria-label': 'Tirar da lista' }, 'tirar');
+      tirar.onclick = async () => { await srvPedir('/fila/' + j.id, null, 'DELETE').catch(() => {}); atualizarFila(); };
+      acoes.appendChild(tirar);
+    }
+    ul.appendChild(el('li', { class: j.situacao },
+      el('span', { class: 'pct' }, j.situacao === 'rodando' ? (j.total || 0) + '%' : ''),
+      el('span', null, j.titulo || j.vid, el('span', { class: 'sub' }, sub), j.situacao === 'rodando' ? barra : null),
+      acoes));
+  });
+}
+$('baixarMus').onclick = () => {
+  $('srvEnd').value = srv.end; $('srvChave').value = srv.chave;
+  $('dlgBaixar').showModal();
+  if (srv.chave) srvConectar();
+  clearInterval(srv.timer);
+  srv.timer = setInterval(atualizarFila, 2000);
+};
+$('dlgBaixar').addEventListener('close', () => { clearInterval(srv.timer); srv.timer = 0; });
+$('dlgFechar').onclick = () => $('dlgBaixar').close();
+$('srvGo').onclick = srvConectar;
+$('bxBuscar').onclick = buscarMusicas;
+$('bxTexto').addEventListener('keydown', e => { if (e.key === 'Enter') buscarMusicas(); });
+$('bxGPU').onclick = () => enfileirar('local');
+$('bxMirelo').onclick = () => enfileirar('mirelo');
 
 /* ---------- eventos ---------- */
 const file = $('file');

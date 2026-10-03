@@ -497,9 +497,24 @@ def por_muscriptor(audio, titulo, args):
                      '   (ou exporte HF_TOKEN=hf_... de huggingface.co/settings/tokens)')
         raise
 
-    log('  transcrevendo…')
-    midi = modelo.transcribe_to_midi(audio, instruments=instrumentos, cfg_coef=args.orientacao,
-                                     beam_size=args.beam, detect_tempo='best-effort')
+    log('  transcrevendo… 0%')
+    # O mesmo que transcribe_to_midi (grade de tempo + eventos -> MIDI), com os eventos de
+    # progresso que o modelo já emite a cada pedaço de 5 s repassados como linha de log: é o que
+    # a janela "Baixar músicas" do site mostra como porcentagem.
+    def com_progresso(eventos):
+        ultimo = -1
+        for ev in eventos:
+            if type(ev).__name__ == 'ProgressEvent' and getattr(ev, 'total', 0):
+                pct = int(100 * ev.completed / ev.total)
+                if pct != ultimo:
+                    log(f'  transcrevendo… {pct}%')
+                    ultimo = pct
+            yield ev
+    grade = modelo.detect_beat_grid_for(audio, 'best-effort')
+    midi = modelo.events_to_midi_bytes(
+        com_progresso(modelo.transcribe(audio, instruments=instrumentos, cfg_coef=args.orientacao,
+                                        beam_size=args.beam)),
+        beat_grid=grade)
 
     saida = pasta_saida(args.saida)
     limpo = ''.join(c for c in titulo if c not in '\\/:*?"<>|').strip() or 'transcricao'

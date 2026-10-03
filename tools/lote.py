@@ -33,6 +33,9 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -95,16 +98,26 @@ def metadados(url):
     return artista or 'artista não identificado', musica or 'sem título', duracao
 
 
-def baixar(url, vid):
+def baixar(url, vid, aviso=None):
+    """Áudio em wav no cache. `aviso(pct)`, se vier, recebe o andamento do download."""
     CACHE.mkdir(exist_ok=True)
     pronto = sorted(CACHE.glob(f'{vid}.wav'))
     if pronto:
         return pronto[0]
-    rc, _, err = ytdlp('-q', '--no-playlist', '-x', '--audio-format', 'wav', '-o',
-                       str(CACHE / f'{vid}.%(ext)s'), url, timeout=1800)
+    cmd = ['yt-dlp', '--no-warnings', '--newline', '--no-playlist', '-x', '--audio-format', 'wav',
+           '-o', str(CACHE / f'{vid}.%(ext)s'), url]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                            encoding='utf-8', errors='replace')
+    ultima = ''
+    for linha in proc.stdout:
+        ultima = linha.strip() or ultima
+        m = re.search(r'\[download\]\s+([\d.]+)%', linha)
+        if m and aviso:
+            aviso(float(m.group(1)))
+    proc.wait(timeout=1800)
     achado = sorted(CACHE.glob(f'{vid}.wav'))
-    if rc or not achado:
-        raise RuntimeError((err.strip().splitlines() or ['sem detalhe'])[-1][:300])
+    if proc.returncode or not achado:
+        raise RuntimeError(ultima[:300] or f'yt-dlp saiu com {proc.returncode}')
     return achado[0]
 
 
@@ -115,8 +128,11 @@ class Falha(RuntimeError):
         self.instrumentos = instrumentos or []
 
 
-def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0):
-    """Roda o transcrever.py à parte. Devolve o relatório, ou levanta Falha com o motivo."""
+def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0, aviso=None):
+    """Roda o transcrever.py à parte. Devolve o relatório, ou levanta Falha com o motivo.
+
+    `aviso(etapa, pct)`, se vier, recebe o andamento: a separação ("separando… 40%") e a
+    transcrição ("transcrevendo… 70%") que o transcrever.py escreve linha a linha."""
     rel = CACHE / f'{audio.stem}.{modelo}.json'
     rel.unlink(missing_ok=True)
     # o large leva ~3,5 vezes a duração da música numa RTX 2060, com a separação junto; folga
@@ -126,15 +142,22 @@ def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0):
            '--saida', str(saida), '--modelo', modelo, '--instrumentos', 'auto', '--relatorio', str(rel),
            '--trecho', str(trecho)]
     env = dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONUTF8='1')
-    try:
-        r = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace',
-                           timeout=limite, env=env)
-    except subprocess.TimeoutExpired as e:
-        texto = (e.stdout or '') if isinstance(e.stdout, str) else ''
-        raise Falha(f'passou de {limite // 60} min', _instrumentos(texto))
-    if r.returncode or not rel.is_file():
-        fim = [l for l in (r.stderr + r.stdout).splitlines() if l.strip() and '[muscriptor]' not in l]
-        raise Falha((fim[-1] if fim else f'saiu com {r.returncode}')[:300], _instrumentos(r.stdout))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                            encoding='utf-8', errors='replace', env=env)
+    linhas, inicio = [], time.time()
+    for linha in proc.stdout:
+        linhas.append(linha)
+        if time.time() - inicio > limite:
+            proc.kill()
+            raise Falha(f'passou de {limite // 60} min', _instrumentos(''.join(linhas)))
+        m = re.search(r'(descobrindo|separando|transcrevendo)\D*(\d+)?%?', linha)
+        if m and aviso:
+            aviso(m.group(1), int(m.group(2)) if m.group(2) else 0)
+    proc.wait()
+    texto = ''.join(linhas)
+    if proc.returncode or not rel.is_file():
+        fim = [l for l in texto.splitlines() if l.strip() and '[muscriptor]' not in l]
+        raise Falha((fim[-1] if fim else f'saiu com {proc.returncode}')[:300], _instrumentos(texto))
     return json.loads(rel.read_text(encoding='utf-8'))
 
 
@@ -165,6 +188,75 @@ def para_o_mirelo(saida, estado):
     arq.write_text('\n'.join(linhas) + '\n', encoding='utf-8')
 
 
+UA = 'flyback-midi/1.0 (https://github.com/Johaan01/flyback-midi)'
+# gêneros do MusicBrainz agrupados em poucos nomes: o filtro do site tem de ser curto
+GENEROS = [('metal', 'Metal'), ('punk', 'Punk'), ('rock', 'Rock'), ('sertanejo', 'Sertanejo'),
+           ('gaúcha', 'Gaúcha'), ('gaucha', 'Gaúcha'), ('nativis', 'Gaúcha'), ('samba', 'Samba'),
+           ('mpb', 'MPB'), ('forró', 'Forró'), ('anime', 'Anime'), ('j-pop', 'J-pop'), ('j-rock', 'Rock'),
+           ('pop', 'Pop'), ('country', 'Country'), ('folk', 'Folk'), ('blues', 'Blues'), ('jazz', 'Jazz'),
+           ('electronic', 'Eletrônica'), ('synth', 'Eletrônica'), ('disco', 'Disco'), ('funk', 'Funk'),
+           ('soul', 'Soul'), ('r&b', 'Soul'), ('hip hop', 'Hip-hop'), ('rap', 'Hip-hop'),
+           ('reggae', 'Reggae'), ('classical', 'Clássica'), ('soundtrack', 'Trilha sonora')]
+
+
+def _mb(caminho):
+    req = urllib.request.Request('https://musicbrainz.org/ws/2/' + caminho, headers={'User-Agent': UA})
+    for tentativa in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                dados = json.load(r)
+            break
+        except urllib.error.HTTPError as e:
+            # 503 é o limite de taxa, mesmo respeitando uma por segundo: AC/DC, Black Sabbath,
+            # KISS e Scorpions ficaram sem gênero na primeira rodada por isso
+            if e.code != 503 or tentativa == 3:
+                raise
+            time.sleep(2 + 3 * tentativa)
+    time.sleep(1.1)                    # o MusicBrainz pede no máximo uma consulta por segundo
+    return dados
+
+
+def artista_mb(nome, musica=None):
+    """(nome como o MusicBrainz escreve, gênero agrupado) — ou (None, None) se não achar com
+    segurança. O nome canônico corrige o que vem do YouTube ("BAITACA" vira "Baitaca"); o gênero
+    é o mais votado do artista, agrupado em GENEROS.
+
+    Com a música junto, o artista sai da gravação que casa com os dois: nome sozinho é ambíguo —
+    "Coda" achava um produtor de eletrônica, não o cantor de BLOODY STREAM."""
+    dobra = lambda s: re.sub(r'[^a-z0-9]', '', s.lower())
+    try:
+        a = None
+        if musica:
+            r = _mb('recording/?fmt=json&limit=3&query='
+                    + urllib.parse.quote(f'recording:"{musica}" AND artist:"{nome}"'))
+            for rec in r.get('recordings') or []:
+                cand = (rec.get('artist-credit') or [{}])[0].get('artist')
+                # a gravação tem de ser do mesmo artista: "Do Fundo da Grota" também existe por
+                # outra dupla, e casava com ela
+                if cand and int(rec.get('score', 0)) >= 90 and dobra(cand.get('name', '')) == dobra(nome):
+                    a = cand
+                    break
+        if not a:
+            r = _mb('artist/?fmt=json&limit=1&query=' + urllib.parse.quote(f'artist:"{nome}"'))
+            a = (r.get('artists') or [None])[0]
+            # e o nome tem de ser o mesmo: "Movie Themes" ou "Nintendo" não são artista do
+            # MusicBrainz, e a busca devolveria alguém parecido com nota alta
+            if not a or int(a.get('score', 0)) < 90 or dobra(a.get('name', '')) != dobra(nome):
+                return None, None
+        info = _mb(f'artist/{a["id"]}?inc=genres+tags&fmt=json')
+        # gêneros curados primeiro; as tags dos usuários cobrem artista menos conhecido
+        g = (sorted(info.get('genres') or [], key=lambda x: -x.get('count', 0))
+             + sorted(info.get('tags') or [], key=lambda x: -x.get('count', 0)))
+        estilo = None
+        for gen in g:
+            estilo = next((rot for chave, rot in GENEROS if chave in gen['name'].lower()), None)
+            if estilo:
+                break
+        return a.get('name') or None, estilo
+    except Exception:
+        return None, None
+
+
 def creditar(saida, arq, artista, musica, url, modelo, rel):
     faixas = ler_midi(arq.read_bytes())
     fins = [t1 for f in faixas for _, t1, _ in f.notas]
@@ -172,16 +264,20 @@ def creditar(saida, arq, artista, musica, url, modelo, rel):
     medida, nota = achar_lead(faixas, dur)      # a mesma detecção de canto do site e do acervo
     vocal = veredito_lead(nota) + (f' · faixa "{medida["nome"]}"' if medida and nota >= 3.8 else '')
     insts = ', '.join(rel.get('instrumentos') or []) or 'sem lista'
+    canonico, estilo = artista_mb(artista, musica)
+    artista = canonico or artista
+    origem = rel.get('origem') or (f'MuScriptor {modelo} (Kyutai/Mirelo) rodado localmente, transcrição automática do '
+                                   f'áudio, sem transcritor humano; instrumentos detectados pelo PANNs: {insts}')
     entrada = {
         'autor': artista, 'artista': artista,
         'licenca': 'obra protegida — uso educacional sem fins lucrativos',
         'credito': f'interpretação de {artista}; "{musica}"',
-        'transcricao': f'MuScriptor {modelo} (Kyutai/Mirelo) rodado localmente, transcrição automática do '
-                       f'áudio, sem transcritor humano; instrumentos detectados pelo PANNs: {insts}',
+        'transcricao': origem,
         'fonte': url,
         'vocal': vocal,
         'aproveitamento': round(aproveitamento(faixas, dur) * 100),
         'aproveitamento6': round(aproveitamento_n(faixas, dur, 6) * 100),
+        **({'estilo': estilo} if estilo else {}),
     }
     c = saida / 'creditos.json'
     dados = json.loads(c.read_text(encoding='utf-8')) if c.is_file() else {}

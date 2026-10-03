@@ -42,7 +42,7 @@ mixer com um módulo por canal e o painel da saída.
   de 1 Hz). Serve para achar a ressonância do arco e casar o par.
 - **Saída serial para ESP32.** Chrome ou Edge. Protocolo em `docs/protocolo-serial.md`. O painel
   "Linhas enviadas" mostra o que vai para a porta, também sem ESP ligado.
-- **Mixer.** Cada canal tem silenciar e solo, ganho, passa-baixa, oitava, que nota tirar do
+- **Mixer.** Cada canal tem silenciar e solo, ganho, agudo máximo, oitava, que nota tirar do
   acorde, envelope e dinâmica.
 - **Atalhos.** Espaço toca e pausa, setas andam 5 s, Home volta ao início. Arrastar um arquivo
   para a janela abre.
@@ -81,21 +81,26 @@ Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `to
 
 ## O que já vem no acervo
 
-1.889 músicas em cinco acervos:
+1.901 músicas em cinco pastas:
 
 | Pasta | Conteúdo |
 |---|---|
-| `bandas` | 718 transcrições de rock, metal e pop, **uma pasta por artista** — 110 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
+| `bandas` | 1.239 transcrições de rock, metal e pop, **uma pasta por artista** — 122 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
 | `classicos` | 590 peças do [Mutopia Project](https://www.mutopiaproject.org), em domínio público ou Creative Commons, por região de origem do compositor: Alemanha e Áustria (217), Itália (82), França (74), Rússia e Leste Europeu (67), Américas (41), Tradicional e anônimo (31), Ibéria e América Latina (31), Nórdicos e Países Baixos (24) e Ilhas Britânicas (23) |
 | `folk russo` | 45 canções tradicionais e soviéticas — Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika, Kamarinskaya, Kazachok, Podmoskovnye Vechera. Quase todas em domínio público; as de autor conhecido e ainda protegido estão marcadas uma a uma |
-| `transcritas` | 5 MIDIs gerados do áudio pelo MuScriptor, com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
+| `transcritas` | 17 MIDIs gerados do áudio pelo MuScriptor (12 na GPU daqui, 5 no Mirelo), com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
 | `exemplos` | 10 arranjos de temas em domínio público feitos para os dois flybacks (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki), mais Ode à Alegria e um riff em Guitar Pro |
 
-A navegação no site é em duas peças: **botões** escolhem o acervo e um **seletor** mostra o que
-há dentro dele — o artista, ou o compositor agrupado por região. Chegar no AC/DC são dois
-toques. Há ainda busca por título, artista, compositor, instrumento ou estilo, um botão
-**só as mais ouvidas** que reduz o acervo às 60 músicas mais conhecidas, e um para sortear.
-O crédito exigido pelas licenças aparece ao abrir cada peça.
+No site, três botões escolhem o que listar: **tudo**, **antigas** (as transcrições de pessoas e
+os arranjos) e **transcritas** (as geradas do áudio). Embaixo, um seletor de grupo — o artista,
+ou o compositor agrupado por região —, um de **gênero** e a busca por título, artista, compositor,
+instrumento ou estilo. O resto fica guardado no menu **Filtros**: com voz, 2 canais (cabe nos
+dois flybacks do P2), + de 2 canais (só soa bem com mais flybacks), as 60 mais ouvidas e sortear
+uma.
+
+Cada linha diz de onde veio a transcrição: **nativo** (MIDI escrito por uma pessoa),
+**MuScriptor** (gerado na GPU daqui) ou **Mirelo** (gerado no Mirelo). O gênero vem do MusicBrainz
+(`tools/generos.py`); o crédito exigido pelas licenças aparece ao abrir cada peça.
 
 ### A linha de canto
 
@@ -105,7 +110,7 @@ sozinho — `tools/curar_acervo.py` acha a faixa que se comporta como linha de c
 registro de voz, presente ao longo da música, nome e instrumento compatíveis) e grava o veredito
 no `creditos.json`.
 
-No site, cada linha da lista ganha o marcador **· vocal**, e o botão **só com vocal** reduz o
+No site, cada linha da lista ganha o marcador **· vocal**, e o filtro **com voz** reduz o
 acervo ao que tem canto. Ao abrir a música, o crédito diz qual faixa é a voz.
 
 Isso também decide qual transcrição fica: o acervo Lakh costuma ter três ou quatro versões da
@@ -194,6 +199,28 @@ Para uma playlist inteira, deixando rodar sozinho:
 
 Pode ser interrompido e retomado. O que o `large` não conseguir nem na segunda tentativa vai
 para `musicas/transcritas/para-o-mirelo.md`, com o link e os instrumentos a marcar no Mirelo.
+
+### Baixar músicas pelo site
+
+O botão **Baixar músicas…** do acervo abre uma janela que faz o mesmo sem terminal: cole o link
+de uma playlist ou de uma música, ou só o nome (ela busca e mostra as dez mais prováveis), marque
+o que quer e mande para **a minha GPU** ou para o **Mirelo**. A janela mostra o download e a
+transcrição em andamento, e cada música pronta vai sozinha para o GitHub e aparece no acervo em
+cerca de um minuto; "abrir" toca na hora, direto do computador que transcreveu.
+
+Quem faz o trabalho é um servidor que roda no computador da GPU:
+
+    python tools/servidor.py
+
+Ele imprime uma chave; cole-a na janela, junto com o endereço (`http://localhost:8790` no
+mesmo computador). Para usar de outro lugar, exponha a porta com um túnel, por exemplo
+`cloudflared tunnel --url http://localhost:8790`, e use o endereço que ele der. A chave é o que
+impede outra pessoa de usar sua GPU e seu GitHub: não a publique.
+
+Para o Mirelo, ponha a chave da API dele no mesmo arquivo de configuração do servidor
+(`~/.flyback-servidor.json`, campo `"mirelo"`) ou em `MIRELO_API_KEY`. Ela fica só nesse
+computador, nunca no site. O Mirelo cobra 2,5 créditos por segundo de áudio (uma música de
+4 minutos são 600); sem chave, a janela só oferece a GPU.
 
 Baixar do YouTube contraria os termos de uso do serviço; quem roda responde pelo uso.
 
