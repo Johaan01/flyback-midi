@@ -183,6 +183,18 @@ harmonia e rastreia a altura de cada um — com três faixas em vez de seis e se
 sob licença. `--guardar` deixa os stems em disco e `--stems` retoma deles, porque a separação é a
 parte lenta e a única que precisa de GPU.
 
+Sem `--instrumentos`, a ferramenta descobre sozinha o que a música tem: separa a gravação e
+passa cada parte por outro modelo, o PANNs, que reconhece canto e instrumentos. Nas cinco
+músicas comparadas com o Mirelo, a voz saiu de 22–58% para 60–73% de concordância.
+
+Para uma playlist inteira, deixando rodar sozinho:
+
+    python tools/lote.py "https://music.youtube.com/playlist?list=..."
+    python tools/lote.py --situacao
+
+Pode ser interrompido e retomado. O que o `large` não conseguir nem na segunda tentativa vai
+para `musicas/transcritas/para-o-mirelo.md`, com o link e os instrumentos a marcar no Mirelo.
+
 Baixar do YouTube contraria os termos de uso do serviço; quem roda responde pelo uso.
 
 ### Direito autoral

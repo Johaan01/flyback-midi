@@ -26,6 +26,9 @@ Arquivos de apoio, fora das páginas:
 | `tools/organizar_bandas.py` | Identifica, tira repetidas e arruma `musicas/bandas` por artista, medindo o quanto cada música é conhecida (Wikipedia e ListenBrainz). Com `--plano` serve a acervo sem artista, como o folk russo |
 | `tools/popularidade.json` | O que as duas APIs responderam, guardado. Faz as rodadas seguintes não precisarem de internet e darem o mesmo resultado |
 | `tools/transcrever.py` | Gera MIDI a partir de uma gravação: separa os stems e transcreve cada um. **A única ferramenta que precisa de pacotes além da biblioteca padrão** (torch, torchaudio, librosa, basic-pitch) — é opcional, e nada no site depende dela |
+| `tools/instrumentos.py` | Descobre a instrumentação de uma gravação para condicionar o MuScriptor: PANNs (AudioSet) aplicado a cada stem do Demucs. Voz pelo peso do stem de voz, baixo e bateria pelos rótulos, o resto traduzido para os grupos do MuScriptor |
+| `tools/lote.py` | Transcreve uma playlist do YouTube sozinho, retomável: `large` com instrumentos automáticos, segunda tentativa com a separação em blocos menores, e o que ainda falhar vai para `para-o-mirelo.md` com os instrumentos a marcar. Credita cada música no `creditos.json` |
+| `tools/medir_canais.py` | Mede o aproveitamento de todo o acervo em 2 e em 6 flybacks e grava no `creditos.json` — é o que o site usa para "cabe em 2" e "pede 6" |
 | `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
 | `tools/testar_site.py` | Abre o `index.html` num Chrome de verdade (Playwright) e exercita os dois modos de saída, o roteamento, o WAV e a serial com porta simulada. Opcional; precisa de `pip install playwright` |
