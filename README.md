@@ -104,7 +104,7 @@ mesma música e normalmente só uma traz o vocal. Em *Highway to Hell*, por exem
 | `tools/curar_acervo.py` | Enxuga e reorganiza `classicos` por região e compositor. O download bruto traz 4.867 arquivos, a maior parte método, estudo e parte de instrumento solta; a ferramenta mede quanto de cada peça sobrevive à redução a dois canais monofônicos e deixa o repertório que se reconhece |
 | `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi, do acervo Lakh (via rawl.rocks) e do folk russo do FreeSheetMusic |
 | `tools/organizar_bandas.py` | Identifica, tira repetidas, mede a linha de canto e ordena `bandas` pelo quanto a música é conhecida, com Wikipedia e ListenBrainz |
-| `tools/transcrever.py` | Gera MIDI a partir de uma gravação, separando voz, baixo e harmonia em faixas. Opcional, e a única ferramenta que precisa de pacotes além da biblioteca padrão |
+| `tools/transcrever.py` | Gera MIDI a partir de uma gravação, em faixas separadas por instrumento. Opcional, e a única ferramenta que precisa de pacotes além da biblioteca padrão |
 
 O caminho completo para acrescentar músicas de banda é:
 
@@ -133,6 +133,30 @@ E o acervo de folk russo, que é plano e sem artista:
 
 Nenhuma delas mexe em nada sem `--baixar` / `--aplicar`: sem a opção, só mostram o que fariam.
 `musicas/pastas.txt` define a ordem das pastas.
+
+### Gerar MIDI de uma gravação
+
+Quando não existe transcrição boa de uma música, dá para fazer uma a partir do áudio:
+
+    python tools/transcrever.py --url "https://..." --instrumentos seis --saida "musicas/transcritas"
+
+Sai um MIDI com uma faixa por instrumento — voz, guitarra, violão, piano, baixo e bateria — que
+é o que o site precisa para mandar cada instrumento a um flyback. `--instrumentos` escolhe quais
+grupos decodificar; sem ele o modelo decide.
+
+Isso usa o [MuScriptor](https://github.com/muscriptor/muscriptor), da Kyutai com a Mirelo. O
+código é MIT, mas **os pesos são CC BY-NC 4.0 e pedem licença aceita numa conta do HuggingFace**:
+
+1. Aceite em [huggingface.co/MuScriptor/muscriptor-medium](https://huggingface.co/MuScriptor/muscriptor-medium)
+   (o acesso é liberado na hora).
+2. `hf auth login`, ou exporte `HF_TOKEN`.
+
+Sem isso, `--motor stems` faz o mesmo por outro caminho — separa a gravação em voz, baixo e
+harmonia e rastreia a altura de cada um — com três faixas em vez de seis e sem depender de pesos
+sob licença. `--guardar` deixa os stems em disco e `--stems` retoma deles, porque a separação é a
+parte lenta e a única que precisa de GPU.
+
+Baixar do YouTube contraria os termos de uso do serviço; quem roda responde pelo uso.
 
 ### Direito autoral
 

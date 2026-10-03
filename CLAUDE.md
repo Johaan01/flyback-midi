@@ -201,6 +201,45 @@ Barra de reprodução fixa no rodapé, alvos de toque de 40 px ou mais (`pointer
 
 ### Gerar MIDI do áudio — `tools/transcrever.py`
 
+Duas vias, `--motor muscriptor` (padrão) e `--motor stems`. A primeira é melhor sempre que der
+para usar; a segunda não depende de pesos sob licença e continua mantida porque é o caminho que
+sempre funciona.
+
+#### `--motor muscriptor` — uma faixa por instrumento
+
+[MuScriptor](https://github.com/muscriptor/muscriptor), da Kyutai com a Mirelo: um transformer
+decoder-only que lê o mel da **mistura** e escreve as notas direto, cada uma com seu instrumento.
+Resolve de uma vez as duas coisas que o caminho de stems resolve mal — não existe "harmonia" como
+um saco só, porque guitarra, piano e teclado saem em faixas separadas; e não há erro de oitava de
+estimador de altura, porque não há estimador de altura.
+
+Encaixa no projeto sem adaptação: escreve SMF tipo 1 com uma faixa nomeada por instrumento e
+bateria no canal 10, que é o que o parser do site já espera, e o nome `voice` casa com `RX_CANTO`
+sem mexer em nada. **Então o MIDI dele entra no acervo como está, sem redução** — quem reduz a
+uma nota por arco é o site, no momento de tocar, como faz com todo o resto do acervo.
+
+`--instrumentos` é a chave para mais de dois flybacks: os 35 grupos que o modelo conhece estão em
+`INSTRUMENTOS`, e os que não estiverem na lista ficam **proibidos de ser decodificados**. O número
+de faixas é decidido na transcrição, não depois. `--instrumentos seis` é o atalho para um conjunto
+que cobre rock e pop com uma faixa por flyback.
+
+| Variante | Parâmetros | Onde cabe |
+|---|---|---|
+| `small` | 103M | CPU |
+| `medium` (padrão) | 307M | float32 numa placa de 6 GB |
+| `large` | 1,4B | precisa de float16 numa placa de 6 GB — é o que `--dtype` faz sozinho |
+
+**O código é MIT, os pesos são CC BY-NC 4.0 e exigem licença aceita numa conta do HuggingFace.**
+Não há como contornar de fora: `hf_hub_download` devolve `GatedRepoError` 401. Não comercial casa
+com o uso deste projeto (ver `USO-EDUCACIONAL.md`), mas é uma dependência de conta de terceiro, e
+é por isso que o motor de stems não foi removido.
+
+No Windows o `rich` do CLI dele quebra no console cp1252; `PYTHONUTF8=1` resolve. Pelo Python
+(que é como `transcrever.py` chama) não acontece.
+
+#### `--motor stems` — separação e rastreio de altura
+
+
 O acervo vive de transcrição de fã, e a qualidade varia muito. Transcrever direto da gravação tira a interpretação de terceiros do caminho, e o problema é mais fácil do que parece **por causa do aparelho**: cada flyback toca uma nota por vez, então não é preciso resolver transcrição polifônica — basta a linha dominante de cada stem.
 
 Separação com o Hybrid Demucs que vem no torchaudio (`HDEMUCS_HIGH_MUSDB_PLUS`), sem o pacote `demucs`. Depois, **o transcritor muda conforme a fonte**, e essa escolha é a diferença entre soar certo e soar cacofônico:

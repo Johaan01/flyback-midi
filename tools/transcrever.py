@@ -408,6 +408,88 @@ def escrever_midi(faixas, titulo):
     return b'MThd' + struct.pack('>IHHH', 6, 1, len(trilhas), DIV) + b''.join(trilhas)
 
 
+# ---------------------------------------------------------------- motor MuScriptor
+# Os 35 grupos que o modelo sabe decodificar, para validar `--instrumentos` antes de carregar
+# 300 MB de pesos só para descobrir que o nome estava errado. `muscriptor list-instruments`.
+INSTRUMENTOS = (
+    'acoustic_piano', 'electric_piano', 'chromatic_percussion', 'organ', 'acoustic_guitar',
+    'clean_electric_guitar', 'distorted_electric_guitar', 'acoustic_bass', 'electric_bass',
+    'violin', 'viola', 'cello', 'contrabass', 'orchestral_harp', 'timpani', 'string_ensemble',
+    'synth_strings', 'voice', 'orchestra_hit', 'trumpet', 'trombone', 'tuba', 'french_horn',
+    'brass_section', 'soprano_and_alto_sax', 'tenor_sax', 'baritone_sax', 'oboe', 'english_horn',
+    'bassoon', 'clarinet', 'flutes', 'synth_lead', 'synth_pad', 'drums')
+
+# Um conjunto de seis que cobre rock e pop e dá uma faixa por flyback. Serve de ponto de
+# partida, não de regra: `--instrumentos` aceita qualquer sublista dos nomes acima.
+SEIS = ['voice', 'distorted_electric_guitar', 'acoustic_guitar', 'acoustic_piano',
+        'electric_bass', 'drums']
+
+
+def por_muscriptor(audio, titulo, args):
+    """Transcreve com o MuScriptor, que já devolve MIDI multifaixa por instrumento.
+
+    Caminho diferente do de stems, e melhor quando dá para usar. O de stems separa a gravação
+    em três fontes e rastreia a altura de cada uma; o MuScriptor é um transformer que lê o mel
+    da mistura e **escreve as notas direto**, com o instrumento de cada uma. Isso resolve de
+    uma vez as duas coisas que o caminho de stems resolve mal: não existe "harmonia" como um
+    saco só — guitarra, piano e teclado saem em faixas separadas — e não há erro de oitava de
+    estimador de altura, porque não há estimador de altura.
+
+    O que ele escreve é SMF tipo 1 com uma faixa nomeada por instrumento e bateria no canal 10,
+    que é exatamente o que o parser do site espera; o nome `voice` casa com a detecção de linha
+    de canto sem precisar de nada. Então o MIDI dele entra no acervo como está, sem redução:
+    quem reduz a uma nota por arco é o site, no momento de tocar, como faz com todo o resto.
+
+    `--instrumentos` é a chave para os seis flybacks: os grupos que não estiverem na lista ficam
+    proibidos de ser decodificados, então o número de faixas é decidido aqui e não depois.
+
+    Os pesos são CC BY-NC 4.0 e exigem aceitar a licença numa conta do HuggingFace — o código
+    é MIT, mas os pesos não vêm sem isso, e não há como contornar de fora.
+    """
+    from muscriptor import TranscriptionModel
+
+    instrumentos = None
+    if args.instrumentos:
+        instrumentos = [x.strip() for x in args.instrumentos.split(',') if x.strip()]
+        ruins = [x for x in instrumentos if x not in INSTRUMENTOS]
+        if ruins:
+            sys.exit(f'instrumento desconhecido: {", ".join(ruins)}\n'
+                     f'Os nomes válidos são:\n  ' + '\n  '.join(INSTRUMENTOS))
+
+    import torch
+    disp = 'cpu' if args.cpu else ('cuda' if torch.cuda.is_available() else 'cpu')
+    # O `large` são 1,4 bilhão de parâmetros: em float32 não cabe numa placa de 6 GB, em
+    # float16 cabe com folga. Nas outras variantes float32 cabe e é mais preciso.
+    dtype = args.dtype or ('float16' if disp == 'cuda' and args.modelo == 'large' else None)
+    log(f'"{titulo}"  ·  MuScriptor {args.modelo}  ·  {disp}{" " + dtype if dtype else ""}')
+    if instrumentos:
+        log(f'  instrumentos: {", ".join(instrumentos)}')
+
+    try:
+        modelo = TranscriptionModel.load_model(args.modelo, device=disp, dtype=dtype)
+    except Exception as e:
+        if 'gated' in str(e).lower() or '401' in str(e):
+            sys.exit('os pesos do MuScriptor são CC BY-NC 4.0 e pedem licença aceita.\n'
+                     f'1. Aceite em https://huggingface.co/MuScriptor/muscriptor-{args.modelo}\n'
+                     '2. Entre na conta aqui:  hf auth login\n'
+                     '   (ou exporte HF_TOKEN=hf_... de huggingface.co/settings/tokens)')
+        raise
+
+    log('  transcrevendo…')
+    midi = modelo.transcribe_to_midi(audio, instruments=instrumentos,
+                                     beam_size=args.beam, detect_tempo='best-effort')
+
+    saida = Path(args.saida) if args.saida else (RAIZ / 'musicas' / 'unsorted')
+    if not saida.is_absolute():
+        saida = RAIZ / saida
+    saida.mkdir(parents=True, exist_ok=True)
+    limpo = ''.join(c for c in titulo if c not in '\\/:*?"<>|').strip() or 'transcricao'
+    arq = saida / f'{limpo}.mid'
+    arq.write_bytes(midi)
+    log(f'\npronto: {arq}  ({len(midi) // 1024} KB)')
+    return arq
+
+
 # ---------------------------------------------------------------- principal
 def faixas_de(stems, sr, so_mono):
     """Transcreve cada stem já separado, na ordem em que as faixas entram no MIDI."""
@@ -473,8 +555,6 @@ def de_stems(args, titulo):
 
 
 def transcrever(args):
-    import torch
-
     tmp = Path(tempfile.mkdtemp(prefix='flyback-'))
     titulo = args.titulo or ''
     if args.stems:
@@ -489,6 +569,10 @@ def transcrever(args):
             sys.exit(f'não achei o arquivo: {audio}')
     titulo = titulo or audio.stem
 
+    if args.motor == 'muscriptor':
+        return por_muscriptor(audio, titulo, args)
+
+    import torch
     disp = 'cuda' if torch.cuda.is_available() and not args.cpu else 'cpu'
     log(f'"{titulo}"  ·  {disp}')
 
@@ -528,7 +612,23 @@ def main():
                    help='rastreio monofônico em tudo, sem basic-pitch')
     p.add_argument('--guardar', help='pasta onde deixar os stems separados, para reaproveitar')
     p.add_argument('--stems', help='pasta com stems já separados, pulando download e separação')
+    p.add_argument('--motor', choices=('muscriptor', 'stems'), default='muscriptor',
+                   help='muscriptor: transformer, uma faixa por instrumento (padrão); '
+                        'stems: separação + rastreio de altura, sem pesos sob licença')
+    p.add_argument('--modelo', choices=('small', 'medium', 'large'), default='medium',
+                   help='tamanho do MuScriptor (padrão medium)')
+    p.add_argument('--instrumentos',
+                   help='grupos a decodificar, separados por vírgula; o resto fica proibido. '
+                        f'"seis" é um atalho para {",".join(SEIS)}')
+    p.add_argument('--dtype', choices=('float32', 'float16', 'bfloat16'),
+                   help='precisão do transformer (padrão: float16 no large em GPU)')
+    p.add_argument('--beam', type=int, default=1,
+                   help='largura da busca em feixe; 1 é guloso (padrão)')
     args = p.parse_args()
+    if args.instrumentos == 'seis':
+        args.instrumentos = ','.join(SEIS)
+    if args.stems:
+        args.motor = 'stems'
     if not args.audio and not args.url and not args.stems:
         p.error('passe um arquivo de áudio, --url ou --stems')
     transcrever(args)
