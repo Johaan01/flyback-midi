@@ -135,5 +135,60 @@
   "vocal": "sim · faixa \"voice\"",
   "aproveitamento": 54,
   "aproveitamento6": 80
+ },
+ "Victor & Leo - Borboletas.mid": {
+  "autor": "Victor & Leo",
+  "artista": "Victor & Leo",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Victor & Leo; \"Borboletas\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, acoustic_guitar",
+  "fonte": "https://www.youtube.com/watch?v=ToHf7SZfceE",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 45,
+  "aproveitamento6": 64
+ },
+ "BAITACA - Do Fundo da Grota.mid": {
+  "autor": "BAITACA",
+  "artista": "BAITACA",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de BAITACA; \"Do Fundo da Grota\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, organ, acoustic_guitar",
+  "fonte": "https://www.youtube.com/watch?v=FRxyz3v4t-Y",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 45,
+  "aproveitamento6": 65
+ },
+ "Coda - BLOODY STREAM.mid": {
+  "autor": "Coda",
+  "artista": "Coda",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Coda; \"BLOODY STREAM\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, organ, brass_section",
+  "fonte": "https://www.youtube.com/watch?v=hmpJqJLsR48",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 46,
+  "aproveitamento6": 69
+ },
+ "Bon Jovi - Livin' On A Prayer.mid": {
+  "autor": "Bon Jovi",
+  "artista": "Bon Jovi",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Bon Jovi; \"Livin' On A Prayer\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "fonte": "https://www.youtube.com/watch?v=lDK9QqIzhwk",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 78,
+  "aproveitamento6": 71
+ },
+ "Avenged Sevenfold - So Far Away.mid": {
+  "autor": "Avenged Sevenfold",
+  "artista": "Avenged Sevenfold",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Avenged Sevenfold; \"So Far Away\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar, acoustic_guitar",
+  "fonte": "https://www.youtube.com/watch?v=A7ry4cx6HfY",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 49,
+  "aproveitamento6": 64
  }
 }
