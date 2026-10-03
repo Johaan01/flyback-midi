@@ -256,15 +256,36 @@ bateria no canal 10, que é o que o parser do site já espera, e o nome `voice` 
 sem mexer em nada. **Então o MIDI dele entra no acervo como está, sem redução** — quem reduz a
 uma nota por arco é o site, no momento de tocar, como faz com todo o resto do acervo.
 
-`--instrumentos` é a chave para mais de dois flybacks: os 35 grupos que o modelo conhece estão em
-`INSTRUMENTOS`, e os que não estiverem na lista ficam **proibidos de ser decodificados**. O número
-de faixas é decidido na transcrição, não depois. `--instrumentos seis` é o atalho para um conjunto
-que cobre rock e pop com uma faixa por flyback.
+**`--instrumentos` não é um filtro, é uma afirmação.** Os 35 grupos que o modelo conhece estão em
+`INSTRUMENTOS`. Os que não estiverem na lista ficam proibidos de ser decodificados, mas a lista
+também vira o **condicionamento** do modelo (`instrument_group_from_names` devolve "the model's
+conditioning string"): ele passa a esperar exatamente aqueles instrumentos. Medido em Borboletas
+contra a versão que o Mirelo devolveu para a mesma música, com o `medium`:
 
-**`drums` fica fora do `seis` de propósito.** Medido em duas saídas de referência, a faixa de
-bateria são milhares de notas de exatamente 10 ms em meia dúzia de "alturas" que são teclas do
-mapa de percussão do GM — 36 bumbo, 38 caixa, 42 prato — e não alturas de verdade. Num arco isso
-são milhares de cliques em frequências arbitrárias, não ritmo.
+| | voz | baixo | violão | todas as notas |
+|---|---|---|---|---|
+| sem lista | 123 notas, F1 22% | 80% | 84% | 77% |
+| com voz, violão, baixo, piano, pad, bateria | 468 notas, **60%** | **92%** | 85% | **80%** |
+
+Sem lista, o `medium` punha metade do canto na faixa de violão (49% da voz do Mirelo aparece lá, 13%
+na voz). Com a lista certa a voz volta para a faixa dela. Com a lista errada estraga: passar os 34
+grupos menos a voz "para o modelo escolher" fez ele inventar trompa, flauta e saxofone com 22 notas
+simultâneas. Por isso não há atalho de lista fixa — houve um, `seis`, e foi removido: afirmava
+guitarra distorcida e órgão em toda música. O piano de Borboletas não aparece nem com a lista.
+
+Duas tentativas que **não** funcionaram, para ninguém repetir: transcrever o canto separado pelo
+Demucs (`--instrumentos voice` no stem de voz) deu voz pior que a do Mirelo e que a do pYIN — o
+modelo foi treinado em mistura, não em stem com artefato; e transcrever o acompanhamento sem a voz
+deu o lixo da orquestra acima.
+
+Ainda aberto: comparar o `large`. Os pesos baixam (5,5 GB em float32), mas a primeira tentativa
+morreu ao carregar, por falta de RAM num computador de 16 GB — o `load_model` lê o float32 inteiro
+antes de converter para float16.
+
+A bateria, quando sai, são milhares de notas de exatamente 10 ms em meia dúzia de "alturas" que são
+teclas do mapa de percussão do GM — 36 bumbo, 38 caixa, 42 prato — e não alturas de verdade. Num arco
+isso são milhares de cliques em frequências arbitrárias, não ritmo; o preset "um por flyback" do site
+a deixa desligada.
 
 E uma medida que importa para o planejamento: nas mesmas duas saídas, `aproveitamento()` dá 42% e
 46% em dois canais. Isso é **abaixo do `APROV_MIN` de 58 do site** — não porque a transcrição

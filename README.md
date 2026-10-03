@@ -155,11 +155,16 @@ Nenhuma delas mexe em nada sem `--baixar` / `--aplicar`: sem a opção, só most
 
 Quando não existe transcrição boa de uma música, dá para fazer uma a partir do áudio:
 
-    python tools/transcrever.py --url "https://..." --instrumentos seis --saida "musicas/transcritas"
+    python tools/transcrever.py --url "https://..." --instrumentos voice,acoustic_guitar,electric_bass,drums --saida "musicas/transcritas"
 
-Sai um MIDI com uma faixa por instrumento — voz, guitarra, violão, piano, baixo e bateria — que
-é o que o site precisa para mandar cada instrumento a um flyback. `--instrumentos` escolhe quais
-grupos decodificar; sem ele o modelo decide.
+Sai um MIDI com uma faixa por instrumento, que é o que o site precisa para mandar cada um a um
+flyback.
+
+**`--instrumentos` deve listar o que a música tem de fato.** A lista não é só um filtro: o modelo
+passa a esperar exatamente aqueles instrumentos. Com a lista certa a voz sai na faixa dela — em
+Borboletas, sem lista, metade do canto ia parar na faixa de violão. Com a lista errada o resultado
+piora: o modelo inventa o que lhe disseram que existe. Os nomes válidos aparecem se você passar
+um nome errado.
 
 Isso usa o [MuScriptor](https://github.com/muscriptor/muscriptor), da Kyutai com a Mirelo. O
 código é MIT, mas **os pesos são CC BY-NC 4.0 e pedem licença aceita numa conta do HuggingFace**:

@@ -419,16 +419,6 @@ INSTRUMENTOS = (
     'brass_section', 'soprano_and_alto_sax', 'tenor_sax', 'baritone_sax', 'oboe', 'english_horn',
     'bassoon', 'clarinet', 'flutes', 'synth_lead', 'synth_pad', 'drums')
 
-# Um conjunto de seis que cobre rock e pop e dá uma faixa por flyback. Serve de ponto de
-# partida, não de regra: `--instrumentos` aceita qualquer sublista dos nomes acima.
-#
-# `drums` fica fora de propósito. Medido em duas saídas de referência, a faixa de bateria são
-# milhares de notas de exatamente 10 ms em meia dúzia de "alturas" que são teclas do mapa de
-# percussão do GM — 36 bumbo, 38 caixa, 42 prato — e não alturas de verdade. Mandar isso para um
-# arco dá milhares de cliques em frequências arbitrárias, não ritmo. Quem quiser mesmo tentar
-# acrescenta `drums` à lista à mão.
-SEIS = ['voice', 'distorted_electric_guitar', 'acoustic_guitar', 'acoustic_piano',
-        'organ', 'electric_bass']
 
 
 def por_muscriptor(audio, titulo, args):
@@ -446,8 +436,14 @@ def por_muscriptor(audio, titulo, args):
     de canto sem precisar de nada. Então o MIDI dele entra no acervo como está, sem redução:
     quem reduz a uma nota por arco é o site, no momento de tocar, como faz com todo o resto.
 
-    `--instrumentos` é a chave para os seis flybacks: os grupos que não estiverem na lista ficam
-    proibidos de ser decodificados, então o número de faixas é decidido aqui e não depois.
+    `--instrumentos` **não é um filtro, é uma afirmação**: além de proibir os grupos de fora, a
+    lista vira o condicionamento do modelo (`instrument_group_from_names`, "the model's
+    conditioning string"). Ele passa a esperar exatamente aqueles instrumentos. Com a lista
+    certa isso ajuda muito — em Borboletas, sem lista o `medium` punha metade do canto na faixa
+    de violão e a voz saía com 123 notas; dizendo "voz, violão, baixo, piano, pad, bateria", a
+    voz sai com 468 e concorda com a do Mirelo em 60% em vez de 22%. Com a lista errada estraga:
+    os 34 grupos menos a voz, para "deixar o modelo escolher", fizeram ele inventar trompa,
+    flauta e saxofone com 22 notas simultâneas. Então só passe o que a música tem de fato.
 
     Os pesos são CC BY-NC 4.0 e exigem aceitar a licença numa conta do HuggingFace — o código
     é MIT, mas os pesos não vêm sem isso, e não há como contornar de fora.
@@ -624,15 +620,13 @@ def main():
     p.add_argument('--modelo', choices=('small', 'medium', 'large'), default='medium',
                    help='tamanho do MuScriptor (padrão medium)')
     p.add_argument('--instrumentos',
-                   help='grupos a decodificar, separados por vírgula; o resto fica proibido. '
-                        f'"seis" é um atalho para {",".join(SEIS)}')
+                   help='os instrumentos que a música TEM, separados por vírgula: o modelo passa a '
+                        'esperá-los e proíbe o resto. Lista errada piora o resultado')
     p.add_argument('--dtype', choices=('float32', 'float16', 'bfloat16'),
                    help='precisão do transformer (padrão: float16 no large em GPU)')
     p.add_argument('--beam', type=int, default=1,
                    help='largura da busca em feixe; 1 é guloso (padrão)')
     args = p.parse_args()
-    if args.instrumentos == 'seis':
-        args.instrumentos = ','.join(SEIS)
     if args.stems:
         args.motor = 'stems'
     if not args.audio and not args.url and not args.stems:
