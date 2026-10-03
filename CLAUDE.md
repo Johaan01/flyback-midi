@@ -231,7 +231,9 @@ O dono do projeto passou a usar só pelo computador, e o layout de coluna única
 
 A divisória entre as duas metades arrasta (e anda com as setas), e o tamanho fica lembrado; duplo clique volta ao padrão. O padrão dá à doca uma altura estável (`clamp(200px, 100vh − 480px, 70vh)` para a metade de cima), porque é a doca que precisa de altura para o acervo e o mixer caberem — com a metade de cima proporcional à tela, a 1366×768 o acervo mostrava uma música só. A pista esconde a linha de faixas quando fica baixa demais, por container query.
 
-O seletor de modo fica na barra de cima. Trocar de modo pausa, silencia os flybacks (`X`) e carrega a configuração do outro modo.
+Os botões de modo (Estéreo · P2 / ESP32) ficam na barra de cima, ao lado de MIDI | Tom. Trocar de modo pausa, silencia os flybacks (`X`) e carrega a configuração do outro modo.
+
+**Tudo numa janela.** O dono do projeto reclamou de ter de rolar cada painel. Os painéis não têm barra de título — o conteúdo diz o que são —, e em Faixas e no Acervo os controles ficam parados no topo (`.fixo`) e só a lista rola. O estado da serial fica na linha do Conectar; os pinos, em duas colunas; áudio e configuração, numa linha cada; nos módulos de canal, rótulo e seletor dividem a linha. Medido a 1920×945 (Chrome maximizado em tela 1080p), no modo ESP com seis flybacks e Borboletas aberta, nenhum painel rola além da lista do acervo. A janela de tempo das pistas foi para o fim do transporte.
 
 Arquivo se abre pelo acervo, por "Abrir arquivo…" ou **arrastando para qualquer ponto da janela**. Atalhos fora de campos de texto: espaço toca e pausa, setas andam 5 s, Home volta ao início.
 

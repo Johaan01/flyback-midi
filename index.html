@@ -52,6 +52,20 @@ h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;white-space:now
 .pane-h .info{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .pane-h .aux{margin-left:auto;display:flex;align-items:center;gap:6px;flex:none}
 .pane-b{flex:1;min-height:0;overflow:auto;padding:10px;overscroll-behavior:contain}
+/* o que fica parado no topo do painel enquanto só a lista rola */
+.fixo{flex:none;padding:10px 10px 0}
+.fixo+.pane-b{padding-top:6px}
+.bar .modo button{padding:4px 12px}
+.transport #zoom{height:36px;font-size:12px}
+.filtros .abrir{margin-left:auto;color:var(--ink)}
+.saida .linha.sep{margin-top:8px;padding-top:8px;border-top:1px solid var(--soft)}
+.saida .linha{margin-bottom:6px}
+.saida .txt{margin-bottom:4px}
+.saida .rot{font-size:12px;color:var(--dim);min-width:84px}
+.saida .estado{font-size:12px;color:var(--dim);white-space:nowrap}
+.saida .campo{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+.ctl.inline{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px;align-items:center}
+.ctl.inline label{line-height:1}
 h3{font-size:12.5px;font-weight:600;margin:16px 0 6px}
 .pane-b>h3:first-child,.pane-b>div>h3:first-child{margin-top:0}
 .txt{margin:0 0 8px;color:var(--dim);font-size:12.5px}
@@ -92,11 +106,11 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 
 /* ---------- faixas ---------- */
 .presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
-.verdict{margin:0 0 6px;color:var(--dim);font-size:12px;font-family:"IBM Plex Mono",monospace;min-height:1.4em}
+.verdict{margin:0 0 4px;color:var(--dim);font-size:12px;font-family:"IBM Plex Mono",monospace;min-height:1.4em}
 .verdict:empty{display:none}
 .tracks{border-top:1px solid var(--soft)}
 .tracks:empty{display:none}
-.trk{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:6px 2px;border-bottom:1px solid var(--soft)}
+.trk{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:5px 2px;border-bottom:1px solid var(--soft)}
 .luz{width:8px;height:8px;border-radius:50%;background:var(--soft)}
 .luz.on{background:var(--cor,var(--ink))}
 .trk .nm{min-width:0;overflow-wrap:anywhere}
@@ -123,7 +137,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 
 /* ---------- canais: um módulo de mixer por flyback ---------- */
 .strips{display:flex;gap:8px;min-height:100%;align-items:stretch}
-.strip{flex:1 1 0;min-width:136px;max-width:220px;display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--rule);border-top:3px solid var(--cor);border-radius:3px;background:var(--fundo)}
+.strip{flex:1 1 0;min-width:136px;max-width:220px;display:flex;flex-direction:column;gap:5px;padding:8px;border:1px solid var(--rule);border-top:3px solid var(--cor);border-radius:3px;background:var(--fundo)}
 .strip.mudo{opacity:.55}
 .strip-h{display:flex;align-items:center;gap:4px}
 .strip-h .nome{flex:1;font-weight:600;font-size:12.5px;color:var(--cor);white-space:nowrap}
@@ -157,12 +171,12 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 .foot{margin:12px 0 0;color:var(--dim);font-size:12px}
 
 /* ---------- saída ---------- */
-.pinos{width:100%;border-collapse:collapse;margin:0 0 6px}
-.pinos td{padding:3px 4px 3px 0;border-bottom:1px solid var(--soft)}
-.pinos td:first-child{color:var(--cor);font-weight:600;white-space:nowrap;padding-left:2px}
-.pinos td:last-child{text-align:right}
-.pinos select{width:100%}
-.pinos select.dup{outline:1px dashed var(--ink);outline-offset:1px}
+.pinos{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin:0 0 8px}
+.pino{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:5px;align-items:center}
+.pino b{color:var(--cor);font-weight:600;font-family:"IBM Plex Mono",monospace}
+.pino select{width:100%;padding:2px 4px}
+.pino button{padding:2px 7px;font-size:11.5px}
+.pino select.dup{outline:1px dashed var(--ink);outline-offset:1px}
 .grade2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 8px}
 .grade2 label{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--dim)}
 .log summary{cursor:pointer;font-size:12.5px;color:var(--dim)}
@@ -199,34 +213,27 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
       <a href="./" aria-current="page">MIDI</a>
       <a href="tom.html">Tom</a>
     </nav>
-    <div class="titulo" id="titulo">nenhuma música aberta</div>
-    <span class="rotulo" id="rotSaida">Saída</span>
-    <div class="seg" id="modo" role="group" aria-labelledby="rotSaida">
-      <button data-modo="estereo">Estéreo · P2</button>
-      <button data-modo="esp" id="modoEsp">ESP32 · serial</button>
+    <div class="seg modo" id="modo" role="group" aria-label="Saída para os flybacks">
+      <button data-modo="estereo" title="dois flybacks pelo cabo de áudio">Estéreo · P2</button>
+      <button data-modo="esp" id="modoEsp" title="até seis flybacks por um ESP32 na serial">ESP32 · serial</button>
     </div>
+    <div class="titulo" id="titulo">nenhuma música aberta</div>
   </header>
 
   <div class="topo" id="topo">
-    <section class="pane faixas" aria-labelledby="hFaixas">
-      <div class="pane-h"><h2 id="hFaixas">Faixas</h2><span class="info" id="nFaixas"></span></div>
-      <div class="pane-b">
+    <section class="pane faixas" aria-label="Faixas da música">
+      <div class="fixo">
         <div class="presets hide" id="presets" role="group" aria-label="Distribuição automática"></div>
         <p class="verdict" id="verdict"></p>
+      </div>
+      <div class="pane-b">
         <div class="tracks" id="tracks" role="list"></div>
         <p class="vazio" id="faixasVazio">Escolha uma música no acervo, aqui embaixo, ou arraste um arquivo MIDI ou Guitar Pro para esta janela. As faixas aparecem aqui, cada uma com o flyback para onde vai.</p>
         <p class="credit hide" id="credito"></p>
       </div>
     </section>
 
-    <section class="pane saidas" aria-labelledby="hSaidas">
-      <div class="pane-h">
-        <h2 id="hSaidas">Saídas</h2><span class="info" id="saidasInfo"></span>
-        <label class="aux"><span class="txt" style="margin:0">janela</span>
-          <select id="zoom" aria-label="Janela de tempo das pistas">
-            <option value="5">5 s</option><option value="10" selected>10 s</option><option value="20">20 s</option><option value="40">40 s</option>
-          </select></label>
-      </div>
+    <section class="pane saidas" aria-label="O que cada flyback está tocando">
       <div class="lanes" id="lanes"></div>
     </section>
   </div>
@@ -237,29 +244,31 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
     <button class="loop" id="loop" aria-pressed="false">repetir</button>
     <span class="clock" id="clock">0:00 / 0:00</span>
     <canvas id="roll" role="slider" tabindex="0" aria-label="Linha do tempo de todas as saídas. Clique ou arraste para ir a um ponto da música." aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></canvas>
+    <select id="zoom" aria-label="Janela de tempo das pistas" title="quanto tempo cada pista mostra">
+      <option value="5">5 s</option><option value="10" selected>10 s</option><option value="20">20 s</option><option value="40">40 s</option>
+    </select>
   </div>
   <div class="split" id="split" role="separator" aria-orientation="horizontal" aria-label="Divisória entre as faixas e os painéis de baixo. Arraste, ou use as setas. Duplo clique volta ao tamanho padrão." tabindex="0"></div>
 
   <div class="doca">
-    <section class="pane acervo" aria-labelledby="hAcervo">
-      <div class="pane-h">
-        <h2 id="hAcervo">Acervo</h2><span class="info" id="libCount"></span>
-        <div class="aux"><button id="abrir">Abrir arquivo…</button></div>
-      </div>
-      <div class="pane-b">
+    <section class="pane acervo" aria-label="Acervo">
+      <div class="fixo">
         <div class="hide" id="libTools">
           <div class="acervos" id="libA" role="group" aria-label="Acervo"></div>
           <div class="lib-linha">
             <select id="libF" aria-label="Grupo dentro do acervo"></select>
             <input type="search" id="libQ" placeholder="buscar título, artista, compositor" aria-label="Buscar no acervo" autocomplete="off">
           </div>
-          <div class="filtros">
-            <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
-            <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
-            <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
-            <button id="libRnd" class="hide">sortear uma</button>
-          </div>
         </div>
+        <div class="filtros">
+          <button id="libTop" class="hide" aria-pressed="false">só as mais ouvidas</button>
+          <button id="libVoz" class="hide" aria-pressed="false">só com vocal</button>
+          <button id="libBom" class="hide" aria-pressed="false">só as que soam bem</button>
+          <button id="libRnd" class="hide">sortear uma</button>
+          <button id="abrir" class="abrir">Abrir arquivo…</button>
+        </div>
+      </div>
+      <div class="pane-b">
         <ul class="liblist" id="libList"></ul>
         <p class="note-line" id="libMsg">carregando…</p>
         <div class="lib-acoes">
@@ -272,29 +281,26 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
       </div>
     </section>
 
-    <section class="pane canais" aria-labelledby="hCanais">
-      <div class="pane-h"><h2 id="hCanais">Canais</h2><span class="info">cada um toca uma nota por vez, como o arco</span></div>
+    <section class="pane canais" aria-label="Canais: um módulo por flyback">
       <div class="pane-b"><div class="strips" id="strips"></div></div>
     </section>
 
-    <section class="pane saida" aria-labelledby="saidaTit">
-      <div class="pane-h"><h2 id="saidaTit">Saída estéreo</h2></div>
+    <section class="pane saida" aria-label="Saída para os flybacks">
       <div class="pane-b">
         <div id="saidaEst">
-          <p class="txt">Esquerdo vai para o flyback 1 e direito para o flyback 2, pelo cabo P2. A separação é dura: nada de um lado vaza para o outro.</p>
-          <p class="txt">Para mais de dois flybacks, use a saída ESP32.</p>
+          <p class="txt">Esquerdo no flyback 1 e direito no 2, pelo cabo P2, com separação dura: nada de um lado vaza para o outro. Para mais flybacks, use o ESP32.</p>
         </div>
         <div id="saidaEsp" class="hide">
           <div class="linha">
             <select id="baud" aria-label="Velocidade da serial"><option>115200</option><option>230400</option><option>460800</option><option>921600</option></select>
             <button id="serGo">Conectar</button>
+            <span class="estado mono" id="serMsg">desconectado</span>
           </div>
-          <p class="txt mono" id="serMsg">desconectado</p>
-          <div class="grade2">
-            <label>Flybacks<select id="espN"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
-            <label>Placa<select id="espPlaca"><option value="esp32">ESP32</option><option value="s3">ESP32-S3</option></select></label>
+          <div class="linha">
+            <label class="campo">Flybacks <select id="espN"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+            <label class="campo">Placa <select id="espPlaca"><option value="esp32">ESP32</option><option value="s3">ESP32-S3</option></select></label>
           </div>
-          <table class="pinos"><tbody id="pinos"></tbody></table>
+          <div class="pinos" id="pinos"></div>
           <p class="txt" id="pinosMsg"></p>
           <div class="linha">
             <button id="serX">Silenciar tudo</button>
@@ -302,21 +308,18 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
           </div>
           <details class="log" id="serLogBox"><summary>Linhas enviadas</summary><pre id="serLog">nada enviado ainda</pre></details>
         </div>
-
-        <h3>Arquivo de áudio</h3>
-        <p class="txt" id="wavInfo"></p>
-        <div class="linha">
+        <div class="linha sep">
+          <span class="rot">Áudio</span>
           <button id="wavGo" disabled>Gerar WAV</button>
           <a id="wavSave" class="btn hide">Salvar WAV</a>
         </div>
         <p class="txt mono" id="wavMsg"></p>
-
-        <h3>Configuração desta música</h3>
-        <p class="txt" id="cfgMsg">nenhuma música aberta</p>
         <div class="linha">
-          <button id="cfgDown" disabled>Baixar configuração</button>
+          <span class="rot">Configuração</span>
+          <button id="cfgDown" disabled>Baixar</button>
           <button id="cfgReset" disabled>Restaurar</button>
         </div>
+        <p class="txt" id="cfgMsg">nenhuma música aberta</p>
       </div>
     </section>
   </div>
@@ -773,7 +776,6 @@ function ativa(t, p){
 function renderTracks(){
   const box = $('tracks'); box.textContent = '';
   const n = nCanais();
-  $('nFaixas').textContent = tracks.length ? tracks.length + (tracks.length === 1 ? ' faixa' : ' faixas') : '';
   tracks.forEach((t, k) => {
     let lo = 127, hi = 0; t.notes.forEach(x => { if (x.n < lo) lo = x.n; if (x.n > hi) hi = x.n; });
     const row = el('div', { class: 'trk' + (assign[k] ? '' : ' off'), role: 'listitem' });
@@ -1017,7 +1019,7 @@ function analyse(){
     else {
       const used = noteTime ? Math.round(soundTime / noteTime * 100) : 0;
       const busy = duration ? Math.round(soundTime / duration * 100) : 0;
-      c.stat = 'toca ' + used + '% das notas · ativo ' + busy + '% do tempo';
+      c.stat = used + '% das notas · ' + busy + '% do tempo';
       msg.push(used + '%');
     }
     if (c.sx) c.sx.stat.textContent = c.stat;
@@ -1123,9 +1125,9 @@ $('cfgDown').onclick = () => {
 /* ---------- canais: um módulo de mixer por flyback ---------- */
 const OPC = {
   oct: [['-2', '−2'], ['-1', '−1'], ['0', 'igual'], ['1', '+1'], ['2', '+2']],
-  pick: [['hi', 'mais aguda'], ['lo', 'mais grave']],
-  env: [['nenhum', 'nenhum (OOK)'], ['percussivo', 'percussivo'], ['medio', 'médio'], ['sustentado', 'sustentado']],
-  vel: [['sim', 'seguir a velocity'], ['nao', 'ignorar']]
+  pick: [['hi', 'aguda'], ['lo', 'grave']],
+  env: [['nenhum', 'OOK'], ['percussivo', 'percussivo'], ['medio', 'médio'], ['sustentado', 'sustentado']],
+  vel: [['sim', 'segue'], ['nao', 'ignora']]
 };
 function renderStrips(){
   const box = $('strips'); box.textContent = '';
@@ -1141,6 +1143,7 @@ function renderStrips(){
     const fontes = el('div', { class: 'fontes' });
     const faixaCtl = (id, rot, input, val) => el('div', { class: 'ctl' },
       el('div', { class: 'row' }, el('label', { for: id }, rot), val || null), input);
+    const linhaCtl = (id, rot, input, dica) => el('div', { class: 'ctl inline', title: dica }, el('label', { for: id }, rot), input);
     const ganho = el('input', { type: 'range', id: 'gain' + i, min: '0', max: '150' }); ganho.value = k.ganho;
     const gv = el('span', { class: 'val' }, k.ganho + '%');
     ganho.oninput = () => { k.ganho = +ganho.value; gv.textContent = k.ganho + '%'; };
@@ -1162,8 +1165,10 @@ function renderStrips(){
     const stat = el('p', { class: 'stat' }, c.stat);
     s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome' }, nomeCanal(i)), mudo, solo), fontes,
       faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('lp' + i, 'Passa-baixa', lp, lv),
-      faixaCtl('oct' + i, 'Oitava', oct), faixaCtl('pick' + i, 'Em acorde, a nota', pick),
-      faixaCtl('env' + i, 'Envelope', env), faixaCtl('vel' + i, 'Dinâmica do MIDI', vel), stat);
+      linhaCtl('oct' + i, 'Oitava', oct, 'transpõe o canal'),
+      linhaCtl('pick' + i, 'Acorde', pick, 'que nota do acorde o arco toca'),
+      linhaCtl('env' + i, 'Envelope', env, 'OOK: o arco só liga e desliga, sem dinâmica'),
+      linhaCtl('vel' + i, 'Dinâmica', vel, 'seguir ou não a intensidade (velocity) de cada nota do MIDI'), stat);
     box.appendChild(s);
     c.sx = { root: s, fontes, stat, mudo, solo };
   }
@@ -1564,7 +1569,6 @@ function renderLib(){
 }
 function markLib(){
   document.querySelectorAll('#libList button').forEach(b => b.setAttribute('aria-current', !!(current && current.lib && current.lib.arquivo === b.dataset.path)));
-  if (lib.length) $('libCount').textContent = lib.length.toLocaleString('pt-BR') + (lib.length === 1 ? ' música' : ' músicas');
 }
 /* crédito exigido pelas licenças Creative Commons: aparece junto das faixas */
 function showCredit(it){
@@ -1799,11 +1803,14 @@ $('monitor').checked = esp.monitor;
 $('monitor').onchange = e => { esp.monitor = e.target.checked; salvarEsp(); ligarSaida(); };
 
 function renderPinos(){
-  const tb = $('pinos'); tb.textContent = '';
+  const box = $('pinos'); box.textContent = '';
   const placa = PLACAS[esp.placa], usados = {};
   for (let i = 0; i < esp.n; i++) usados[esp.pinos[i]] = (usados[esp.pinos[i]] || 0) + 1;
+  box.title = 'Só aparecem pinos livres em módulo comum de ' + placa.nome + ': sem os de boot, da flash, da USB e da UART0. '
+    + '"testar" toca um lá de 0,6 s naquele canal, para achar qual flyback é qual.';
   for (let i = 0; i < esp.n; i++){
-    const tr = el('tr'); tr.style.setProperty('--cor', CORES[i]);
+    const linha = el('div', { class: 'pino', title: 'Canal ' + (i + 1) });
+    linha.style.setProperty('--cor', CORES[i]);
     const sel = el('select', { 'aria-label': 'GPIO do canal ' + (i + 1) });
     placa.pinos.forEach(p => sel.appendChild(new Option('GPIO ' + p, p)));
     sel.value = String(esp.pinos[i]);
@@ -1814,14 +1821,12 @@ function renderPinos(){
     };
     const teste = el('button', { 'aria-label': 'Tocar um lá de teste no canal ' + (i + 1) }, 'testar');
     teste.onclick = () => testar(i);
-    tr.append(el('td', null, 'Canal ' + (i + 1)), el('td', null, sel), el('td', null, teste));
-    tb.appendChild(tr);
+    linha.append(el('b', null, String(i + 1)), sel, teste);
+    box.appendChild(linha);
   }
   atualizarTestes();
   const dup = Object.values(usados).some(v => v > 1);
-  $('pinosMsg').textContent = dup
-    ? 'Dois canais no mesmo pino: um atropela o outro. Troque um deles.'
-    : 'Só aparecem pinos livres em módulo comum de ' + placa.nome + ': sem os de boot, da flash, da USB e da UART0. "Testar" toca um lá de 0,6 s naquele canal, para achar qual flyback é qual.';
+  $('pinosMsg').textContent = dup ? 'Dois canais no mesmo pino: um atropela o outro. Troque um deles.' : '';
 }
 $('espN').value = String(esp.n);
 $('espN').onchange = e => {
@@ -1852,11 +1857,7 @@ function renderModo(){
   $('libBom').title = filtroSeis() ? 'soam bem com um instrumento por flyback' : 'soam bem já com dois flybacks, pelo P2';
   $('saidaEst').classList.toggle('hide', modo !== 'estereo');
   $('saidaEsp').classList.toggle('hide', modo !== 'esp');
-  $('saidaTit').textContent = modo === 'esp' ? 'Saída ESP32' : 'Saída estéreo';
-  $('saidasInfo').textContent = modo === 'esp'
-    ? esp.n + (esp.n === 1 ? ' flyback' : ' flybacks') + ' pelo ESP32 · ' + (ser.writer ? 'conectado' : 'desconectado')
-    : '2 flybacks pelo P2';
-  $('wavInfo').textContent = modo === 'esp'
+  $('wavGo').title = modo === 'esp'
     ? 'WAV com ' + esp.n + (esp.n === 1 ? ' canal' : ' canais') + ', um por flyback, para uma interface de áudio multicanal.'
     : 'WAV estéreo com os dois canais separados, para tocar em qualquer player pelo cabo P2.';
 }

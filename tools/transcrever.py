@@ -518,16 +518,17 @@ def por_muscriptor(audio, titulo, args):
 def carregar_muscriptor(nome, disp, dtype):
     """Carrega o MuScriptor, com pouca memória quando é para rodar em meia precisão na placa.
 
-    O `load_model` do pacote monta o modelo inteiro em float32 **na placa** e carrega por cima
-    outra cópia float32 dos pesos, e só então converte para float16. No `large` são ~11 GB de
-    pico num lugar que tem 6: o driver da NVIDIA transborda para a RAM, e numa máquina de 16 GB a
-    RAM livre bateu 0,1 GB — a primeira tentativa foi derrubada por isso. Rodando sozinho, num
-    lote de várias músicas, isso não pode acontecer.
+    O `load_model` do pacote monta o modelo inteiro em float32 na RAM, carrega os pesos float32
+    inteiros **na placa**, copia e só então converte para float16. No `large` são 5,6 GB de RAM
+    mais 5,5 GB numa placa de 6: o driver da NVIDIA transborda o que não cabe para a RAM, e numa
+    máquina de 16 GB a RAM livre bateu 0,1 GB — a primeira tentativa foi derrubada por isso.
+    Rodando sozinho, num lote de várias músicas, isso não pode acontecer.
 
-    Aqui o modelo já nasce em float16 (o tipo padrão do torch é trocado só durante a montagem) e
-    os pesos são lidos do arquivo um tensor de cada vez, convertidos no caminho. Pico de ~2,8 GB
-    na placa e outro tanto na RAM. O resto repete o `load_model`: o condicionamento (mel e
-    classes) volta para float32, porque o log-mel de trecho baixo some em float16.
+    Aqui o modelo já nasce em float16 (o tipo padrão do torch é trocado só durante a montagem),
+    cada tensor do arquivo é copiado direto para dentro do parâmetro, e o modelo só vai para a
+    placa no fim. Pico de ~2,8 GB na RAM e outro tanto na placa. O resto repete o `load_model`:
+    o condicionamento (mel e classes) volta para float32, porque o log-mel de trecho baixo some
+    em float16.
 
     Usa funções internas do pacote (`_build_model` e companhia). Se uma versão nova do
     muscriptor mudar isso, cai no `load_model` comum, que funciona com a máquina folgada.
@@ -550,13 +551,22 @@ def carregar_muscriptor(nome, disp, dtype):
         finally:
             torch.set_default_dtype(padrao)
         rede.eval()
-        estado = {}
+        # cada tensor do arquivo vai direto para dentro do parâmetro, convertido no caminho:
+        # nunca existe uma segunda cópia inteira dos pesos na memória
+        destino = rede.state_dict()
+        faltam = set(destino)
         with safe_open(str(pesos), framework='pt', device='cpu') as f:
             for chave in f.keys():
-                estado[chave] = f.get_tensor(chave).to(alvo)
-        rede.load_state_dict(tm._remap_single_codebook_keys(estado))
-        del estado
-        rede.to(alvo)
+                nova = next(iter(tm._remap_single_codebook_keys({chave: None})))
+                if nova not in destino:
+                    raise TypeError(f'peso inesperado no arquivo: {nova}')
+                destino[nova].copy_(f.get_tensor(chave).to(destino[nova].dtype))
+                faltam.discard(nova)
+        if faltam:
+            raise TypeError(f'pesos ausentes no arquivo: {sorted(faltam)[:3]}')
+        del destino
+        # só agora vai para a placa, já em meia precisão — o _build_model monta na RAM
+        rede.to(dispositivo, dtype=alvo)
         rede.condition_provider.float()
         tok = tm.MT3Tokenizer(instrument_vocabulary='MT3_FULL_PLUS', max_shift_steps=1001)
         return TranscriptionModel(model=rede, tokenizer=tok, device=dispositivo)
