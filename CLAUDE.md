@@ -278,9 +278,28 @@ Demucs (`--instrumentos voice` no stem de voz) deu voz pior que a do Mirelo e qu
 modelo foi treinado em mistura, não em stem com artefato; e transcrever o acompanhamento sem a voz
 deu o lixo da orquestra acima.
 
-Ainda aberto: comparar o `large`. Os pesos baixam (5,5 GB em float32), mas a primeira tentativa
-morreu ao carregar, por falta de RAM num computador de 16 GB — o `load_model` lê o float32 inteiro
-antes de converter para float16.
+**O `large` não dispensa a lista.** Mesma música, mesma comparação:
+
+| Borboletas contra o Mirelo | voz | baixo | violão | todas as notas | tempo (RTX 2060) |
+|---|---|---|---|---|---|
+| `medium` sem lista | 22% | 80% | 84% | 77% | ~4 min |
+| `large` sem lista | 30% | 89% | 81% | 70% | ~12 min |
+| `medium` com a lista | 60% | 92% | 85% | 80% | ~4 min |
+| `large` com a lista | **67%** | 91% | 83% | 79% | ~9 min |
+
+Sem lista, o `large` também põe o canto no violão, e ainda inventa uma faixa inteira de guitarra
+limpa. Então o Mirelo não roda simplesmente o modelo grande: muito provavelmente condiciona pela
+escolha de instrumentos que o usuário faz na interface dele ("divididos em quantos instrumentos eu
+quiser"). Com a lista, o `large` ganha 7 pontos na voz e empata no resto, levando mais que o dobro
+do tempo. O `medium` com a lista certa é o padrão razoável; o `large` vale quando a voz importa
+muito e a máquina está livre.
+
+**Memória do `large`.** O `load_model` monta o modelo inteiro em float32 **na placa** e carrega
+outra cópia float32 dos pesos antes de converter para float16 — pico de ~11 GB num lugar que tem 6.
+No Windows o driver transborda para a RAM compartilhada: numa máquina de 16 GB a RAM livre bateu
+0,1 GB no carregamento, e a primeira tentativa foi derrubada por isso. Funciona com a máquina sem
+outras coisas pesadas abertas. Se precisar ficar robusto, o caminho é montar o modelo já em
+float16 e ler os pesos tensor a tensor (pico ~3 GB) — não implementado.
 
 A bateria, quando sai, são milhares de notas de exatamente 10 ms em meia dúzia de "alturas" que são
 teclas do mapa de percussão do GM — 36 bumbo, 38 caixa, 42 prato — e não alturas de verdade. Num arco

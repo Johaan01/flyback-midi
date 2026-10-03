@@ -166,6 +166,11 @@ Borboletas, sem lista, metade do canto ia parar na faixa de violão. Com a lista
 piora: o modelo inventa o que lhe disseram que existe. Os nomes válidos aparecem se você passar
 um nome errado.
 
+`--modelo large` acerta um pouco mais a voz (67% contra 60% de concordância com o Mirelo em
+Borboletas), mas leva mais que o dobro do tempo e, numa placa de 6 GB, usa quase toda a memória
+do computador para carregar. O `medium`, que é o padrão, já resolve bem com a lista certa. O
+`large` pede a licença aceita na página dele, separada da do `medium`.
+
 Isso usa o [MuScriptor](https://github.com/muscriptor/muscriptor), da Kyutai com a Mirelo. O
 código é MIT, mas **os pesos são CC BY-NC 4.0 e pedem licença aceita numa conta do HuggingFace**:
 
