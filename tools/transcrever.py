@@ -421,8 +421,14 @@ INSTRUMENTOS = (
 
 # Um conjunto de seis que cobre rock e pop e dá uma faixa por flyback. Serve de ponto de
 # partida, não de regra: `--instrumentos` aceita qualquer sublista dos nomes acima.
+#
+# `drums` fica fora de propósito. Medido em duas saídas de referência, a faixa de bateria são
+# milhares de notas de exatamente 10 ms em meia dúzia de "alturas" que são teclas do mapa de
+# percussão do GM — 36 bumbo, 38 caixa, 42 prato — e não alturas de verdade. Mandar isso para um
+# arco dá milhares de cliques em frequências arbitrárias, não ritmo. Quem quiser mesmo tentar
+# acrescenta `drums` à lista à mão.
 SEIS = ['voice', 'distorted_electric_guitar', 'acoustic_guitar', 'acoustic_piano',
-        'electric_bass', 'drums']
+        'organ', 'electric_bass']
 
 
 def por_muscriptor(audio, titulo, args):

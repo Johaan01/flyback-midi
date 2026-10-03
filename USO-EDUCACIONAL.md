@@ -9,7 +9,7 @@ A finalidade é **educacional e de divulgação científica, sem fins lucrativos
 é reproduzido em rádio, em transmissão ao vivo, em evento pago nem em qualquer contexto
 monetizado, e o repositório não tem publicidade, patrocínio, assinatura ou botão de doação.
 
-## O acervo tem três origens, com situações diferentes
+## O acervo tem quatro origens, com situações diferentes
 
 ### 1. `musicas/classicos` — domínio público e licença livre
 
@@ -52,6 +52,26 @@ E o que ele **não** faz, para não dar margem a engano:
 > geral de *fair use*: o artigo 46 permite a reprodução de **pequenos trechos**, para uso
 > privado de quem copia e sem intuito de lucro, o que é mais estreito do que a redistribuição
 > de uma obra inteira num repositório público. Quem usa este material assume essa avaliação.
+
+### 4. `musicas/transcritas` — obras protegidas, transcritas por máquina
+
+Mesma situação da pasta `bandas` quanto à composição: **a obra continua protegida**, e tudo o que
+está escrito ali acima vale igual aqui, inclusive a ressalva de que atribuir autoria não substitui
+licença.
+
+A diferença é de onde vem o arquivo. Não há transcritor humano: o MIDI foi gerado a partir da
+gravação por um modelo de transcrição automática, o [MuScriptor](https://github.com/muscriptor/muscriptor),
+da Kyutai com a Mirelo. Então o crédito de transcrição nomeia o modelo, não uma pessoa, e isso
+está escrito arquivo por arquivo em `musicas/transcritas/creditos.json`.
+
+Duas consequências que vale deixar explícitas:
+
+- **O resultado é derivado da gravação, não de uma partitura.** O modelo ouviu o fonograma para
+  produzir a lista de notas. Nenhuma gravação é distribuída aqui — o que sai é MIDI —, mas a
+  cadeia passa pelo fonograma, e não só pela composição.
+- **Os pesos do modelo são CC BY-NC 4.0**, isto é, não comerciais. Isso restringe o uso do
+  próprio modelo, não destes arquivos, e é compatível com a finalidade declarada aqui; mas quem
+  reaproveitar a ferramenta para outro fim precisa olhar essa licença.
 
 ## Pedido de remoção
 

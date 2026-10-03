@@ -65,13 +65,14 @@ Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `to
 
 ## O que já vem no acervo
 
-1.363 músicas em quatro acervos:
+1.889 músicas em cinco acervos:
 
 | Pasta | Conteúdo |
 |---|---|
 | `bandas` | 718 transcrições de rock, metal e pop, **uma pasta por artista** — 110 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
 | `classicos` | 590 peças do [Mutopia Project](https://www.mutopiaproject.org), em domínio público ou Creative Commons, por região de origem do compositor: Alemanha e Áustria (217), Itália (82), França (74), Rússia e Leste Europeu (67), Américas (41), Tradicional e anônimo (31), Ibéria e América Latina (31), Nórdicos e Países Baixos (24) e Ilhas Britânicas (23) |
 | `folk russo` | 45 canções tradicionais e soviéticas — Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika, Kamarinskaya, Kazachok, Podmoskovnye Vechera. Quase todas em domínio público; as de autor conhecido e ainda protegido estão marcadas uma a uma |
+| `transcritas` | 5 MIDIs gerados do áudio pelo MuScriptor, com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
 | `exemplos` | 10 arranjos de temas em domínio público feitos para os dois flybacks (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki), mais Ode à Alegria e um riff em Guitar Pro |
 
 A navegação no site é em duas peças: **botões** escolhem o acervo e um **seletor** mostra o que
@@ -163,8 +164,9 @@ Baixar do YouTube contraria os termos de uso do serviço; quem roda responde pel
 `classicos`, `exemplos` e quase todo o `folk russo` são domínio público, licença livre ou arranjo
 do próprio projeto: use à vontade, mantida a atribuição.
 
-`bandas` é diferente — são transcrições de obras ainda protegidas, mantidas aqui com atribuição ao
-artista e ao transcritor, para estudo e demonstração do princípio físico, sem fins lucrativos.
+`bandas` e `transcritas` são diferentes — são transcrições de obras ainda protegidas, mantidas aqui
+com atribuição ao artista e ao transcritor, para estudo e demonstração do princípio físico, sem fins
+lucrativos. Em `transcritas` o transcritor é um modelo, não uma pessoa, e o crédito diz isso.
 Algumas poucas do `folk russo` também são (Katyusha, de Blanter, é de 1938), e estão marcadas
 individualmente no `creditos.json` da pasta.
 **Leia [`USO-EDUCACIONAL.md`](USO-EDUCACIONAL.md)** antes de reaproveitar essa pasta: ele explica a

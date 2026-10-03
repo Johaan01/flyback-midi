@@ -1,0 +1,57 @@
+{
+ "BLOODY STREAM.mid": {
+  "autor": "Coda",
+  "artista": "Coda",
+  "credito": "segunda abertura de JoJo's Bizarre Adventure: Battle Tendency (2012), interpretada por Coda",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "distorted_electric_guitar, electric_bass, brass_section, drums, voice",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 82
+ },
+ "Borboletas.mid": {
+  "autor": "Victor & Leo",
+  "artista": "Victor & Leo",
+  "credito": "composição e interpretação de Victor & Leo",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "acoustic_guitar, electric_bass, drums, voice, synth_pad, acoustic_piano",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 46
+ },
+ "Do Fundo da Grota.mid": {
+  "autor": "Baitaca",
+  "artista": "Baitaca",
+  "credito": "interpretação de Baitaca, música gaúcha",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "acoustic_guitar, voice, organ, electric_bass, drums",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 42
+ },
+ "Livin' On A Prayer.mid": {
+  "autor": "Bon Jovi",
+  "artista": "Bon Jovi",
+  "credito": "composição de Jon Bon Jovi, Richie Sambora e Desmond Child; do álbum Slippery When Wet (1986)",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "synth_pad, electric_bass, drums, voice",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 72
+ },
+ "So Far Away.mid": {
+  "autor": "Avenged Sevenfold",
+  "artista": "Avenged Sevenfold",
+  "credito": "composição e interpretação de Avenged Sevenfold; do álbum Nightmare (2010)",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "electric_bass, drums, voice, distorted_electric_guitar",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 73
+ }
+}

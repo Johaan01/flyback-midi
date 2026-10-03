@@ -223,6 +223,17 @@ uma nota por arco é o site, no momento de tocar, como faz com todo o resto do a
 de faixas é decidido na transcrição, não depois. `--instrumentos seis` é o atalho para um conjunto
 que cobre rock e pop com uma faixa por flyback.
 
+**`drums` fica fora do `seis` de propósito.** Medido em duas saídas de referência, a faixa de
+bateria são milhares de notas de exatamente 10 ms em meia dúzia de "alturas" que são teclas do
+mapa de percussão do GM — 36 bumbo, 38 caixa, 42 prato — e não alturas de verdade. Num arco isso
+são milhares de cliques em frequências arbitrárias, não ritmo.
+
+E uma medida que importa para o planejamento: nas mesmas duas saídas, `aproveitamento()` dá 42% e
+46% em dois canais. Isso é **abaixo do `APROV_MIN` de 58 do site** — não porque a transcrição
+esteja ruim, mas porque ela é fiel: cinco ou seis instrumentos não cabem em dois arcos, e mais da
+metade da música é descartada na redução. Transcrição multifaixa boa e dois flybacks são
+objetivos que brigam entre si, e é o segundo que precisa crescer.
+
 | Variante | Parâmetros | Onde cabe |
 |---|---|---|
 | `small` | 103M | CPU |
