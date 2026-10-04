@@ -854,6 +854,7 @@ function notasDe(t){
   return t.batidas;
 }
 function rebuild(){
+  if (aplicarSons() && $('strips')) renderStrips();
   ch.forEach((c, i) => {
     c.segs = i < nCanais() ? buildSegs(i) : [];
     let lo = Infinity, hi = -Infinity;
@@ -1253,26 +1254,62 @@ function umPorFlyback(n){
 }
 /* controles de canal que o último preset quer: [canal, {pick}] */
 let ajustes = [];
-/* Com 3 ou mais flybacks, o som de cada arco — ganho, agudo, oitava, envelope, dinâmica — é da
-   montagem, não da música: ajustado uma vez, vale para todas. O que é da música é o roteamento e
-   que nota do acorde cada arco toca. Com dois, tudo continua por música, como sempre foi (e como
-   os .json do acervo descrevem). Os padrões seguem o papel: voz no médio, bateria em batida, e
-   corda no resto — guitarra, baixo e teclado apagam sozinhos depois do ataque, e é o "corda" que
-   fez a introdução de Iron Man soar como guitarra. */
-const SOM = ['ganho', 'agudo', 'oct', 'env', 'vel'];
-const SOM_PADRAO = ['medio', 'corda', 'corda', 'percussivo', 'corda', 'corda']
-  .map(env => ({ ganho: 70, agudo: AGUDO_LIVRE, oct: 0, env, vel: true }));
-const montagem = (() => {
-  const salvo = store.get('montagem');
-  return SOM_PADRAO.map((p, i) => {
-    const m = Object.assign({}, p);
-    const s = Array.isArray(salvo) && salvo[i];
+/* Com 3 ou mais flybacks, o som segue o instrumento, não o arco nem a música: agudo, oitava,
+   envelope e dinâmica são da voz, do baixo, da guitarra, da bateria, do teclado e do "extra"
+   (`sons`), ajustados uma vez para todas as músicas. Cada arco toca com o som do instrumento que
+   manda nele (familiaDoArco) — o 6 com a segunda voz soa como voz, o 3 com o teclado de uma
+   música sem guitarra soa como teclado. Foi assim que o dono do projeto pediu de início ("os
+   mesmos presets dos instrumentos"); antes era por arco, e o arco que numa música é guitarra e
+   noutra é voz ficava com o som errado numa das duas.
+
+   O ganho fica por arco (`ganhoArco`): é o volume de cada flyback, que é físico — um pode sair
+   mais forte que outro. O que é da música é o roteamento e que nota do acorde cada arco toca.
+   Com dois flybacks, tudo continua por música, como sempre foi (e como os .json do acervo
+   descrevem). Padrões: voz no médio, bateria em batida, e corda no resto — guitarra, baixo e
+   teclado apagam sozinhos depois do ataque, e é o "corda" que fez a introdução de Iron Man soar
+   como guitarra. */
+const SOM = ['agudo', 'oct', 'env', 'vel'];
+const SOM_PADRAO = { voz: 'medio', baixo: 'corda', guitarra: 'corda', bateria: 'percussivo', teclado: 'corda', extra: 'corda' };
+/* a montagem antiga, um som por arco na ordem dos papéis, vira o som de cada instrumento */
+const montagemAntiga = store.get('montagem');
+const sons = (() => {
+  const salvo = store.get('sons') || {};
+  const out = {};
+  PAPEIS.forEach((f, i) => {
+    const m = { agudo: AGUDO_LIVRE, oct: 0, env: SOM_PADRAO[f], vel: true };
+    const s = salvo[f] || (Array.isArray(montagemAntiga) && montagemAntiga[i]);
     if (s) SOM.forEach(k => { if (s[k] !== undefined) m[k] = s[k]; });
-    if (!ENVELOPES.hasOwnProperty(m.env)) m.env = p.env;
-    return m;
+    if (!ENVELOPES.hasOwnProperty(m.env)) m.env = SOM_PADRAO[f];
+    out[f] = m;
   });
+  return out;
 })();
-const salvarMontagem = () => store.set('montagem', montagem);
+const ganhoArco = PAPEIS.map((f, i) => {
+  const g = (store.get('ganhos') || [])[i];
+  const a = Array.isArray(montagemAntiga) && montagemAntiga[i] && montagemAntiga[i].ganho;
+  return isFinite(g) ? +g : isFinite(a) ? +a : 70;
+});
+/* o instrumento que manda no arco: a faixa de maior prioridade nele, e no empate a de mais notas */
+function familiaDoArco(i){
+  let melhor = -1, mp = -1, mn = -1;
+  tracks.forEach((t, k) => {
+    if (!(assign[k] >> i & 1)) return;
+    const p = prio[k] | 0, n = t.notes.length;
+    if (p > mp || (p === mp && n > mn)){ melhor = k; mp = p; mn = n; }
+  });
+  return melhor >= 0 ? familia(tracks[melhor]) : PAPEIS[i];
+}
+/* põe em cada arco o som do instrumento dele; devolve true se algum arco trocou de instrumento */
+function aplicarSons(){
+  if (dois()) return false;
+  let mudou = false;
+  for (let i = 0; i < nCanais(); i++){
+    const f = familiaDoArco(i), c = ch[i];
+    if (c.som !== f){ c.som = f; mudou = true; }
+    Object.assign(c.ctl, sons[f], { ganho: ganhoArco[i] });
+  }
+  return mudou;
+}
 function computePresetN(p){
   const n = esp.n;
   prio = tracks.map(() => 0);
@@ -1365,7 +1402,7 @@ function resetControls(){
      outros levam acompanhamento e baixo, e vão na mais grave pelo mesmo motivo. */
   ch.forEach((c, i) => {
     c.ctl = dois() ? Object.assign({}, CTL, { pick: i ? 'hi' : 'lo' })
-                   : Object.assign({}, CTL, montagem[i], { pick: PICK_PAPEL[i] });
+                   : Object.assign({}, CTL, sons[PAPEIS[i]], { ganho: ganhoArco[i], pick: PICK_PAPEL[i] });
   });
 }
 /* devolve false se nenhuma faixa casar pelo nome, ou seja, se a configuração é de outro arquivo */
@@ -1413,7 +1450,7 @@ function initialCfg(){
   if (current.sidecar && nCanais() === 2 && applyCfg(current.sidecar)){ $('cfgMsg').textContent = 'Configuração que veio com a música no acervo.'; return; }
   resetControls(); renderStrips();
   if (dois()){ preset('bass', false); $('cfgMsg').textContent = 'Padrão: baixo e melodia. Qualquer ajuste fica salvo neste navegador.'; }
-  else { preset('um', false); $('cfgMsg').textContent = 'Padrão: montagem fixa. As rotas ficam salvas por música; o som de cada flyback, para todas.'; }
+  else { preset('um', false); $('cfgMsg').textContent = 'Padrão: montagem fixa. As rotas ficam salvas por música; o som de cada instrumento e o ganho de cada flyback, para todas.'; }
 }
 $('cfgReset').onclick = () => { if (!current) return; store.del(cfgChave()); initialCfg(); };
 $('cfgDown').onclick = () => {
@@ -1453,8 +1490,14 @@ function renderStrips(){
     const gv = el('span', { class: 'val' }, k.ganho + '%');
     ganho.oninput = () => { k.ganho = +ganho.value; gv.textContent = k.ganho + '%'; };
     ganho.onchange = () => { guarda('ganho'); reschedule(); saveCfg(); };
-    /* com 3 ou mais flybacks, mexer no som de um arco grava na montagem: vale para todas as músicas */
-    const guarda = campo => { if (!dois()){ montagem[i][campo] = k[campo]; salvarMontagem(); } };
+    /* com 3 ou mais flybacks, o ganho grava no arco e o resto no som do instrumento do arco: vale
+       para todas as músicas, e para os outros arcos que tocam o mesmo instrumento */
+    const guarda = campo => {
+      if (dois()) return;
+      if (campo === 'ganho'){ ganhoArco[i] = k.ganho; store.set('ganhos', ganhoArco); return; }
+      sons[c.som || PAPEIS[i]][campo] = k[campo]; store.set('sons', sons);
+      aplicarSons(); setTimeout(renderStrips);
+    };
     const fmtAgudo = v => v >= AGUDO_LIVRE ? 'livre' : fmtF(v);
     const agudo = el('input', { type: 'range', id: 'agudo' + i, min: '0', max: '1000' }); agudo.value = Math.min(1000, sliderOf(k.agudo));
     const av = el('span', { class: 'val' }, fmtAgudo(k.agudo));
@@ -1472,7 +1515,8 @@ function renderStrips(){
     const env = sel('env' + i, OPC.env, k.env, v => k.env = v, 'env');
     const vel = sel('vel' + i, OPC.vel, k.vel ? 'sim' : 'nao', v => k.vel = v === 'sim', 'vel');
     const stat = el('p', { class: 'stat' }, c.stat);
-    s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome' }, nomeCanal(i)), mudo, solo), fontes,
+    const som = !dois() && c.som && c.som !== PAPEIS[i] ? ' · som de ' + c.som : '';
+    s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome', title: som ? 'este arco toca ' + c.som + ' nesta música, e soa como ' + c.som : '' }, nomeCanal(i) + som), mudo, solo), fontes,
       faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('agudo' + i, 'Agudo máx', agudo, av),
       linhaCtl('oct' + i, 'Oitava', oct, 'transpõe o canal'),
       linhaCtl('pick' + i, 'Acorde', pick, 'que nota do acorde o arco toca. "Repartir": os arcos com a mesma faixa e essa opção dividem as notas dela, uma em cada, como as vozes de um teclado'),

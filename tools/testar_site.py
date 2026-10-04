@@ -117,13 +117,16 @@ def player(nav, base, telas):
     ritmo = pg.evaluate("ch[3].segs.map(s => s.n)")
     confere(ritmo and set(ritmo) <= {33, 40, 45, 50, 55, 60},
             f'bateria vira estouros de bumbo, caixa e tons, sem chimbal nem prato ({sorted(set(ritmo))})')
-    # o som de um flyback vale para todas as músicas
-    pg.select_option('#env2', 'longo' if False else 'sustentado')
+    # o som segue o instrumento: o da guitarra vale para todas as músicas e todo arco com guitarra
+    pg.select_option('#env2', 'sustentado')
     abrir(pg, base, 'transcritas/AC-DC - Thunderstruck.mid')
-    confere(pg.evaluate("ch[2].ctl.env") == 'sustentado', 'o envelope mudado no flyback 3 continua em outra música')
-    pg.evaluate("ch[2].ctl.agudo = 400; rebuild()")
+    r = pg.evaluate("ch.slice(0, 6).map(c => [c.som, c.ctl.env])")
+    confere(all(e == 'sustentado' for f, e in r if f == 'guitarra') and r[0] == ['voz', 'medio'],
+            f'o envelope da guitarra mudado numa música vale em outra, em todo arco com guitarra ({r})')
+    pg.evaluate("sons.guitarra.agudo = 400; rebuild()")
     alto = pg.evaluate("Math.max(...ch[2].segs.map(s => s.f))")
     confere(alto <= 400, f'limite de agudo desce as notas de oitava até caber ({alto:.0f} Hz)')
+    pg.evaluate("sons.guitarra.agudo = AGUDO_LIVRE; sons.guitarra.env = 'corda'; store.set('sons', sons); rebuild()")
     pg.select_option('#env2', 'corda')
     abrir(pg, base, 'transcritas/Borboletas.mid')
     pg.select_option('#espN', '4'); time.sleep(.2)
@@ -163,6 +166,10 @@ def player(nav, base, telas):
         return { nome: tracks[v].name, arcos: arcos.map(i => i + 1), alturas: arcos.map(i => Math.round(media(i))) }; }""")
     confere(r['nome'] == 'voice' and len(r['arcos']) == 2 and r['arcos'][0] == 1 and r['alturas'][0] > r['alturas'][1],
             f'a segunda voz da dupla vai para outro arco, e a de cima fica no 1 ({r})')
+    a = r['arcos'][1] - 1
+    r = pg.evaluate(f"[ch[{a}].som, ch[{a}].ctl.env, ch[0].ctl.env, document.querySelectorAll('#strips .strip .nome')[{a}].textContent]")
+    confere(r[0] == 'voz' and r[1] == r[2] and 'som de voz' in r[3],
+            f'o arco da segunda voz soa como voz, e o mixer diz isso ({r})')
     abrir(pg, base, 'transcritas/Borboletas.mid')
     pg.click('#presets button:nth-child(1)')      # Montagem fixa, por cima do ajuste salvo antes
     r = pg.evaluate("() => tracks.filter((t, k) => assign[k] >> 4 & 1).map(t => [t.name, prio[tracks.indexOf(t)]])")
