@@ -162,14 +162,14 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
-O acervo tem 1.930 músicas em cinco pastas de primeiro nível:
+O acervo tem 1.931 músicas em cinco pastas de primeiro nível:
 
 | Pasta | Quantas | O que é |
 |---|---|---|
 | `bandas` | 1.239 | transcrições de fã, **uma pasta por artista** (122 deles) |
 | `classicos` | 590 | Mutopia, em `<região>/<compositor>/` |
 | `folk russo` | 45 | tradicional e soviético, pasta plana |
-| `transcritas` | 46 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo, sempre "Artista - Música"; a versão do Mirelo de uma música que também foi feita aqui leva "(Mirelo)" no fim, para as duas ficarem juntas na lista. O grupo é o artista, do crédito |
+| `transcritas` | 47 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo, sempre "Artista - Música"; a versão do Mirelo de uma música que também foi feita aqui leva "(Mirelo)" no fim, para as duas ficarem juntas na lista. O grupo é o artista, do crédito |
 | `exemplos` | 10 | arranjos do projeto para dois flybacks, mais casos de teste |
 
 Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o filtro inútil: a lista era um balaio só. `tools/curar_acervo.py` resolveu as duas coisas ao mesmo tempo.

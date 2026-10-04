@@ -375,11 +375,12 @@
   "artista": "ZZ Top",
   "licenca": "obra protegida — uso educacional sem fins lucrativos",
   "credito": "interpretação de ZZ Top; \"La Grange\"",
-  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, electric bass, drums; orientação 2",
+  "transcricao": "MuScriptor medium (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, electric bass, drums; orientação 2. O canto falado e murmurado depois de 1:10 não virou nota em nenhum modelo",
   "fonte": "https://www.youtube.com/watch?v=bSt4myecN_c",
-  "vocal": "nao",
-  "aproveitamento": 59,
-  "aproveitamento6": 78
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 46,
+  "aproveitamento6": 78,
+  "estilo": "Rock"
  },
  "ZZ Top - Gimme All Your Lovin'.mid": {
   "autor": "ZZ Top",
