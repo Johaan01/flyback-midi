@@ -219,8 +219,9 @@ impede outra pessoa de usar sua GPU e seu GitHub: não a publique.
 
 Para o Mirelo, ponha a chave da API dele no mesmo arquivo de configuração do servidor
 (`~/.flyback-servidor.json`, campo `"mirelo"`) ou em `MIRELO_API_KEY`. Ela fica só nesse
-computador, nunca no site. O Mirelo cobra 2,5 créditos por segundo de áudio (uma música de
-4 minutos são 600); sem chave, a janela só oferece a GPU.
+computador, nunca no site. Pela API o Mirelo cobra 2,5 créditos por segundo de áudio (uma
+música de 4 minutos são 600) — metade do que a interface web dele cobra: lá, Kickstart My Heart
+(4:44) custou 1.420. Sem chave, a janela só oferece a GPU.
 
 Baixar do YouTube contraria os termos de uso do serviço; quem roda responde pelo uso.
 

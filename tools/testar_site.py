@@ -146,7 +146,7 @@ def player(nav, base, telas):
     abrir(pg, base, 'transcritas/AC-DC - Back In Black.mid')
     r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name));
         return { canais: canaisDe(assign[g]).map(i => i + 1), picks: canaisDe(assign[g]).map(i => ch[i].ctl.pick) }; }""")
-    confere(len(r['canais']) == 3 and sorted(r['picks']) == ['hi', 'lo', 'meio'],
+    confere(len(r['canais']) == 3 and sorted(r['picks']) == ['hi', 'lo', 'lo2'],
             f'acorde bem abaixo da voz espalha a guitarra por três flybacks ({r})')
     abrir(pg, base, 'transcritas/Black Sabbath - Iron Man.mid')
     r = pg.evaluate("() => { const g = tracks.findIndex(t => /guitar/.test(t.name)); return canaisDe(assign[g]).length; }")

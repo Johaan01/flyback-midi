@@ -709,7 +709,9 @@ function buildSegs(i){
      criterio do usuario (mais aguda ou mais grave) continua valendo como antes. */
   /* "Do meio" e para espalhar um acorde por varios flybacks: a mesma faixa em tres canais, um
      na grave, um na do meio e um na aguda, e o power chord sai inteiro. Escolhida entre as
-     notas que entraram juntas, como a aguda e a grave. */
+     notas que entraram juntas, como a aguda e a grave. "2a" e "3a grave" contam de baixo para
+     cima, para acorde cheio (teclado de 4 a 6 notas): as de baixo nao competem com a voz. Acorde
+     com menos notas que isso toca a mais aguda que houver. */
   const best = () => {
     let bp = -1, bt = -1;
     for (const [k, o] of live){
@@ -720,7 +722,9 @@ function buildSegs(i){
     const acorde = [];
     for (const [k, o] of live) if ((k & 15) === bp && Math.abs(o.t - bt) <= 1e-9) acorde.push(k);
     acorde.sort((a, b) => (a >> 4) - (b >> 4));
-    const k = pick === 'hi' ? acorde[acorde.length - 1] : pick === 'lo' ? acorde[0] : acorde[acorde.length >> 1];
+    const k = pick === 'hi' ? acorde[acorde.length - 1] : pick === 'lo' ? acorde[0]
+      : pick === 'lo2' ? acorde[Math.min(1, acorde.length - 1)] : pick === 'lo3' ? acorde[Math.min(2, acorde.length - 1)]
+      : acorde[acorde.length >> 1];
     return { n: k >> 4, v: live.get(k).v };
   };
   for (const e of ev){
@@ -1096,12 +1100,13 @@ function ataques(t){
   if (t._ataques === undefined) t._ataques = new Set(notasDe(t).map(n => Math.round(n.t0 * 50))).size;
   return t._ataques;
 }
-/* altura típica da nota de cima (ou do meio) dos acordes da faixa */
+/* altura típica de uma voz dos acordes da faixa: a de cima, a do meio, ou a 2ª ou 3ª de baixo */
 function alturaDoAcorde(t, qual){
   const por = new Map();
   t.notes.forEach(n => { const k = Math.round(n.t0 * 50); (por.get(k) || por.set(k, []).get(k)).push(n.n); });
   const alt = [];
-  por.forEach(l => { if (l.length < 2) return; l.sort((a, b) => a - b); alt.push(qual === 'hi' ? l[l.length - 1] : l[l.length >> 1]); });
+  por.forEach(l => { if (l.length < 2) return; l.sort((a, b) => a - b); alt.push(qual === 'hi' ? l[l.length - 1] : qual === 'lo2' ? l[Math.min(1, l.length - 1)]
+    : qual === 'lo3' ? l[Math.min(2, l.length - 1)] : l[l.length >> 1]); });
   alt.sort((a, b) => a - b);
   return alt.length ? alt[alt.length >> 1] : 0;
 }
@@ -1135,18 +1140,24 @@ function umPorFlyback(n){
     if (novo < nb * .06 || novo < tam[i] * .3) continue;
     out[i] |= 1 << c; pr[i] = Math.max(pr[i], 1); ocupa(i, c);
   }
-  /* flybacks vazios: as outras notas do acorde da faixa mais polifônica, primeiro o 6, depois o 5 */
+  /* flybacks vazios: as outras notas do acorde da faixa mais polifônica, primeiro o 6, depois o
+     5, e o 3 quando a música não tem guitarra (DEJA VU: voz, baixo, bateria e um teclado de seis
+     notas por acorde, e o 3 ficava apagado) */
   const cheia = dono.filter(i => i >= 0 && fam.get(i) !== 'bateria').map(i => [i, polifonia(tracks[i])])
     .filter(([, p]) => p >= 1.3).sort((a, b) => b[1] - a[1])[0];
   if (cheia){
     const [i] = cheia, base = dono.indexOf(i);
-    const vozes = [base === 0 ? 'lo' : 'hi'].concat(acordesDeTres(tracks[i]) >= .25 ? ['meio'] : []);
+    /* contadas de baixo para cima: a 2ª quando o acorde costuma ter três notas (aí ela é a do
+       meio), a 3ª quando costuma ter quatro. Teclado de seis notas sai em quatro arcos sem
+       repetir nota: grave, 2ª, 3ª e aguda */
+    const vozes = [base === 0 ? 'lo' : 'hi'].concat(acordesDe(tracks[i], 3) >= .25 ? ['lo2'] : [],
+      acordesDe(tracks[i], 4) >= .25 ? ['lo3'] : []);
     /* A nota de cima do acorde que cai na altura da voz compete com ela, e a voz parece mais
        baixa — o dono do projeto ouviu isso. Só entra a voz do acorde que fica pelo menos uma
        quarta abaixo do canto; se não, o flyback fica vazio, que é melhor que mascarar a voz. */
     const teto = li >= 0 && li !== i ? avgPitch(tracks[li]) - 5 : Infinity;
     const cabem = vozes.filter(v => v === 'lo' || alturaDoAcorde(tracks[i], v) <= teto);
-    for (const c of [5, 4]){
+    for (const c of [5, 4, 2]){
       if (!cabem.length || c >= n || dono[c] >= 0) continue;
       out[i] |= 1 << c; dono[c] = i;
       ajustes.push([c, { pick: cabem.shift() }]);
@@ -1154,13 +1165,13 @@ function umPorFlyback(n){
   }
   return out;
 }
-/* fração dos ataques de acorde (duas notas ou mais juntas) que têm três notas ou mais */
-function acordesDeTres(t){
+/* fração dos ataques de acorde (duas notas ou mais juntas) que têm `q` notas ou mais */
+function acordesDe(t, q){
   const por = new Map();
   t.notes.forEach(n => { const k = Math.round(n.t0 * 1000); por.set(k, (por.get(k) || 0) + 1); });
-  let dois = 0, tres = 0;
-  por.forEach(q => { if (q >= 2) dois++; if (q >= 3) tres++; });
-  return dois ? tres / dois : 0;
+  let dois = 0, mais = 0;
+  por.forEach(x => { if (x >= 2) dois++; if (x >= q) mais++; });
+  return dois ? mais / dois : 0;
 }
 /* controles de canal que o último preset quer: [canal, {pick}] */
 let ajustes = [];
@@ -1261,7 +1272,7 @@ function currentCfg(){
       ganho: c.ctl.ganho,
       agudo: c.ctl.agudo,
       oitava: c.ctl.oct,
-      acorde: c.ctl.pick === 'lo' ? 'grave' : c.ctl.pick === 'meio' ? 'meio' : 'agudo',
+      acorde: ACORDE[c.ctl.pick] || 'agudo',
       envelope: c.ctl.env,
       velocity: c.ctl.vel
     }))
@@ -1301,7 +1312,7 @@ function applyCfg(cfg){
   (Array.isArray(cfg.canais) ? cfg.canais : []).slice(0, nCanais()).forEach((c, i) => {
     if (!c) return;
     const k = ch[i].ctl;
-    if (c.acorde) k.pick = c.acorde === 'grave' ? 'lo' : c.acorde === 'meio' ? 'meio' : 'hi';
+    if (c.acorde) k.pick = Object.keys(ACORDE).find(p => ACORDE[p] === c.acorde) || 'hi';
     if (!dois()) return;               /* com 3 ou mais, o som é da montagem */
     if (isFinite(c.ganho)) k.ganho = Math.max(0, Math.min(150, +c.ganho));
     if (isFinite(c.agudo) && c.agudo > 0) k.agudo = Math.max(100, Math.min(AGUDO_LIVRE, Math.round(+c.agudo)));
@@ -1336,9 +1347,11 @@ $('cfgDown').onclick = () => {
 };
 
 /* ---------- canais: um módulo de mixer por flyback ---------- */
+/* nota do acorde, como vai no .json */
+const ACORDE = { hi: 'agudo', meio: 'meio', lo3: 'terceira', lo2: 'segunda', lo: 'grave' };
 const OPC = {
   oct: [['-2', '−2'], ['-1', '−1'], ['0', 'igual'], ['1', '+1'], ['2', '+2']],
-  pick: [['hi', 'aguda'], ['meio', 'do meio'], ['lo', 'grave']],
+  pick: [['hi', 'aguda'], ['meio', 'do meio'], ['lo3', '3ª grave'], ['lo2', '2ª grave'], ['lo', 'grave']],
   env: [['nenhum', 'OOK'], ['percussivo', 'batida'], ['medio', 'médio'], ['sustentado', 'longo'], ['corda', 'corda']],
   vel: [['sim', 'segue'], ['nao', 'ignora']]
 };

@@ -11,7 +11,8 @@ documentação pública (mirelo.ai/api-docs):
    consulta ao job_url até 'succeeded', 'failed' ou 'expired';
 4. o MIDI vem de um link temporário em result.midi.url — baixado na hora.
 
-Cobra 2,5 créditos por segundo de áudio: uma música de 4 min são 600. A chave da API fica só
+Cobra 2,5 créditos por segundo de áudio: uma música de 4 min são 600 — metade da interface web,
+que cobrou 1.420 por Kickstart My Heart (4:44). A chave da API fica só
 nesta máquina (~/.flyback-servidor.json, campo "mirelo", ou MIRELO_API_KEY), nunca no site.
 
 Escrito pela documentação e testado só até a autenticação: sem uma chave válida não há como

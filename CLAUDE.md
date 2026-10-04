@@ -92,7 +92,7 @@ No modo ESP os presets são outros, porque os de cima são pensados para dois la
 
 **Origem: quem transcreveu.** `gerar_acervo.py` grava `origem` no índice a partir do crédito: `muscriptor` quando a transcrição foi rodada aqui, na GPU (o crédito diz "rodado localmente"), `mirelo` quando veio do Mirelo, pela interface ou pela API; sem o campo, é MIDI nativo, escrito por uma pessoa. O site mostra isso em cada linha — "MIDI · nativo", "MIDI · MuScriptor", "MIDI · Mirelo" — e a busca acha pelas três palavras. É campo, não pasta, de propósito: pasta serve para achar (artista, compositor), origem é uma característica, e a mesma música pode existir nas versões. A montagem fixa vale para todas — numa amostra de 40 transcrições de fã, a melodia caiu no flyback 1 em 39, o baixo no 2 em 35, a guitarra no 3 em 34 e a bateria no 4 em 38, porque ela lê o programa General MIDI, que essas transcrições trazem. O que difere é a densidade: as de fã têm 9,7 faixas em média (uma de Queen tem cinco guitarras), e 46% delas ficam sem flyback; as da IA têm de 4 a 6.
 
-**Montagem fixa (3 a 6 flybacks).** Cada família de instrumento cai sempre no mesmo flyback, em toda música: 1 voz, 2 baixo, 3 guitarra, 4 bateria, 5 teclado, 6 extra (`PAPEIS`, `familia()`). Pedido do dono do projeto: duas músicas de rock têm de sair com os mesmos instrumentos nos mesmos arcos. A ordem é a de importância — com 4 flybacks ficam voz, baixo, guitarra e bateria. Na família, a faixa que mais ocupa a música é a dona; as outras entram nas brechas (6% e 30%). O 1 é da melodia principal pela detecção de canto; numa instrumental pode ser a guitarra solo. Os flybacks que sobram vazios — o 6 quase sempre, o 5 quando não há teclado — recebem as outras notas do acorde da faixa mais polifônica: uma banda de rock tem voz, guitarra, baixo e bateria, e o MuScriptor põe as duas guitarras numa faixa só; o power chord sai em dois arcos, e acorde de três notas em três, com a opção **"do meio"** de "Acorde" (só quando pelo menos 25% dos acordes têm três notas, `acordesDeTres`).
+**Montagem fixa (3 a 6 flybacks).** Cada família de instrumento cai sempre no mesmo flyback, em toda música: 1 voz, 2 baixo, 3 guitarra, 4 bateria, 5 teclado, 6 extra (`PAPEIS`, `familia()`). Pedido do dono do projeto: duas músicas de rock têm de sair com os mesmos instrumentos nos mesmos arcos. A ordem é a de importância — com 4 flybacks ficam voz, baixo, guitarra e bateria. Na família, a faixa que mais ocupa a música é a dona; as outras entram nas brechas (6% e 30%). O 1 é da melodia principal pela detecção de canto; numa instrumental pode ser a guitarra solo. Os flybacks que sobram vazios — o 6 quase sempre, o 5 quando não há teclado, o 3 quando não há guitarra — recebem as outras notas do acorde da faixa mais polifônica: uma banda de rock tem voz, guitarra, baixo e bateria, e o MuScriptor põe as duas guitarras numa faixa só; o power chord sai em dois arcos, e acorde de três notas em três. As vozes extras são a aguda e as contadas **de baixo para cima** — "2ª grave" quando pelo menos 25% dos acordes têm três notas, "3ª grave" quando têm quatro (`acordesDe`) —, porque num teclado de seis notas "do meio" e "aguda" caem na altura do canto e as de baixo não. Pedido do dono do projeto ao ver o "electric piano" de DEJA VU, transcrito pela Kyutai com acordes de 5 a 9 notas numa faixa só: agora ele sai em dois arcos (grave e 2ª); a 3ª fica em C#4, três semitons abaixo da voz, e a regra abaixo a barra.
 
 **Quem manda quando a família tem mais de uma faixa: mais ataques** (instantes de começo de nota, acorde contando como um, `ataques()`). Nem mais notas — acorde de três conta três, e uma guitarra abafada tinha 1.132 notas e 412 ataques — nem mais tempo, que escolhe o bordão: em Borboletas ganhava o pad, de notas de 1,7 s em acorde, sobre o piano. Mais ataques é a parte que mais se mexe, a mais reconhecível numa nota por vez. Medido em 77 conflitos de família em 73 músicas: "mais tempo" e "mais ataques" discordam em 13. E o nome dado à faixa vale antes do programa GM (`familia()`): "Vocals" com programa de guitarra é voz.
 
@@ -216,8 +216,10 @@ Formato (o mesmo no `localStorage` e no `.json` ao lado da música):
 ```json
 { "versao": 2, "saida": "estereo",
   "faixas": [{ "nome": "Baixo", "canal": "esquerdo", "saidas": [1] }],
-  "canais": [{ "ganho": 70, "passaBaixa": 20000, "oitava": 1, "acorde": "agudo" }, { … }] }
+  "canais": [{ "ganho": 70, "agudo": 20000, "oitava": 1, "acorde": "agudo" }, { … }] }
 ```
+
+`acorde` é `agudo`, `meio`, `terceira`, `segunda` ou `grave` (`ACORDE` no `index.html`): qual nota do acorde o flyback toca, as duas do meio contadas de baixo para cima.
 
 Internamente o roteamento de cada faixa é uma **máscara de bits**, um bit por canal (`assign[k]`): no estéreo 0, 1, 2 e 3 são exatamente o desligada, esquerdo, direito e ambos de antes; no ESP qualquer combinação dos seis vale, e uma faixa pode ir para mais de um flyback.
 
@@ -335,6 +337,28 @@ muito e a máquina está livre.
 
 Com 2, instrumento listado que o modelo deixaria de fora aparece. Mas com instrumento **errado** na lista ele inventa e o canto vai junto: Borboletas com órgão e metais listados (não tem nenhum dos dois) saiu com 473 notas de "metais" — o canto — e a voz caiu de 524 para 88 notas. Como o detector automático erra justamente o "resto" (em BLOODY STREAM viu órgão no lugar da guitarra), 2 só vale com lista conhecida: `--orientacao 2 --instrumentos ...` no `transcrever.py`. Com a lista certa de Livin' On A Prayer, o synth apareceu com 332 notas (Mirelo: 962) e a voz ficou igual. O piano de Borboletas não aparece em orientação nenhuma: é o limite do modelo local.
 
+**O site da Kyutai (muscriptor.kyutai.org) roda o `medium`.** É o `muscriptor serve` do próprio
+pacote — a mesma versão 0.3.0 instalada aqui, com a página em `web_dist`: `POST /transcribe` com
+o áudio e a lista, resposta em fluxo, um trecho de 5 s por vez. DEJA VU com a lista que o dono do
+projeto marcou lá (voz, synth pad, electric piano, baixo, bateria): o `medium` daqui em float32
+saiu **nota por nota igual** ao do site (F1 100% em todas as faixas), em 3min21 contra 4min25 lá;
+o `large` daqui concordou 42%. O site não acrescenta nada à GPU daqui além de poupá-la. Três
+coisas que a interface sugere e não são:
+
+- a música de exemplo não tem detecção: os instrumentos dela estão fixos no código da página;
+- "not detected" é só "ainda sem nota": o modelo escreve de 5 em 5 s, e a voz de Kickstart My
+  Heart "apareceu" perto de 1 min porque é ali que o canto entra;
+- o resultado não varia a cada rodada. A decodificação é gulosa, sem sorteio: o mesmo modelo, na
+  mesma precisão, com o mesmo áudio e a mesma lista, dá o mesmo MIDI. O que muda o resultado é
+  o modelo (`medium` × `large`), a precisão (float32 × float16) e a lista.
+
+**O Mirelo não é nenhum dos dois.** Kickstart My Heart, voz, guitarra distorcida, baixo e
+bateria: Mirelo × site da Kyutai concordam em 75% das notas, Mirelo × `large` daqui em 76%,
+`large` × Kyutai em 82%. Onde o Mirelo se destaca, de ouvido e na medida: a segunda voz (23 s de
+duas vozes juntas em Kickstart, contra 13 s no `medium`) e os acordes de metais em BLOODY STREAM
+(715 notas, três por ataque, contra 481 e 1,6 no `large` daqui, que também chamou a guitarra de
+órgão — erro do detector automático, não do modelo).
+
 **Memória do `large`.** O `load_model` monta o modelo inteiro em float32 **na placa** e carrega
 outra cópia float32 dos pesos antes de converter para float16 — pico de ~11 GB num lugar que tem 6.
 No Windows o driver transborda para a RAM compartilhada: numa máquina de 16 GB a RAM livre bateu
@@ -437,7 +461,7 @@ servidor que roda no computador da GPU: `tools/servidor.py`.
 **Mirelo pela API** (`tools/mirelo.py`): o mp3 sobe como asset (`POST /v3/assets`, multipart com o
 arquivo por último), a detecção de instrumentos do próprio Mirelo escolhe a lista (grátis até 10
 por dia) e o job roda até `succeeded`; o MIDI vem de um link temporário. 2,5 créditos por segundo
-de áudio. A chave fica no `~/.flyback-servidor.json` (campo `"mirelo"`) ou em `MIRELO_API_KEY`,
+de áudio pela API, segundo a documentação; a interface web cobrou o dobro (1.420 por 4:44). A chave fica no `~/.flyback-servidor.json` (campo `"mirelo"`) ou em `MIRELO_API_KEY`,
 **nunca no site**; sem ela a janela esconde o botão. Escrito pela documentação pública e
 **testado só até a autenticação** (chave inválida devolve 401 "Invalid API key"): o resto do
 fluxo só se confirma com uma chave de verdade.
