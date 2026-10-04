@@ -144,6 +144,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 .luz.on{background:var(--cor,var(--ink))}
 .trk .nm{min-width:0;overflow-wrap:anywhere}
 .trk.off .nm{color:var(--dim)}
+.trk.linha .nm{margin-left:8px;padding-left:10px;border-left:2px solid var(--soft)}
+.trk .mini{margin-left:6px;padding:0 6px;font-size:11px;line-height:1.5;vertical-align:baseline}
 .trk .meta{display:block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
 .vazio{color:var(--dim);margin:0;max-width:48ch}
 .credit{margin:12px 0 0;color:var(--dim);font-size:12px;overflow-wrap:anywhere}
@@ -983,8 +985,17 @@ function renderTracks(){
     if (prim !== undefined) luz.style.setProperty('--cor', CORES[prim]);
     t.luz = luz; t.aceso = false;
     const papel = !assign[k] || !prio[k] ? '' : prio[k] >= 3 ? ' · principal' : prio[k] >= 2 ? ' · base' : ' · preenche as brechas';
-    const name = el('div', { class: 'nm' }, t.name,
-      el('span', { class: 'meta' }, t.notes.length + ' notas · ' + nm(lo) + ' – ' + nm(hi) + (isDrum(t) ? ' · percussão' : '') + papel));
+    if (t.linha) row.classList.add('linha');
+    const meta = el('span', { class: 'meta' }, t.notes.length + ' notas · ' + nm(lo) + ' – ' + nm(hi) + (isDrum(t) ? ' · percussão' : '') + papel);
+    if (!t.linha && !isDrum(t) && (t.poli = t.poli || polifonia(t)) >= 1.2){
+      const ja = separadas.includes(t.name);
+      const b = el('button', { class: 'mini', title: ja ? 'tira as linhas da lista' : 'uma faixa por linha do acorde, da mais aguda à mais grave, cada uma com o seu flyback' },
+        ja ? 'juntar as linhas' : 'separar em linhas');
+      b.onclick = () => ja ? juntarLinhas(t.name) : separarEscolhida(k);
+      meta.appendChild(b);
+    }
+    const rotulo = t.linha ? 'linha ' + t.nLinha + ' de ' + t.deLinhas + (t.nLinha === 1 ? ' (aguda)' : t.nLinha === t.deLinhas ? ' (grave)' : '') : t.name;
+    const name = el('div', { class: 'nm', title: t.name }, rotulo, meta);
     const seg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Saída de ' + t.name });
     const muda = m => { assign[k] = m; renderTracks(); reschedule(); saveCfg(); };
     const botao = (rot, desc, ativo, cor, fn) => {
@@ -1195,8 +1206,9 @@ function umPorFlyback(n){
   const tam = occ.map(a => { let c = 0; for (let k = 0; k < nb; k++) c += a[k]; return c; });
   const out = tracks.map(() => 0), pr = tracks.map(() => 0);
   prio = pr;
-  /* as faixas juntadas de outra versão ficam como quem juntou deixou: são escolha de quem ouve */
-  const com = tracks.map((t, i) => i).filter(i => tracks[i].notes.length && !tracks[i].junta);
+  /* as faixas juntadas de outra versão e as linhas separadas ficam como quem as pôs deixou:
+     são escolha de quem ouve */
+  const com = tracks.map((t, i) => i).filter(i => tracks[i].notes.length && !tracks[i].junta && !tracks[i].linha);
   if (!com.length) return out;
   const fam = new Map(com.map(i => [i, familia(tracks[i])]));
   const dono = new Array(MAX).fill(-1), cheio = [];
@@ -1335,7 +1347,7 @@ function computePresetN(p){
   prio = tracks.map(() => 0);
   if (p === 'none') return tracks.map(() => 0);
   if (p === 'faixas'){
-    const idx = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]) && tracks[i].notes.length)
+    const idx = tracks.map((t, i) => i).filter(i => !isDrum(tracks[i]) && tracks[i].notes.length && !tracks[i].junta && !tracks[i].linha)
       .sort((x, y) => avgPitch(tracks[x]) - avgPitch(tracks[y]));
     const a = tracks.map(() => 0);
     idx.forEach((i, k) => a[i] = 1 << Math.min(n - 1, Math.floor(k * n / idx.length)));
@@ -1351,7 +1363,7 @@ function preset(p, user){
   ajustes = [];
   if (!dois()) ch.slice(0, nCanais()).forEach((c, i) => { c.ctl.pick = PICK_PAPEL[i]; });
   assign = dois() ? computePreset(p).map(l => LETRA_MASC[l] || 0) : computePresetN(p);
-  if (dois()) tracks.forEach((t, k) => { if (t.junta) assign[k] = 0; });
+  if (dois()) tracks.forEach((t, k) => { if (t.junta || t.linha) assign[k] = 0; });
   ajustes.forEach(([c, a]) => Object.assign(ch[c].ctl, a));
   if (ajustes.length) renderStrips();
   renderTracks(); reschedule(); if (user) saveCfg();
@@ -1377,7 +1389,7 @@ function analyse(){
     else {
       const used = noteTime ? Math.round(soundTime / noteTime * 100) : 0;
       const busy = duration ? Math.round(soundTime / duration * 100) : 0;
-      c.stat = used + '% das notas · ' + busy + '% do tempo'
+      c.stat = used + '% das notas · ' + busy + '% do tempo' + (c.segs.length ? ' · ' + nm(c.lo) + ' – ' + nm(c.hi) : '')
         + (c.descidas ? ' · ' + c.descidas + (c.descidas === 1 ? ' nota descida' : ' notas descidas') + ' de oitava pelo agudo máx' : '');
       msg.push(used + '%');
     }
@@ -1398,6 +1410,7 @@ function currentCfg(){
   return {
     versao: 2,
     ...(juntas.length ? { juntar: juntas.map(j => ({ arquivo: j.arquivo, rotulo: j.rotulo, desvio: j.desvio })) } : {}),
+    ...(separadas.length ? { linhas: separadas.slice() } : {}),
     saida: dois() ? 'estereo' : 'esp',
     faixas: tracks.map((t, k) => {
       const f = { nome: t.name };
@@ -1677,6 +1690,11 @@ async function openBuffer(buf, info){
     if (!j.arquivo) continue;                    /* arquivo do computador não volta sozinho */
     try { const r = await fetch(libUrl(j.arquivo)); if (r.ok) juntarVersao(await r.arrayBuffer(), j.rotulo, j.arquivo, j.desvio); } catch (e) {}
   }
+  separadas = [];
+  for (const nome of (salvo && Array.isArray(salvo.linhas) ? salvo.linhas : [])){
+    const k = tracks.findIndex(t => t.name === nome && !t.linha);
+    if (k >= 0) separarFaixa(k, false);
+  }
   initialCfg();
   ['play', 'stop', 'wavGo', 'cfgDown', 'cfgReset'].forEach(id => $(id).disabled = false);
   wavReset(); renderTudo(); stop();
@@ -1686,6 +1704,85 @@ async function openBuffer(buf, info){
   document.title = current.title + ' · Flyback MIDI';
   montarJuntar();
   return tracks.length;
+}
+
+/* ---------- separar uma faixa em linhas ----------
+   Pedido do dono do projeto: "aguda, do meio, grave" escolhe a cada instante uma nota do acorde,
+   e com quatro notas "do meio" não quer dizer nada fixo — a nota do arco muda de lugar a cada
+   acorde, e com a oitava deslocada ia parar fora do lugar (a de cima com −2 caía na região do
+   baixo, mas só às vezes). Separada, a faixa vira linhas fixas, da mais aguda à mais grave, cada
+   uma na lista com o próprio seletor de flyback: escolher a linha é escolher a faixa, e a oitava
+   desloca uma linha inteira.
+
+   As linhas saem como as vozes de um coral, sem cruzar: em cada acorde a nota mais aguda vai
+   para uma linha acima da seguinte, escolhida a distribuição de menor salto somado (programação
+   dinâmica), com cada linha presa a um registro — a altura daquela camada da faixa, do quantil
+   de cima ao de baixo. Sem isso, "a linha livre mais próxima" deixava as seis linhas de Deja Vu
+   com a mesma altura média, trocando de lugar a cada acorde. Linha que ainda soa custa mais (é
+   cortada). Num acorde com mais notas que linhas ficam as das pontas e as espalhadas entre elas
+   — a de baixo de um acorde de seis cordas não some. Quantas linhas: quantas notas a faixa soa juntas em trecho de mais de
+   0,3 s por pelo menos 1% da música (vozesJuntas), de 2 a 6; linha com menos de 3% das notas sai. */
+let separadas = [];
+function separarLinhas(t){
+  let k = 2;
+  while (k < 6 && vozesJuntas(t, k + 1) >= duration * .01) k++;
+  const notas = t.notes.slice().sort((a, b) => a.t0 - b.t0);
+  const alt = notas.map(x => x.n).sort((a, b) => b - a);
+  const centro = Array.from({ length: k }, (_, j) => alt[Math.min(alt.length - 1, Math.floor((j + .5) * alt.length / k))]);
+  const por = Array.from({ length: k }, () => []), soa = new Array(k).fill(null);
+  const livre = (a, x) => !soa[a] || soa[a].t1 <= x.t0 + LEGATO;
+  const custo = (a, x) => .6 * Math.abs((soa[a] ? soa[a].n : centro[a]) - x.n) + .4 * Math.abs(centro[a] - x.n) + (livre(a, x) ? 0 : 6);
+  for (let j = 0; j < notas.length; ){
+    let f = j + 1;
+    while (f < notas.length && notas[f].t0 - notas[j].t0 <= .03) f++;
+    let g = notas.slice(j, f).sort((a, b) => b.n - a.n);
+    if (g.length > k) g = Array.from({ length: k }, (_, q) => g[Math.round(q * (g.length - 1) / (k - 1))]);
+    /* D[i][a]: menor custo com a nota i (da mais aguda para baixo) na linha a, e as de cima em
+       linhas de número menor */
+    const m = g.length, D = g.map(() => new Array(k).fill(Infinity)), P = g.map(() => new Array(k).fill(-1));
+    for (let a = 0; a <= k - m; a++) D[0][a] = custo(a, g[0]);
+    for (let i = 1; i < m; i++) for (let a = i; a <= k - m + i; a++) for (let b = i - 1; b < a; b++){
+      const v = D[i - 1][b] + custo(a, g[i]);
+      if (v < D[i][a]){ D[i][a] = v; P[i][a] = b; }
+    }
+    let a = m - 1;
+    for (let x = m - 1; x < k; x++) if (D[m - 1][x] < D[m - 1][a]) a = x;
+    for (let i = m - 1; i >= 0; i--){
+      const x = g[i];
+      if (soa[a] && soa[a].t1 > x.t0) soa[a].t1 = x.t0;
+      const c = Object.assign({}, x); por[a].push(c); soa[a] = c;
+      a = P[i][a];
+    }
+    j = f;
+  }
+  const media = l => l.reduce((s, x) => s + x.n, 0) / l.length;
+  return por.filter(l => l.length >= Math.max(3, t.notes.length * .03)).sort((a, b) => media(b) - media(a));
+}
+/* põe as linhas da faixa `k` logo abaixo dela, desligadas; `rotas` mexe em assign e prio, que
+   ao abrir a música ainda são da anterior (a configuração os refaz) */
+function separarFaixa(k, rotas){
+  const t = tracks[k];
+  const linhas = separarLinhas(t);
+  if (linhas.length < 2) return 0;
+  const novas = linhas.map((notes, j) => ({ name: t.name + ' · linha ' + (j + 1), gm: t.gm, prog: t.prog, chan: t.chan,
+    mtrk: t.mtrk, notes, linha: t.name, nLinha: j + 1, deLinhas: linhas.length, uniao: uniao(notes) }));
+  tracks.splice(k + 1, 0, ...novas);
+  if (rotas){ assign.splice(k + 1, 0, ...novas.map(() => 0)); prio.splice(k + 1, 0, ...novas.map(() => 0)); }
+  separadas.push(t.name);
+  return novas.length;
+}
+function separarEscolhida(k){
+  const nome = tracks[k].name, n = separarFaixa(k, true);
+  if (!n){ $('cfgMsg').textContent = nome + ': não há linhas para separar.'; return; }
+  renderTracks(); reschedule(); saveCfg();
+  $('cfgMsg').textContent = nome + ' separada em ' + n + ' linhas, desligadas: escolha o flyback de cada uma, e desligue a faixa inteira se quiser só as linhas.';
+}
+function juntarLinhas(nome){
+  for (let k = tracks.length - 1; k >= 0; k--)
+    if (tracks[k].linha === nome){ tracks.splice(k, 1); assign.splice(k, 1); prio.splice(k, 1); }
+  separadas = separadas.filter(x => x !== nome);
+  renderTracks(); reschedule(); saveCfg();
+  $('cfgMsg').textContent = nome + ': linhas tiradas da lista.';
 }
 
 /* ---------- juntar faixas de outra versão da mesma música ----------

@@ -204,6 +204,24 @@ def player(nav, base, telas):
     dono = max(r, key=lambda x: x[1])[0] if r else None
     confere(dono == 'acoustic_piano', f'no teclado manda a faixa com mais ataques, o piano, não o pad ({r})')
 
+    print('linhas')
+    abrir(pg, base, 'transcritas/Dave Rodgers - Deja Vu.mid')
+    pg.locator('#tracks .trk', has_text='electric piano').first.locator('button.mini').click(); time.sleep(.5)
+    r = pg.evaluate("""() => tracks.filter(t => t.linha === 'electric piano').map(t => [Math.round(avgPitch(t)), +polifonia(t).toFixed(2), assign[tracks.indexOf(t)]])""")
+    alturas = [a for a, _, _ in r]
+    confere(len(r) >= 4 and alturas == sorted(alturas, reverse=True) and len(set(alturas)) == len(alturas),
+            f'o teclado de seis notas vira linhas, da mais aguda à mais grave, sem repetir registro ({alturas})')
+    confere(all(p <= 1.05 for _, p, _ in r) and all(a == 0 for _, _, a in r),
+            f'cada linha toca uma nota por vez, e entra desligada ({r})')
+    pg.evaluate("""() => { const k = tracks.findIndex(t => t.linha && t.nLinha === 2); assign[k] = 1 << 5; rebuild(); renderTracks(); saveCfg(); }""")
+    abrir(pg, base, 'transcritas/AC-DC - Back In Black.mid')
+    abrir(pg, base, 'transcritas/Dave Rodgers - Deja Vu.mid')
+    r = pg.evaluate("() => tracks.filter((t, k) => t.linha && assign[k]).map(t => [t.nLinha, canaisDe(assign[tracks.indexOf(t)])])")
+    confere(r == [[2, [5]]], f'a música reabre com as linhas separadas e a rota de cada uma ({r})')
+    pg.locator('#tracks .trk', has_text='electric piano').first.locator('button.mini').click(); time.sleep(.3)
+    confere(pg.evaluate('!tracks.some(t => t.linha) && !separadas.length'), 'juntar as linhas tira as linhas da lista')
+    pg.evaluate("store.del(cfgChave())")
+
     print('juntar versões')
     abrir(pg, base, "transcritas/Bon Jovi - Livin' On A Prayer.mid")
     opcoes = pg.eval_on_selector_all('#juntarSel option', 'x => x.map(o => o.value)')

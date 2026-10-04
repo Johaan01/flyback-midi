@@ -42,6 +42,9 @@ mixer com um módulo por canal e o painel da saída.
   de 1 Hz). Serve para achar a ressonância do arco e casar o par.
 - **Saída serial para ESP32.** Chrome ou Edge. Protocolo em `docs/protocolo-serial.md`. O painel
   "Linhas enviadas" mostra o que vai para a porta, também sem ESP ligado.
+- **Separar em linhas.** Uma faixa com acordes vira linhas fixas, da mais aguda à mais grave,
+  cada uma com o seu seletor de flyback: em vez de "a nota de cima do acorde", escolhe-se qual
+  linha toca em cada arco.
 - **Juntar versões.** No painel de Faixas, "Juntar faixas de outra versão" traz as faixas de
   outra transcrição da mesma música (a do Mirelo, a do `large`…), alinhadas no tempo e
   desligadas: escolher a voz de uma e a guitarra de outra é escolher o flyback de cada faixa.
