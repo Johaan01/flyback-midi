@@ -111,6 +111,12 @@ O que ainda sobra fica calado. **Já houve pedaço de acorde nos vazios, e saiu.
 
 Depois disso, nas 47 transcritas, 42 sem aviso; nas 5 restantes os seis arcos estão ocupados por instrumentos de verdade e o aviso descreve uma troca (em Sweet Home Alabama, os solos ou o backing vocal do refrão), não um erro.
 
+**Juntar faixas de outra versão.** Cada modelo acerta uma parte: em La Grange o `medium` achou mais voz que o `large`; em Deja Vu o `large` achou o synth pad que o `medium` não achou; o Mirelo pega a segunda voz. O dono do projeto pediu para tirar a faixa de uma e pôr na outra, imaginando um editor de MIDI. Não precisou: o seletor "Juntar faixas de outra versão" no painel de Faixas lista as outras versões da mesma música no acervo (mesmo título, tirado o sufixo de versão, `VERSAO`) ou abre um arquivo do computador, e as faixas dela entram na lista **desligadas**, com o nome da versão ("voice · medium") e **alinhadas no tempo** (`alinhar`: o desvio, de −3 a +3 s, que mais casa ataques da bateria, senão do baixo — o áudio do Mirelo de Livin' On A Prayer está 0,84 s deslocado, e o site acha). Escolher a voz de uma e a guitarra de outra é rotear, no seletor de flyback de cada faixa. A configuração da música guarda de onde vieram (`juntar`: arquivo, rótulo e desvio), e ela reabre com as mesmas. Os presets não mexem nas faixas juntadas (`t.junta`): são escolha de quem ouve. **"Baixar MIDI"** grava só as faixas que estão em algum flyback (`midiDe`, SMF formato 1 a 120 bpm, 960 tiques por segundo), com o nome sem o sufixo quando não repete — é a versão combinada, pronta para ir ao acervo.
+
+Por isso as versões alternativas ficam no acervo, com o modelo no fim do nome — "ZZ Top - La Grange (large)", "Dave Rodgers - Deja Vu (large)" —, como a do Mirelo fica com "(Mirelo)". A principal é a sem sufixo.
+
+**O agudo máx também mexe na oitava, e agora avisa.** O dono do projeto desconfiou, com razão, que a oitava saía do lugar pela interface e não pela transcrição. Eram dois caminhos: a oitava de um arco, que até esta mudança valia para todas as músicas (agora é por música), e o agudo máx, que desce de oitava, nota a nota, o que passa do limite — com o limite baixo na voz, só as notas altas caem e a melodia pula no meio da frase. O módulo do canal agora diz quantas notas o agudo máx desceu.
+
 **O arco do baixo toca a nota mais grave que soa**, de qualquer ataque, em vez de "a última que entrou ganha" (`grave` em `buildSegs`). Baixo de verdade quase nunca tem duas notas; o que aparece por cima é acorde de synth que a transcrição pôs na faixa de baixo — em Never Gonna Give You Up, três notas juntas em média —, e com a regra comum o arco saía da linha do baixo a cada ataque.
 
 **O som segue o instrumento, não o arco nem a música.** Com 3 ou mais flybacks, agudo, envelope e dinâmica são de cada instrumento — voz, baixo, guitarra, bateria, teclado, extra (`sons`, `flyback:sons` no navegador) —, ajustados uma vez para todas as músicas, e cada arco toca com o som do instrumento que manda nele (`familiaDoArco`: a faixa de maior prioridade, e no empate a de mais notas). Mexer no envelope de um arco muda o do instrumento dele, em todo arco que o toca. O ganho fica por arco (`ganhoArco`), porque é o volume de cada flyback, que é físico. Já foi por arco (`montagem`, que migra sozinha para `sons` pela ordem dos papéis), e o dono do projeto notou o problema quando os arcos vazios passaram a receber coisas diferentes em cada música: o 6 com a segunda voz tocava com o envelope de corda, que apaga. Agora soa como voz, e o mixer mostra "6 · extra · som de voz". O que é da música é o roteamento, qual nota do acorde cada arco toca e **a oitava** (`cfgmont:`): ela depende do cantor, não do instrumento. A voz de Sweet Child O' Mine está na altura certa no MIDI (94% das notas batem com o pYIN do canto separado), mas em onda quadrada soa mais grave que a voz rasgada do Axl, e o dono do projeto a quis uma oitava acima — o que, valendo para toda voz, subiria também a de Back In Black, que já é aguda. Padrões: voz no médio, bateria em batida, e **"corda"** no resto. O envelope "corda" (`tau` 0,9 s, sem patamar) faz a nota apagar até a próxima; veio de ouvido, na introdução de Iron Man, onde cada nota dura ~1,8 s e os outros envelopes ou caíam num patamar de 10% ou ficavam retos em 70%. Com dois flybacks tudo continua por música, como sempre foi.
@@ -162,14 +168,14 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
-O acervo tem 1.931 músicas em cinco pastas de primeiro nível:
+O acervo tem 1.934 músicas em cinco pastas de primeiro nível:
 
 | Pasta | Quantas | O que é |
 |---|---|---|
 | `bandas` | 1.239 | transcrições de fã, **uma pasta por artista** (122 deles) |
 | `classicos` | 590 | Mutopia, em `<região>/<compositor>/` |
 | `folk russo` | 45 | tradicional e soviético, pasta plana |
-| `transcritas` | 47 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo, sempre "Artista - Música"; a versão do Mirelo de uma música que também foi feita aqui leva "(Mirelo)" no fim, para as duas ficarem juntas na lista. O grupo é o artista, do crédito |
+| `transcritas` | 50 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo, sempre "Artista - Música"; a versão do Mirelo de uma música que também foi feita aqui leva "(Mirelo)" no fim, para as duas ficarem juntas na lista. O grupo é o artista, do crédito |
 | `exemplos` | 10 | arranjos do projeto para dois flybacks, mais casos de teste |
 
 Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o filtro inútil: a lista era um balaio só. `tools/curar_acervo.py` resolveu as duas coisas ao mesmo tempo.

@@ -200,7 +200,8 @@
   "fonte": "https://www.youtube.com/watch?v=MjwttGizNEs",
   "vocal": "sim · faixa \"voice\"",
   "aproveitamento": 49,
-  "aproveitamento6": 73
+  "aproveitamento6": 73,
+  "estilo": "Metal"
  },
  "Michael Jackson - Beat It.mid": {
   "autor": "Michael Jackson",
@@ -566,5 +567,41 @@
   "aproveitamento": 45,
   "aproveitamento6": 65,
   "estilo": "Gaúcha"
+ },
+ "ZZ Top - La Grange (large).mid": {
+  "autor": "ZZ Top",
+  "artista": "ZZ Top",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de ZZ Top; \"La Grange\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, electric bass, drums; orientação 1. Versão alternativa: a principal é a do medium, que achou mais voz",
+  "fonte": "https://www.youtube.com/watch?v=bSt4myecN_c",
+  "vocal": "nao",
+  "aproveitamento": 58,
+  "aproveitamento6": 77,
+  "estilo": "Rock"
+ },
+ "Dave Rodgers - Deja Vu (large).mid": {
+  "autor": "Dave Rodgers",
+  "artista": "Dave Rodgers",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Dave Rodgers; \"Deja Vu\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, synth pad, electric piano, electric bass, drums; orientação 1. Versão alternativa: a principal é a do site da Kyutai (medium); esta tem o synth pad",
+  "fonte": "https://www.youtube.com/watch?v=jFsQS4AhZms",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 61,
+  "aproveitamento6": 64,
+  "estilo": "Eletrônica"
+ },
+ "Mötley Crüe - Kickstart My Heart.mid": {
+  "autor": "Mötley Crüe",
+  "artista": "Mötley Crüe",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Mötley Crüe; \"Kickstart My Heart\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, clean electric guitar, electric bass, drums; orientação 1",
+  "fonte": "https://www.youtube.com/watch?v=CzRFOP-lDG8",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 54,
+  "aproveitamento6": 77,
+  "estilo": "Metal"
  }
 }

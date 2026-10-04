@@ -204,6 +204,33 @@ def player(nav, base, telas):
     dono = max(r, key=lambda x: x[1])[0] if r else None
     confere(dono == 'acoustic_piano', f'no teclado manda a faixa com mais ataques, o piano, não o pad ({r})')
 
+    print('juntar versões')
+    abrir(pg, base, "transcritas/Bon Jovi - Livin' On A Prayer.mid")
+    opcoes = pg.eval_on_selector_all('#juntarSel option', 'x => x.map(o => o.value)')
+    confere("transcritas/Bon Jovi - Livin' On A Prayer (Mirelo).mid" in opcoes, f'a versão do Mirelo aparece para juntar ({opcoes})')
+    antes = pg.evaluate('tracks.length')
+    pg.select_option('#juntarSel', "transcritas/Bon Jovi - Livin' On A Prayer (Mirelo).mid"); time.sleep(1.5)
+    r = pg.evaluate("""() => ({ n: tracks.length, desvio: juntas[0] && juntas[0].desvio,
+        novas: tracks.filter(t => t.junta).map((t, j) => [t.name, assign[tracks.indexOf(t)]]) })""")
+    confere(r['n'] > antes and all(a == 0 for _, a in r['novas']) and all(' · Mirelo' in n for n, _ in r['novas']),
+            f'as faixas da outra versão entram desligadas e com o nome dela ({r["novas"]})')
+    confere(r['desvio'] is not None and abs(abs(r['desvio']) - .84) < .05,
+            f'e alinhadas no tempo: o áudio do Mirelo está 0,84 s deslocado ({r["desvio"]})')
+    pg.evaluate("""() => { const v = tracks.findIndex(t => t.name === 'voice · Mirelo'), m = tracks.findIndex(t => t.name === 'voice');
+        assign[v] = assign[m]; assign[m] = 0; rebuild(); saveCfg(); }""")
+    abrir(pg, base, 'transcritas/AC-DC - Back In Black.mid')
+    abrir(pg, base, "transcritas/Bon Jovi - Livin' On A Prayer.mid")
+    r = pg.evaluate("() => tracks.filter((t, k) => assign[k] & 1).map(t => t.name)")
+    confere(r == ['voice · Mirelo'], f'reabrir traz a versão juntada e a escolha de faixa ({r})')
+    with pg.expect_download() as d:
+        pg.click('#midiDown')
+    dados = list(Path(d.value.path()).read_bytes())
+    volta = pg.evaluate("b => parseMidi(new Uint8Array(b).buffer).map(t => [t.name, t.notes.length])", dados)
+    usadas = pg.evaluate("tracks.filter((t, k) => assign[k]).map(t => t.notes.length)")
+    confere(sorted(n for _, n in volta) == sorted(usadas) and 'voice' in [n for n, _ in volta],
+            f'"Baixar MIDI" grava só as faixas em uso, com o nome limpo ({volta})')
+    pg.evaluate("store.del(cfgChave())")
+
     print('origem')
     pg.click('#libA button[data-vista=transcritas]')
     ia = pg.eval_on_selector_all('#libList button .tag', 'x => x.map(e => e.textContent)')

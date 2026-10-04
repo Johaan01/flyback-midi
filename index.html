@@ -176,6 +176,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 .ctl .row label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ctl .val{flex:none;white-space:nowrap}
 .legenda{margin:0 0 6px;font-size:11.5px;color:var(--dim)}
+.juntar{display:flex;gap:6px;align-items:center;margin:0 0 8px}
+.juntar select{flex:1;min-width:0}
 .ctl label{display:block;font-size:11.5px;color:var(--dim);line-height:1.3}
 .ctl .val{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-variant-numeric:tabular-nums}
 .ctl select{width:100%;padding:2px 4px}
@@ -247,6 +249,11 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
         <div class="presets hide" id="presets" role="group" aria-label="Distribuição automática"></div>
         <p class="verdict" id="verdict"></p>
         <p class="legenda hide" id="legenda">Montagem fixa: 1 voz · 2 baixo · 3 guitarra · 4 bateria · 5 teclado · 6 extra. O som de cada flyback vale para todas as músicas.</p>
+        <div class="juntar hide" id="juntar">
+          <select id="juntarSel" aria-label="Juntar faixas de outra versão"></select>
+          <input type="file" id="juntarArq" accept=".mid,.midi,.kar,.rmi" hidden>
+          <button id="midiDown" title="grava num .mid só as faixas que estão em algum flyback: a versão combinada">Baixar MIDI</button>
+        </div>
       </div>
       <div class="pane-b">
         <div class="tracks" id="tracks" role="list"></div>
@@ -749,7 +756,11 @@ function buildSegs(i){
   /* limite de agudo: desce de oitava até caber. Vale para o P2 e para a serial, porque mexe na
      nota, não no áudio */
   const lim = ch[i].ctl.agudo;
-  if (lim < AGUDO_LIVRE) segs.forEach(s => { while (s.f > lim && s.n > 12){ s.n -= 12; s.f = hz(s.n); } });
+  ch[i].descidas = 0;
+  if (lim < AGUDO_LIVRE) segs.forEach(s => {
+    if (s.f > lim) ch[i].descidas++;
+    while (s.f > lim && s.n > 12){ s.n -= 12; s.f = hz(s.n); }
+  });
   return segs;
 }
 /* "Repartir". Os arcos com essa opção que recebem a mesma faixa dividem as notas dela como as
@@ -1184,7 +1195,8 @@ function umPorFlyback(n){
   const tam = occ.map(a => { let c = 0; for (let k = 0; k < nb; k++) c += a[k]; return c; });
   const out = tracks.map(() => 0), pr = tracks.map(() => 0);
   prio = pr;
-  const com = tracks.map((t, i) => i).filter(i => tracks[i].notes.length);
+  /* as faixas juntadas de outra versão ficam como quem juntou deixou: são escolha de quem ouve */
+  const com = tracks.map((t, i) => i).filter(i => tracks[i].notes.length && !tracks[i].junta);
   if (!com.length) return out;
   const fam = new Map(com.map(i => [i, familia(tracks[i])]));
   const dono = new Array(MAX).fill(-1), cheio = [];
@@ -1339,6 +1351,7 @@ function preset(p, user){
   ajustes = [];
   if (!dois()) ch.slice(0, nCanais()).forEach((c, i) => { c.ctl.pick = PICK_PAPEL[i]; });
   assign = dois() ? computePreset(p).map(l => LETRA_MASC[l] || 0) : computePresetN(p);
+  if (dois()) tracks.forEach((t, k) => { if (t.junta) assign[k] = 0; });
   ajustes.forEach(([c, a]) => Object.assign(ch[c].ctl, a));
   if (ajustes.length) renderStrips();
   renderTracks(); reschedule(); if (user) saveCfg();
@@ -1364,7 +1377,8 @@ function analyse(){
     else {
       const used = noteTime ? Math.round(soundTime / noteTime * 100) : 0;
       const busy = duration ? Math.round(soundTime / duration * 100) : 0;
-      c.stat = used + '% das notas · ' + busy + '% do tempo';
+      c.stat = used + '% das notas · ' + busy + '% do tempo'
+        + (c.descidas ? ' · ' + c.descidas + (c.descidas === 1 ? ' nota descida' : ' notas descidas') + ' de oitava pelo agudo máx' : '');
       msg.push(used + '%');
     }
     if (c.sx) c.sx.stat.textContent = c.stat;
@@ -1383,6 +1397,7 @@ const cfgChave = () => (dois() ? 'cfg:' : 'cfgmont:') + current.key;
 function currentCfg(){
   return {
     versao: 2,
+    ...(juntas.length ? { juntar: juntas.map(j => ({ arquivo: j.arquivo, rotulo: j.rotulo, desvio: j.desvio })) } : {}),
     saida: dois() ? 'estereo' : 'esp',
     faixas: tracks.map((t, k) => {
       const f = { nome: t.name };
@@ -1656,6 +1671,12 @@ async function openBuffer(buf, info){
   offset = 0;
   current = { key: info.key, file: info.file, title: info.title || title || baseName(info.file), sidecar: info.sidecar || null, lib: info.lib || null };
   ch.forEach(c => { c.mudo = c.solo = false; });
+  juntas = [];
+  const salvo = store.get(cfgChave());
+  for (const j of (salvo && Array.isArray(salvo.juntar) ? salvo.juntar : [])){
+    if (!j.arquivo) continue;                    /* arquivo do computador não volta sozinho */
+    try { const r = await fetch(libUrl(j.arquivo)); if (r.ok) juntarVersao(await r.arrayBuffer(), j.rotulo, j.arquivo, j.desvio); } catch (e) {}
+  }
   initialCfg();
   ['play', 'stop', 'wavGo', 'cfgDown', 'cfgReset'].forEach(id => $(id).disabled = false);
   wavReset(); renderTudo(); stop();
@@ -1663,8 +1684,137 @@ async function openBuffer(buf, info){
   tt.append(el('b', null, current.title), ' · ' + tracks.length + (tracks.length === 1 ? ' faixa' : ' faixas') + ' · ' + fmtT(duration));
   tt.title = current.title;
   document.title = current.title + ' · Flyback MIDI';
+  montarJuntar();
   return tracks.length;
 }
+
+/* ---------- juntar faixas de outra versão da mesma música ----------
+   Pedido do dono do projeto: em La Grange o medium achou mais voz que o large, e o certo
+   seria pôr a voz de um no outro. Sem editor de MIDI: as faixas da outra versão entram na
+   lista desligadas, com o nome dela ("voice · medium") e alinhadas no tempo, e o seletor de
+   flyback de cada faixa faz o resto — escolher a voz de uma e a guitarra de outra é rotear.
+   A configuração da música guarda de onde vieram (`juntar`), e ela reabre com as mesmas.
+   "Baixar MIDI" grava só as faixas que estão em algum flyback: a versão combinada, pronta
+   para ir ao acervo. */
+let juntas = [];
+const VERSAO = / \((Mirelo|large|medium|small|Kyutai)\)$/i;
+const tituloBase = t => fold(String(t || '').replace(VERSAO, ''));
+const rotuloDe = it => (it.titulo.match(VERSAO) || [])[1]
+  || (it.origem === 'mirelo' ? 'Mirelo' : ((it.transcricao || '').match(/MuScriptor (small|medium|large)/) || [])[1]) || 'outra';
+/* desvio (s) a somar na outra versão: o que mais casa ataques da mesma família — bateria,
+   senão baixo, senão tudo. O áudio do Mirelo pode vir deslocado (0,84 s em Livin' On A Prayer) */
+function alinhar(a, b){
+  const fam = ['bateria', 'baixo'].find(f => a.some(t => familia(t) === f) && b.some(t => familia(t) === f));
+  const on = l => l.filter(t => !fam || familia(t) === fam).flatMap(t => t.notes.map(n => n.t0)).sort((x, y) => x - y);
+  const ta = on(a), tb = on(b);
+  if (!ta.length || !tb.length) return 0;
+  const perto = x => { let lo = 0, hi = ta.length - 1; while (lo < hi){ const m = (lo + hi) >> 1; if (ta[m] < x) lo = m + 1; else hi = m; }
+    return Math.min(Math.abs(ta[lo] - x), lo ? Math.abs(ta[lo - 1] - x) : Infinity) < .03; };
+  let melhor = 0, mv = -1;
+  for (let d = -3; d <= 3.0001; d += .01){
+    let v = 0; for (const x of tb) if (perto(x + d)) v++;
+    if (v > mv){ mv = v; melhor = d; }
+  }
+  return Math.round(melhor * 100) / 100;
+}
+function juntarVersao(buf, rotulo, arquivo, desvio){
+  const off = midiOffset(buf);
+  if (off < 0) throw new Error('só dá para juntar MIDI');
+  const list = parseMidi(off ? buf.slice(off) : buf).filter(t => t.notes.length);
+  const d = Number.isFinite(desvio) ? desvio : alinhar(tracks, list);
+  let end = duration - .3;
+  list.forEach(t => {
+    t.notes = t.notes.map(n => Object.assign({}, n, { t0: n.t0 + d, t1: n.t1 + d })).filter(n => n.t1 > 0);
+    t.notes.forEach(n => { if (n.t1 > end) end = n.t1; });
+    t.name += ' · ' + rotulo; t.junta = rotulo; t.uniao = uniao(t.notes);
+  });
+  tracks.push(...list);
+  duration = end + .3;
+  juntas.push({ arquivo, rotulo, desvio: d });
+  return list;
+}
+function montarJuntar(){
+  const box = $('juntar'), sel = $('juntarSel');
+  box.classList.toggle('hide', !current);
+  if (!current) return;
+  const base = tituloBase(current.lib ? current.lib.titulo : current.title);
+  const ja = new Set(juntas.map(j => j.arquivo));
+  const outras = lib.filter(it => it.tipo === 'MIDI' && !it.local && it.arquivo !== (current.lib && current.lib.arquivo)
+    && !ja.has(it.arquivo) && tituloBase(it.titulo) === base);
+  sel.textContent = '';
+  sel.appendChild(new Option(outras.length ? 'Juntar faixas de outra versão…' : 'Juntar faixas de outro arquivo…', ''));
+  outras.forEach(it => sel.appendChild(new Option(rotuloDe(it) + ' · ' + it.titulo, it.arquivo)));
+  sel.appendChild(new Option('arquivo do computador…', '__arq'));
+  sel.value = '';
+}
+async function juntarEscolhida(buf, rotulo, arquivo){
+  const n = tracks.length;
+  const novas = juntarVersao(buf, rotulo, arquivo);
+  novas.forEach(() => { assign.push(0); prio.push(0); });
+  renderTracks(); reschedule(); saveCfg(); montarJuntar();
+  $('titulo').lastChild.textContent = ' · ' + tracks.length + ' faixas · ' + fmtT(duration);
+  $('cfgMsg').textContent = novas.length + ' faixas de "' + rotulo + '" entraram desligadas, alinhadas em '
+    + juntas[juntas.length - 1].desvio.toFixed(2).replace('.', ',') + ' s: escolha o flyback de cada uma.';
+  return tracks.length - n;
+}
+$('juntarSel').onchange = async () => {
+  const v = $('juntarSel').value;
+  if (!v || !current) return;
+  if (v === '__arq'){ $('juntarArq').click(); montarJuntar(); return; }
+  const it = lib.find(x => x.arquivo === v);
+  try {
+    const r = await fetch(libUrl(v));
+    if (!r.ok) throw new Error('arquivo não encontrado (' + r.status + ')');
+    await juntarEscolhida(await r.arrayBuffer(), rotuloDe(it), v);
+  } catch (e) { $('cfgMsg').textContent = 'não deu para juntar: ' + e.message; montarJuntar(); }
+};
+$('juntarArq').onchange = async () => {
+  const f = $('juntarArq').files[0];
+  $('juntarArq').value = '';
+  if (!f || !current) return;
+  try { await juntarEscolhida(await f.arrayBuffer(), baseName(f.name), null); }
+  catch (e) { $('cfgMsg').textContent = 'não deu para juntar ' + f.name + ': ' + e.message; }
+};
+/* SMF formato 1, 480 por semínima a 120 bpm: o tempo do arquivo vira segundos exatos */
+function midiDe(lista){
+  const vlq = n => { const b = [n & 127]; while (n >>= 7) b.unshift((n & 127) | 128); return b; };
+  const u32 = n => [n >>> 24 & 255, n >>> 16 & 255, n >>> 8 & 255, n & 255];
+  const tk = t => Math.max(0, Math.round(t * 960));
+  const trilha = (ev, nome) => {
+    const d = [];
+    if (nome){ const b = [...new TextEncoder().encode(nome)]; d.push(0, 0xFF, 0x03, ...vlq(b.length), ...b); }
+    let antes = 0;
+    ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]).forEach(([t, , bytes]) => { d.push(...vlq(t - antes), ...bytes); antes = t; });
+    d.push(0, 0xFF, 0x2F, 0);
+    return [0x4D, 0x54, 0x72, 0x6B, ...u32(d.length), ...d];
+  };
+  const out = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, 0, lista.length + 1, 1, 0xE0];
+  out.push(...trilha([[0, 0, [0xFF, 0x51, 3, 0x07, 0xA1, 0x20]]], ''));
+  let canal = 0;
+  lista.forEach(({ t, nome }) => {
+    const c = isDrum(t) ? 9 : (canal === 9 ? ++canal : canal) % 16;
+    if (!isDrum(t)) canal++;
+    const ev = [];
+    if (t.prog >= 0 && c !== 9) ev.push([0, -1, [0xC0 | c, t.prog]]);
+    t.notes.forEach(n => {
+      ev.push([tk(n.t0), 1, [0x90 | c, n.n, Math.max(1, Math.min(127, Math.round(n.v)))]]);
+      ev.push([tk(n.t1), 0, [0x80 | c, n.n, 0]]);
+    });
+    out.push(...trilha(ev, nome));
+  });
+  return new Uint8Array(out);
+}
+$('midiDown').onclick = () => {
+  if (!current) return;
+  const usadas = tracks.filter((t, k) => assign[k]);
+  if (!usadas.length){ $('cfgMsg').textContent = 'Nenhuma faixa num flyback: nada para gravar.'; return; }
+  /* o nome sem "· versão" quando não repete: a família de instrumento sai do nome */
+  const sem = t => t.junta ? t.name.slice(0, -(' · ' + t.junta).length) : t.name;
+  const lista = usadas.map(t => ({ t, nome: usadas.filter(u => sem(u) === sem(t)).length > 1 ? t.name : sem(t) }));
+  const nome = baseName(current.file).replace(VERSAO, '') + (juntas.length ? ' (combinada)' : '') + '.mid';
+  saveBlob(new Blob([midiDe(lista)], { type: 'audio/midi' }), nome);
+  $('cfgMsg').textContent = nome + ': ' + lista.length + ' faixas, as que estão em algum flyback.';
+};
 async function loadFile(f){
   if (!f) return;
   const msg = $('libMsg'); msg.textContent = 'lendo ' + f.name + '…';

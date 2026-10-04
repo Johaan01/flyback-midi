@@ -42,6 +42,10 @@ mixer com um módulo por canal e o painel da saída.
   de 1 Hz). Serve para achar a ressonância do arco e casar o par.
 - **Saída serial para ESP32.** Chrome ou Edge. Protocolo em `docs/protocolo-serial.md`. O painel
   "Linhas enviadas" mostra o que vai para a porta, também sem ESP ligado.
+- **Juntar versões.** No painel de Faixas, "Juntar faixas de outra versão" traz as faixas de
+  outra transcrição da mesma música (a do Mirelo, a do `large`…), alinhadas no tempo e
+  desligadas: escolher a voz de uma e a guitarra de outra é escolher o flyback de cada faixa.
+  "Baixar MIDI" grava a combinação, só com as faixas em uso.
 - **Mixer.** Cada canal tem silenciar e solo, ganho, agudo máximo, oitava, que nota tirar do
   acorde (ou "repartir": os arcos com a mesma faixa dividem as notas dela, como as vozes de um
   teclado), envelope e dinâmica.
@@ -82,14 +86,14 @@ Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `to
 
 ## O que já vem no acervo
 
-1.931 músicas em cinco pastas:
+1.934 músicas em cinco pastas:
 
 | Pasta | Conteúdo |
 |---|---|
 | `bandas` | 1.239 transcrições de rock, metal e pop, **uma pasta por artista** — 122 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
 | `classicos` | 590 peças do [Mutopia Project](https://www.mutopiaproject.org), em domínio público ou Creative Commons, por região de origem do compositor: Alemanha e Áustria (217), Itália (82), França (74), Rússia e Leste Europeu (67), Américas (41), Tradicional e anônimo (31), Ibéria e América Latina (31), Nórdicos e Países Baixos (24) e Ilhas Britânicas (23) |
 | `folk russo` | 45 canções tradicionais e soviéticas — Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika, Kamarinskaya, Kazachok, Podmoskovnye Vechera. Quase todas em domínio público; as de autor conhecido e ainda protegido estão marcadas uma a uma |
-| `transcritas` | 47 MIDIs gerados do áudio pelo MuScriptor (41 na GPU daqui, 6 no Mirelo), sempre "Artista - Música", com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
+| `transcritas` | 50 MIDIs gerados do áudio pelo MuScriptor (44 na GPU daqui, 6 no Mirelo), sempre "Artista - Música", com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
 | `exemplos` | 10 arranjos de temas em domínio público feitos para os dois flybacks (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki), mais Ode à Alegria e um riff em Guitar Pro |
 
 No site, três botões escolhem o que listar: **tudo**, **antigas** (as transcrições de pessoas e
