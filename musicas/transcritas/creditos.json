@@ -104,12 +104,12 @@
   "autor": "Black Sabbath",
   "artista": "Black Sabbath",
   "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "credito": "interpretação de Black Sabbath; \"War Pigs / Luke's Wall\"",
-  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, drums, distorted_electric_guitar",
+  "credito": "interpretação de Black Sabbath; \"War Pigs - Luke's Wall\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, electric bass, drums; orientação 2",
   "fonte": "https://www.youtube.com/watch?v=lLb6UUw2ZVQ",
   "vocal": "sim · faixa \"voice\"",
-  "aproveitamento": 48,
-  "aproveitamento6": 73,
+  "aproveitamento": 55,
+  "aproveitamento6": 87,
   "estilo": "Metal"
  },
  "AC-DC - Back In Black.mid": {
@@ -117,11 +117,11 @@
   "artista": "AC/DC",
   "licenca": "obra protegida — uso educacional sem fins lucrativos",
   "credito": "interpretação de AC/DC; \"Back In Black\"",
-  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, electric bass, drums; orientação 2",
   "fonte": "https://www.youtube.com/watch?v=9vWNauaZAgg",
   "vocal": "sim · faixa \"voice\"",
-  "aproveitamento": 46,
-  "aproveitamento6": 75,
+  "aproveitamento": 49,
+  "aproveitamento6": 76,
   "estilo": "Rock"
  },
  "AC-DC - Rock N Roll Train.mid": {
@@ -129,11 +129,11 @@
   "artista": "AC/DC",
   "licenca": "obra protegida — uso educacional sem fins lucrativos",
   "credito": "interpretação de AC/DC; \"Rock N Roll Train\"",
-  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, electric bass, drums; orientação 2",
   "fonte": "https://www.youtube.com/watch?v=1sdKWB_8C1k",
   "vocal": "sim · faixa \"voice\"",
-  "aproveitamento": 43,
-  "aproveitamento6": 69,
+  "aproveitamento": 45,
+  "aproveitamento6": 70,
   "estilo": "Rock"
  },
  "Black Sabbath - Paranoid.mid": {
