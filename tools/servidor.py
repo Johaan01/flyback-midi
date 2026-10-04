@@ -123,11 +123,14 @@ def processar(job):
     vid, url = job['vid'], f"https://www.youtube.com/watch?v={job['vid']}"
     etapa(job, 'lendo dados')
     artista, musica, duracao = lote.metadados(url)
+    # a versão do Mirelo convive com a da GPU: "Artista - Música (Mirelo)", e estado à parte
+    mir = job['motor'] == 'mirelo'
+    chave = f'{vid}:mirelo' if mir else vid
     with TRAVA:
         est = estado_ler()
-        titulo = lote.nome_livre(SAIDA, artista, musica, vid, est)
+        titulo = lote.nome_livre(SAIDA, artista, musica, vid, est) + (' (Mirelo)' if mir else '')
         job['titulo'] = titulo
-        est[vid] = dict(est.get(vid, {}), titulo=titulo, url=url, situacao='rodando')
+        est[chave] = dict(est.get(chave, {}), titulo=titulo, url=url, situacao='rodando')
         estado_gravar(est)
 
     audio = lote.baixar(url, vid, aviso=lambda p: etapa(job, 'baixando', p))
@@ -168,10 +171,10 @@ def processar(job):
     entrada = lote.creditar(SAIDA, arq, artista, musica, url, rel['modelo'], rel)
     with TRAVA:
         est = estado_ler()
-        est[vid].update(situacao='feito', modelo=rel['modelo'], arquivo=arq.name,
+        est[chave].update(situacao='feito', modelo=rel['modelo'], arquivo=arq.name,
                         instrumentos=rel.get('instrumentos'), aproveitamento=entrada['aproveitamento'],
                         aproveitamento6=entrada['aproveitamento6'])
-        est[vid].pop('erro', None)
+        est[chave].pop('erro', None)
         estado_gravar(est)
         lote.para_o_mirelo(SAIDA, est)
         job['arquivo'] = arq.name

@@ -1,69 +1,4 @@
 {
- "BLOODY STREAM.mid": {
-  "autor": "Coda",
-  "artista": "Coda",
-  "credito": "segunda abertura de JoJo's Bizarre Adventure: Battle Tendency (2012), interpretada por Coda",
-  "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
-  "fonte": "https://muscriptor.kyutai.org",
-  "faixas": "distorted_electric_guitar, electric_bass, brass_section, drums, voice",
-  "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 82,
-  "aproveitamento6": 69,
-  "estilo": "Anime"
- },
- "Borboletas.mid": {
-  "autor": "Victor & Leo",
-  "artista": "Victor & Leo",
-  "credito": "composição e interpretação de Victor & Leo",
-  "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
-  "fonte": "https://muscriptor.kyutai.org",
-  "faixas": "acoustic_guitar, electric_bass, drums, voice, synth_pad, acoustic_piano",
-  "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 46,
-  "aproveitamento6": 64,
-  "estilo": "Sertanejo"
- },
- "Do Fundo da Grota.mid": {
-  "autor": "Baitaca",
-  "artista": "Baitaca",
-  "credito": "interpretação de Baitaca, música gaúcha",
-  "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
-  "fonte": "https://muscriptor.kyutai.org",
-  "faixas": "acoustic_guitar, voice, organ, electric_bass, drums",
-  "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 42,
-  "aproveitamento6": 67,
-  "estilo": "Gaúcha"
- },
- "Livin' On A Prayer.mid": {
-  "autor": "Bon Jovi",
-  "artista": "Bon Jovi",
-  "credito": "composição de Jon Bon Jovi, Richie Sambora e Desmond Child; do álbum Slippery When Wet (1986)",
-  "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
-  "fonte": "https://muscriptor.kyutai.org",
-  "faixas": "synth_pad, electric_bass, drums, voice",
-  "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 72,
-  "aproveitamento6": 75,
-  "estilo": "Rock"
- },
- "So Far Away.mid": {
-  "autor": "Avenged Sevenfold",
-  "artista": "Avenged Sevenfold",
-  "credito": "composição e interpretação de Avenged Sevenfold; do álbum Nightmare (2010)",
-  "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
-  "fonte": "https://muscriptor.kyutai.org",
-  "faixas": "electric_bass, drums, voice, distorted_electric_guitar",
-  "vocal": "sim — faixa \"voice\"",
-  "aproveitamento": 73,
-  "aproveitamento6": 66,
-  "estilo": "Metal"
- },
  "Black Sabbath - Iron Man.mid": {
   "autor": "Black Sabbath",
   "artista": "Black Sabbath",
@@ -160,18 +95,6 @@
   "aproveitamento6": 64,
   "estilo": "Sertanejo"
  },
- "BAITACA - Do Fundo da Grota.mid": {
-  "autor": "BAITACA",
-  "artista": "BAITACA",
-  "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "credito": "interpretação de BAITACA; \"Do Fundo da Grota\"",
-  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, organ, acoustic_guitar",
-  "fonte": "https://www.youtube.com/watch?v=FRxyz3v4t-Y",
-  "vocal": "sim · faixa \"voice\"",
-  "aproveitamento": 45,
-  "aproveitamento6": 65,
-  "estilo": "Gaúcha"
- },
  "Coda - BLOODY STREAM.mid": {
   "autor": "Coda",
   "artista": "Coda",
@@ -206,18 +129,6 @@
   "vocal": "sim · faixa \"voice\"",
   "aproveitamento": 49,
   "aproveitamento6": 64,
-  "estilo": "Metal"
- },
- "Mötley Crüe - Kickstart My Heart.mid": {
-  "autor": "Mötley Crüe",
-  "artista": "Mötley Crüe",
-  "licenca": "obra protegida — uso educacional sem fins lucrativos",
-  "credito": "interpretação de Mötley Crüe; \"Kickstart My Heart\"",
-  "transcricao": "MuScriptor pelo Mirelo (interface web, mirelo.ai), transcrição automática do áudio, sem transcritor humano; instrumentos marcados à mão: distorted electric guitar, electric bass, drums, voice",
-  "fonte": "https://www.youtube.com/watch?v=CzRFOP-lDG8",
-  "vocal": "sim · faixa \"voice\"",
-  "aproveitamento": 56,
-  "aproveitamento6": 78,
   "estilo": "Metal"
  },
  "Dave Rodgers - Deja Vu.mid": {
@@ -565,5 +476,94 @@
   "aproveitamento": 54,
   "aproveitamento6": 68,
   "estilo": "Pop"
+ },
+ "Coda - BLOODY STREAM (Mirelo).mid": {
+  "autor": "Coda",
+  "artista": "Coda",
+  "credito": "segunda abertura de JoJo's Bizarre Adventure: Battle Tendency (2012), interpretada por Coda",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "distorted_electric_guitar, electric_bass, brass_section, drums, voice",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 82,
+  "aproveitamento6": 69,
+  "estilo": "Anime"
+ },
+ "Victor & Leo - Borboletas (Mirelo).mid": {
+  "autor": "Victor & Leo",
+  "artista": "Victor & Leo",
+  "credito": "composição e interpretação de Victor & Leo",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "acoustic_guitar, electric_bass, drums, voice, synth_pad, acoustic_piano",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 46,
+  "aproveitamento6": 64,
+  "estilo": "Sertanejo"
+ },
+ "Baitaca - Do Fundo da Grota (Mirelo).mid": {
+  "autor": "Baitaca",
+  "artista": "Baitaca",
+  "credito": "interpretação de Baitaca, música gaúcha",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "acoustic_guitar, voice, organ, electric_bass, drums",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 42,
+  "aproveitamento6": 67,
+  "estilo": "Gaúcha"
+ },
+ "Bon Jovi - Livin' On A Prayer (Mirelo).mid": {
+  "autor": "Bon Jovi",
+  "artista": "Bon Jovi",
+  "credito": "composição de Jon Bon Jovi, Richie Sambora e Desmond Child; do álbum Slippery When Wet (1986)",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "synth_pad, electric_bass, drums, voice",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 72,
+  "aproveitamento6": 75,
+  "estilo": "Rock"
+ },
+ "Avenged Sevenfold - So Far Away (Mirelo).mid": {
+  "autor": "Avenged Sevenfold",
+  "artista": "Avenged Sevenfold",
+  "credito": "composição e interpretação de Avenged Sevenfold; do álbum Nightmare (2010)",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "transcricao": "MuScriptor (Kyutai/Mirelo) — transcrição automática do áudio, sem transcritor humano",
+  "fonte": "https://muscriptor.kyutai.org",
+  "faixas": "electric_bass, drums, voice, distorted_electric_guitar",
+  "vocal": "sim — faixa \"voice\"",
+  "aproveitamento": 73,
+  "aproveitamento6": 66,
+  "estilo": "Metal"
+ },
+ "Mötley Crüe - Kickstart My Heart (Mirelo).mid": {
+  "autor": "Mötley Crüe",
+  "artista": "Mötley Crüe",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Mötley Crüe; \"Kickstart My Heart\"",
+  "transcricao": "MuScriptor pelo Mirelo (interface web, mirelo.ai), transcrição automática do áudio, sem transcritor humano; instrumentos marcados à mão: distorted electric guitar, electric bass, drums, voice",
+  "fonte": "https://www.youtube.com/watch?v=CzRFOP-lDG8",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 56,
+  "aproveitamento6": 78,
+  "estilo": "Metal"
+ },
+ "Baitaca - Do Fundo da Grota.mid": {
+  "autor": "Baitaca",
+  "artista": "Baitaca",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Baitaca; \"Do Fundo da Grota\"",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, organ, acoustic_guitar",
+  "fonte": "https://www.youtube.com/watch?v=FRxyz3v4t-Y",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 45,
+  "aproveitamento6": 65,
+  "estilo": "Gaúcha"
  }
 }

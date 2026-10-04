@@ -103,7 +103,7 @@ def player(nav, base, telas):
     confere(r[0] == 2 and r[1] > .1 and r[2] == 0, f'WAV estéreo com separação dura: o lado sem faixa sai zero ({r})')
 
     print('seis flybacks')
-    abrir(pg, base, 'transcritas/Borboletas.mid')
+    abrir(pg, base, 'transcritas/Victor & Leo - Borboletas (Mirelo).mid')
     pg.select_option('#espN', '6'); time.sleep(.3)
     e = estado(pg)
     confere(e['pistas'] == 6 and e['canais'] == 6, 'seis pistas e seis canais')
@@ -128,7 +128,7 @@ def player(nav, base, telas):
     confere(alto <= 400, f'limite de agudo desce as notas de oitava até caber ({alto:.0f} Hz)')
     pg.evaluate("sons.guitarra.agudo = AGUDO_LIVRE; sons.guitarra.env = 'corda'; store.set('sons', sons); rebuild()")
     pg.select_option('#env2', 'corda')
-    abrir(pg, base, 'transcritas/Borboletas.mid')
+    abrir(pg, base, 'transcritas/Victor & Leo - Borboletas (Mirelo).mid')
     pg.select_option('#espN', '4'); time.sleep(.2)
     e = estado(pg)
     confere(e['pistas'] == 4 and all(m < 16 for m in e['assign']), 'quatro flybacks: nenhuma rota além do canal 4')
@@ -150,16 +150,44 @@ def player(nav, base, telas):
     abrir(pg, base, 'transcritas/AC-DC - Back In Black.mid')
     r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name));
         return { canais: canaisDe(assign[g]).map(i => i + 1), picks: canaisDe(assign[g]).map(i => ch[i].ctl.pick) }; }""")
-    confere(len(r['canais']) == 3 and set(r['picks']) == {'div'},
-            f'a guitarra reparte as notas por três flybacks ({r})')
+    confere(r['canais'] == [3] and r['picks'] == ['lo'],
+            f'a guitarra fica no arco dela, na nota grave: arco vazio não recebe pedaço de acorde ({r})')
+    abrir(pg, base, 'transcritas/Scorpions - Still Loving You.mid')
+    r = pg.evaluate("""() => tracks.map((t, k) => [t.name, canaisDe(assign[k]).map(i => i + 1), canaisDe(assign[k]).map(i => ch[i].ctl.pick)])""")
+    rotas = {n: (a, p) for n, a, p in r}
+    dist, voz = rotas.get('distorted electric guitar'), rotas.get('voice')
+    confere(dist and len(dist[0]) == 1 and dist[0][0] in (5, 6) and dist[1] == ['lo']
+            and voz and voz[0][0] == 1 and len(voz[0]) == 2 and set(voz[1]) == {'div'},
+            f'a segunda guitarra ganha arco próprio, na nota grave, e a segunda voz reparte com o 1 ({rotas})')
+    # repartir à mão: a guitarra de Iron Man em três arcos
     abrir(pg, base, 'transcritas/Black Sabbath - Iron Man.mid')
     r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name)), v = prio.indexOf(3);
-        const teto = avgPitch(tracks[v]) - 5, arcos = canaisDe(assign[g]);
-        const acima = arcos.slice(1).flatMap(i => ch[i].segs.filter(s => s.n > teto)).length;
-        const notas = arcos.map(i => ch[i].segs.length);
-        return { arcos: arcos.map(i => i + 1), acima, notas }; }""")
-    confere(len(r['arcos']) > 1 and not r['acima'] and all(r['notas']),
-            f'nos arcos extras da guitarra nada fica a menos de uma quarta da voz ({r})')
+        assign[g] = (1 << 2) | (1 << 4) | (1 << 5); [2, 4, 5].forEach(i => { ch[i].ctl.pick = 'div'; }); rebuild();
+        const teto = avgPitch(tracks[v]) - 5;
+        const acima = [4, 5].flatMap(i => ch[i].segs.filter(s => s.n > teto)).length;
+        let igual = 0;
+        [[2, 4], [2, 5], [4, 5]].forEach(([i, j]) => ch[i].segs.forEach(a => ch[j].segs.forEach(b => {
+          if (a.n === b.n){ const x = Math.max(a.start, b.start), y = Math.min(a.end, b.end); if (y > x) igual += y - x; } })));
+        return { notas: [2, 4, 5].map(i => ch[i].segs.length), acima, igual: +igual.toFixed(2) }; }""")
+    confere(all(r['notas']) and not r['acima'] and r['igual'] == 0,
+            f'repartir à mão: cada arco com notas suas, nada acima do teto nos extras, nenhuma nota repetida ({r})')
+    # o baixo toca a mais grave que soa, mesmo com acorde de synth na faixa dele
+    abrir(pg, base, 'transcritas/Rick Astley - Never Gonna Give You Up.mid')
+    r = pg.evaluate("""() => { const b = tracks.findIndex(t => familia(t) === 'baixo'); let erros = 0, total = 0;
+        ch[1].segs.forEach(s => { const m = (s.start + s.end) / 2;
+          const soando = tracks[b].notes.filter(x => x.t0 <= m && x.t1 > m).map(x => x.n);
+          if (soando.length){ total++; if (s.n !== Math.min(...soando)) erros++; } });
+        return { total, erros, juntas: +polifonia(tracks[b]).toFixed(2) }; }""")
+    confere(r['total'] > 100 and r['erros'] <= r['total'] * .02,
+            f'o arco do baixo toca a nota mais grave que soa na faixa ({r})')
+    # a oitava é da música
+    abrir(pg, base, "transcritas/Guns N' Roses - Sweet Child O' Mine.mid")
+    pg.select_option('#oct0', '1')
+    abrir(pg, base, 'transcritas/AC-DC - Back In Black.mid')
+    outra = pg.evaluate('ch[0].ctl.oct')
+    abrir(pg, base, "transcritas/Guns N' Roses - Sweet Child O' Mine.mid")
+    volta = pg.evaluate('ch[0].ctl.oct')
+    confere(outra == 0 and volta == 1, f'a oitava mudada numa música fica nela e não passa para outra ({outra}, {volta})')
     abrir(pg, base, 'transcritas/Victor & Leo - Borboletas.mid')
     r = pg.evaluate("""() => { const v = prio.indexOf(3), arcos = canaisDe(assign[v]);
         const media = i => { const s = ch[i].segs; return s.reduce((a, x) => a + x.n, 0) / s.length; };
@@ -170,7 +198,7 @@ def player(nav, base, telas):
     r = pg.evaluate(f"[ch[{a}].som, ch[{a}].ctl.env, ch[0].ctl.env, document.querySelectorAll('#strips .strip .nome')[{a}].textContent]")
     confere(r[0] == 'voz' and r[1] == r[2] and 'som de voz' in r[3],
             f'o arco da segunda voz soa como voz, e o mixer diz isso ({r})')
-    abrir(pg, base, 'transcritas/Borboletas.mid')
+    abrir(pg, base, 'transcritas/Victor & Leo - Borboletas (Mirelo).mid')
     pg.click('#presets button:nth-child(1)')      # Montagem fixa, por cima do ajuste salvo antes
     r = pg.evaluate("() => tracks.filter((t, k) => assign[k] >> 4 & 1).map(t => [t.name, prio[tracks.indexOf(t)]])")
     dono = max(r, key=lambda x: x[1])[0] if r else None
@@ -210,7 +238,7 @@ def player(nav, base, telas):
     if telas:
         destino = Path(tempfile.gettempdir()) / 'flyback-telas'
         destino.mkdir(exist_ok=True)
-        abrir(pg, base, 'transcritas/Borboletas.mid')
+        abrir(pg, base, 'transcritas/Victor & Leo - Borboletas (Mirelo).mid')
         for w, h in [(1920, 1080), (1366, 768), (1280, 720), (900, 1000)]:
             pg.set_viewport_size({'width': w, 'height': h}); time.sleep(.3)
             larg = pg.evaluate('document.documentElement.scrollWidth')

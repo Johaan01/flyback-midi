@@ -15,8 +15,6 @@ Avisa quando:
 - uma faixa com material de verdade (5% da música ou mais) não tem flyback;
 - a melodia principal (o arco 1) fica calada em mais de 10% do que tem, contando só trechos de
   mais de 0,3 s — o fim de uma nota que a seguinte corta é resto de transcrição, não perda;
-- uma faixa sobreposta (polifonia 1,4 ou mais: acorde, ou dois instrumentos numa faixa) toca
-  menos da metade e há arco vazio que poderia ajudar;
 - a bateria não tem arco.
 
 Bateria não entra na conta de notas: vira estouros de tom (BATIDA), de outra altura.
@@ -76,7 +74,6 @@ MEDIR = """() => {
 def problemas(m):
     """Lista de avisos, em português, do que a montagem deixa de fora."""
     out = []
-    vazios = [i + 1 for i, a in enumerate(m['arcos']) if not a['faixas']]
     for f in m['faixas']:
         if not f['notas']:
             continue
@@ -88,9 +85,6 @@ def problemas(m):
         if f['lead'] and f['falta'] > .1:
             out.append(f'a melodia principal "{f["nome"]}" fica calada em {f["falta"] * 100:.0f}% do que tem, '
                        f'em trechos de mais de 0,3 s')
-        elif f['polifonia'] >= 1.4 and f['soa'] < .5 and vazios:
-            out.append(f'"{f["nome"]}" tem {f["polifonia"]:.1f} notas soando juntas e toca {f["soa"] * 100:.0f}%; '
-                       f'arco vazio: {", ".join(map(str, vazios))}')
     return out
 
 

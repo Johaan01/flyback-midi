@@ -82,14 +82,14 @@ Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `to
 
 ## O que já vem no acervo
 
-1.901 músicas em cinco pastas:
+1.930 músicas em cinco pastas:
 
 | Pasta | Conteúdo |
 |---|---|
 | `bandas` | 1.239 transcrições de rock, metal e pop, **uma pasta por artista** — 122 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
 | `classicos` | 590 peças do [Mutopia Project](https://www.mutopiaproject.org), em domínio público ou Creative Commons, por região de origem do compositor: Alemanha e Áustria (217), Itália (82), França (74), Rússia e Leste Europeu (67), Américas (41), Tradicional e anônimo (31), Ibéria e América Latina (31), Nórdicos e Países Baixos (24) e Ilhas Britânicas (23) |
 | `folk russo` | 45 canções tradicionais e soviéticas — Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika, Kamarinskaya, Kazachok, Podmoskovnye Vechera. Quase todas em domínio público; as de autor conhecido e ainda protegido estão marcadas uma a uma |
-| `transcritas` | 17 MIDIs gerados do áudio pelo MuScriptor (12 na GPU daqui, 5 no Mirelo), com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
+| `transcritas` | 46 MIDIs gerados do áudio pelo MuScriptor (40 na GPU daqui, 6 no Mirelo), sempre "Artista - Música", com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
 | `exemplos` | 10 arranjos de temas em domínio público feitos para os dois flybacks (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki), mais Ode à Alegria e um riff em Guitar Pro |
 
 No site, três botões escolhem o que listar: **tudo**, **antigas** (as transcrições de pessoas e

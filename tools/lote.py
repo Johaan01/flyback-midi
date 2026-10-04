@@ -24,7 +24,7 @@ Feito para ficar rodando sem ninguém olhando. Por música:
 4. mede o aproveitamento em 2 e em 6 flybacks e grava o crédito no creditos.json da pasta:
    artista e título do YouTube, o endereço, o modelo e os instrumentos;
 5. confere a montagem de 6 flybacks no próprio site (auditar_montagem.py): instrumento sem
-   arco, melodia calada em trecho longo, acorde preso num arco com arco vazio ao lado. Os
+   arco, melodia calada em trecho longo. Os
    avisos vão para o log e para o `.lote.json` — é o que olhar antes de publicar, em vez de
    abrir cada MIDI num editor para ver as notas sobrepostas que o site não mostra.
 

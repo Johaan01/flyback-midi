@@ -690,7 +690,7 @@ function buildSegs(i){
   if (!sel.length) return [];
   /* "repartir" escolhe as notas antes (notasPara); o que mais cair no arco segue o papel dele */
   const pick = ch[i].ctl.pick === 'div' ? (esp.n === 2 ? (i ? 'hi' : 'lo') : PICK_PAPEL[i]) : ch[i].ctl.pick;
-  const oct = ch[i].ctl.oct;
+  const oct = ch[i].ctl.oct, grave = !dois() && ch[i].som === 'baixo';
   const ev = [];
   sel.forEach(([t, p, k]) => notasPara(t, k, i).forEach(n => {
     /* altura e prioridade numa chave so; batida de bateria traz a prioridade da peca */
@@ -720,6 +720,15 @@ function buildSegs(i){
       if (p > bp || (p === bp && o.t > bt + 1e-9)){ bp = p; bt = o.t; }
     }
     if (bp < 0) return null;
+    /* no arco do baixo, a mais grave que soa, entre de qualquer ataque: baixo de verdade quase
+       nunca tem duas notas, e o que aparece por cima é acorde de synth que a transcrição pôs na
+       faixa de baixo (Never Gonna Give You Up: 3 notas juntas em média), que com "a última que
+       entrou ganha" arrancava o arco da linha do baixo a cada ataque */
+    if (grave){
+      let km = -1;
+      for (const [k] of live) if ((k & 15) === bp && (km < 0 || k >> 4 < km >> 4)) km = k;
+      return { n: km >> 4, v: live.get(km).v };
+    }
     const acorde = [];
     for (const [k, o] of live) if ((k & 15) === bp && Math.abs(o.t - bt) <= 1e-9) acorde.push(k);
     acorde.sort((a, b) => (a >> 4) - (b >> 4));
@@ -800,31 +809,16 @@ function notasPara(t, k, i){
   if (!t.rep || t.rep.chave !== chave) t.rep = { chave, por: repartir(t, arcos, teto) };
   return t.rep.por.get(i) || [];
 }
-/* Quanto tempo de som a faixa ganha com mais arcos repartindo: g[k] é o tempo em que soam
-   notas dela para um k-ésimo arco a mais, contando nos extras só as que ficam abaixo do teto. */
-function ganhos(t, teto, max){
-  const ev = [];
-  t.notes.forEach(x => { const b = x.n <= teto ? 1 : 0; ev.push([x.t0, 1, b]); ev.push([x.t1, -1, b]); });
-  ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const g = new Array(max + 2).fill(0);
-  let s = 0, l = 0, antes = 0;
-  for (const [tt, d, b] of ev){
-    const cabe = Math.min(l, s - 1, max);
-    for (let q = 1; q <= cabe; q++) g[q] += tt - antes;
-    s += d; l += d * b; antes = tt;
-  }
-  return g;
-}
-/* tempo em que a faixa soa duas notas ou mais, só nos trechos de mais de 0,3 s */
-function segundaVoz(t){
+/* tempo em que a faixa soa `k` notas ou mais, só nos trechos de mais de 0,3 s */
+function vozesJuntas(t, k = 2){
   const ev = [];
   t.notes.forEach(x => { ev.push([x.t0, 1]); ev.push([x.t1, -1]); });
   ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   let s = 0, ini = null, total = 0;
   for (const [tt, d] of ev){
     s += d;
-    if (s >= 2 && ini === null) ini = tt;
-    if (s < 2 && ini !== null){ if (tt - ini > .3) total += tt - ini; ini = null; }
+    if (s >= k && ini === null) ini = tt;
+    if (s < k && ini !== null){ if (tt - ini > .3) total += tt - ini; ini = null; }
   }
   return total;
 }
@@ -1215,46 +1209,56 @@ function umPorFlyback(n){
     if (novo < nb * .06 || novo < tam[i] * .3) continue;
     out[i] |= 1 << c; pr[i] = Math.max(pr[i], 1); ocupa(i, c);
   }
-  /* Flybacks vazios — o 6, o 5 e, sem guitarra, o 3. O auditor (tools/auditar_montagem.py)
-     mostrou o que se perdia: o violão dedilhado de Borboletas tocava 19% num arco com dois vazios
-     ao lado, a dupla cantava num arco só, e em So Far Away uma guitarra presente em 69% da música
-     ficava sem arco nenhum. A ordem:
-     1. a segunda voz da melodia, se soar em 5% da música ou mais, contando só trechos de mais de
-        0,3 s (segundaVoz) — é o que se reconhece, e sobreposição curta é resto de transcrição:
-        em Rock N Roll Train eram 7,7% de duas notas juntas e só 2,7% em trecho longo;
-     2. a faixa que ficou sem arco, se soar em 5% da música ou mais: instrumento inteiro faltando
-        é pior que uma nota a mais de acorde;
-     3. o resto, um a um, para quem mais ganha tempo de som com mais uma voz do acorde.
-     Quem ganha arco para dividir passa a "repartir" (repartir()). */
+  /* Flybacks vazios — o 6, o 5 e, sem guitarra, o 3 — vão, em três degraus e dentro de cada um
+     para quem soa mais tempo, para:
+     1. a segunda voz do canto, se soar em 5% da música ou mais, contando só trechos de mais de
+        0,3 s (vozesJuntas): a voz reparte com o arco 1 (repartir()). Sobreposição curta é resto
+        de transcrição — em Rock N Roll Train eram 7,7% de duas notas juntas e 2,7% em trecho
+        longo. Victor & Leo são uma dupla, e a segunda voz tocava 62% num arco só;
+     2. a faixa que não tem arco próprio — ficou de fora, ou só entrava nas brechas de outra da
+        mesma família —, se soar em 5% da música: em So Far Away uma guitarra presente em 69% da
+        música não tinha arco, e em Still Loving You a distorcida dividia o arco da limpa. Ganha
+        o seu, tocando a nota de baixo (a de cima, se for voz).
+     Os degraus: primeiro a faixa que não toca em arco nenhum — em Sweet Home Alabama a segunda
+     voz levava o último arco e os solos da guitarra distorcida, 36% da música, sumiam —; depois a
+     segunda voz; por fim a faixa que já soa nas brechas de outra e ganharia arco próprio — o pad
+     de Borboletas tirava o arco da segunda voz da dupla. E se ainda sobrar arco, a segunda voz o
+     leva com bem menos (1% da música): arco livre não custa nada a ninguém — e, sobrando mais, a
+     terceira voz também (o coro em terças de So Far Away, as vozes empilhadas de We Will Rock You).
+     O que sobra fica calado. Já houve um passo 3, as outras notas do acorde da guitarra nos arcos
+     livres, e o dono do projeto ouviu "tons nos lugares errados" em Scorpions, Breaking the Law,
+     Symphony of Destruction e na "guitarra extra" de Simple Man: com um arco, só a nota de baixo de
+     cada acorde soava, e o erro de transcrição nas notas de dentro ficava escondido; espalhado,
+     cada nota interna errada virava um arco tocando fora do lugar. Antes disso ele já tinha
+     achado o recurso "pouco elegante". Quem quiser o acorde inteiro põe a faixa em mais arcos com
+     "repartir", à mão. */
   const vazios = [5, 4, 2].filter(c => c < n && dono[c] < 0);
-  if (vazios.length){
-    const teto = li >= 0 ? avgPitch(tracks[li]) - 5 : Infinity;
-    const cand = dono.map((i, c) => ({ i, base: c, extras: [] }))
-      .filter(m => m.i >= 0 && fam.get(m.i) !== 'bateria' && dono.indexOf(m.i) === m.base)
-      .map(m => Object.assign(m, { g: ganhos(tracks[m.i], m.i === li ? Infinity : teto, vazios.length) }));
-    com.filter(i => !out[i] && fam.get(i) !== 'bateria').forEach(i => {
-      const soa = tracks[i].uniao.reduce((a, [x, y]) => a + y - x, 0);
-      cand.push({ i, base: -1, extras: [], g: [0, soa] });
-    });
-    const proximo = m => m.g[m.extras.length + 1] || 0;
-    const da = (m, c) => { m.extras.push(c); dono[c] = m.i; out[m.i] |= 1 << c; };
-    const voz = cand.find(m => m.i === li);
-    if (voz && segundaVoz(tracks[li]) >= duration * .05) da(voz, vazios.shift());
-    cand.filter(m => m.base < 0 && m.g[1] >= duration * .05).sort((a, b) => b.g[1] - a.g[1])
-      .forEach(m => { if (vazios.length) da(m, vazios.shift()); });
-    for (const c of vazios){
-      const m = cand.filter(x => x.base >= 0).reduce((a, b) => !a || proximo(b) > proximo(a) ? b : a, null);
-      if (!m || proximo(m) < duration * .03) break;
-      da(m, c);
+  const tempo = i => tracks[i].uniao.reduce((a, [x, y]) => a + y - x, 0);
+  const proprio = new Set(dono.filter(i => i >= 0));
+  const pelaDuracao = l => l.map(i => ({ i, t: tempo(i) })).filter(q => q.t >= duration * .05).sort((a, b) => b.t - a.t);
+  const sem = com.filter(i => !proprio.has(i) && fam.get(i) !== 'bateria');
+  const sv = li >= 0 && fam.get(li) === 'voz' ? vozesJuntas(tracks[li]) : 0;
+  const quer = pelaDuracao(sem.filter(i => !out[i]))
+    .concat(sv >= duration * .05 ? [{ i: li, voz: true }] : [])
+    .concat(pelaDuracao(sem.filter(i => out[i])))
+    .concat(sv >= duration * .01 && sv < duration * .05 ? [{ i: li, voz: true }] : []);
+  quer.forEach(q => {
+    if (!vazios.length) return;
+    const c = vazios.shift();
+    dono[c] = q.i;
+    if (q.voz){ out[q.i] |= 1 << c; ajustes.push([0, { pick: 'div' }], [c, { pick: 'div' }]); }
+    else { out[q.i] = 1 << c; pr[q.i] = 2; ajustes.push([c, { pick: fam.get(q.i) === 'voz' ? 'hi' : 'lo' }]); }
+  });
+  if (li >= 0 && fam.get(li) === 'voz')
+    for (let k = canaisDe(out[li]).length + 1; k >= 3 && vazios.length && vozesJuntas(tracks[li], k) >= duration * .01; k++){
+      const c = vazios.shift();
+      dono[c] = li; out[li] |= 1 << c; ajustes.push([c, { pick: 'div' }]);
     }
-    cand.filter(m => m.base >= 0 && m.extras.length)
-      .forEach(m => [m.base].concat(m.extras).forEach(c => ajustes.push([c, { pick: 'div' }])));
-  }
   return out;
 }
 /* controles de canal que o último preset quer: [canal, {pick}] */
 let ajustes = [];
-/* Com 3 ou mais flybacks, o som segue o instrumento, não o arco nem a música: agudo, oitava,
+/* Com 3 ou mais flybacks, o som segue o instrumento, não o arco nem a música: agudo,
    envelope e dinâmica são da voz, do baixo, da guitarra, da bateria, do teclado e do "extra"
    (`sons`), ajustados uma vez para todas as músicas. Cada arco toca com o som do instrumento que
    manda nele (familiaDoArco) — o 6 com a segunda voz soa como voz, o 3 com o teclado de uma
@@ -1263,12 +1267,16 @@ let ajustes = [];
    noutra é voz ficava com o som errado numa das duas.
 
    O ganho fica por arco (`ganhoArco`): é o volume de cada flyback, que é físico — um pode sair
-   mais forte que outro. O que é da música é o roteamento e que nota do acorde cada arco toca.
+   mais forte que outro. O que é da música é o roteamento, que nota do acorde cada arco toca e a
+   oitava: ela depende do cantor, não do instrumento. A voz de Sweet Child O' Mine está na altura
+   certa no MIDI (94% das notas batem com o pYIN do canto separado), mas em onda quadrada soa mais
+   grave que a voz rasgada do Axl, e o dono do projeto a quis uma oitava acima — o que, valendo para
+   toda voz, subiria também a de Back In Black, que já é aguda.
    Com dois flybacks, tudo continua por música, como sempre foi (e como os .json do acervo
    descrevem). Padrões: voz no médio, bateria em batida, e corda no resto — guitarra, baixo e
    teclado apagam sozinhos depois do ataque, e é o "corda" que fez a introdução de Iron Man soar
    como guitarra. */
-const SOM = ['agudo', 'oct', 'env', 'vel'];
+const SOM = ['agudo', 'env', 'vel'];
 const SOM_PADRAO = { voz: 'medio', baixo: 'corda', guitarra: 'corda', bateria: 'percussivo', teclado: 'corda', extra: 'corda' };
 /* a montagem antiga, um som por arco na ordem dos papéis, vira o som de cada instrumento */
 const montagemAntiga = store.get('montagem');
@@ -1276,7 +1284,7 @@ const sons = (() => {
   const salvo = store.get('sons') || {};
   const out = {};
   PAPEIS.forEach((f, i) => {
-    const m = { agudo: AGUDO_LIVRE, oct: 0, env: SOM_PADRAO[f], vel: true };
+    const m = { agudo: AGUDO_LIVRE, env: SOM_PADRAO[f], vel: true };
     const s = salvo[f] || (Array.isArray(montagemAntiga) && montagemAntiga[i]);
     if (s) SOM.forEach(k => { if (s[k] !== undefined) m[k] = s[k]; });
     if (!ENVELOPES.hasOwnProperty(m.env)) m.env = SOM_PADRAO[f];
@@ -1429,7 +1437,8 @@ function applyCfg(cfg){
     if (!c) return;
     const k = ch[i].ctl;
     if (c.acorde) k.pick = Object.keys(ACORDE).find(p => ACORDE[p] === c.acorde) || 'hi';
-    if (!dois()) return;               /* com 3 ou mais, o som é da montagem */
+    if ([-2, -1, 0, 1, 2].includes(+c.oitava)) k.oct = +c.oitava;
+    if (!dois()) return;               /* com 3 ou mais, o resto do som é do instrumento */
     if (isFinite(c.ganho)) k.ganho = Math.max(0, Math.min(150, +c.ganho));
     if (isFinite(c.agudo) && c.agudo > 0) k.agudo = Math.max(100, Math.min(AGUDO_LIVRE, Math.round(+c.agudo)));
     if ([-2, -1, 0, 1, 2].includes(+c.oitava)) k.oct = +c.oitava;
@@ -1450,7 +1459,7 @@ function initialCfg(){
   if (current.sidecar && nCanais() === 2 && applyCfg(current.sidecar)){ $('cfgMsg').textContent = 'Configuração que veio com a música no acervo.'; return; }
   resetControls(); renderStrips();
   if (dois()){ preset('bass', false); $('cfgMsg').textContent = 'Padrão: baixo e melodia. Qualquer ajuste fica salvo neste navegador.'; }
-  else { preset('um', false); $('cfgMsg').textContent = 'Padrão: montagem fixa. As rotas ficam salvas por música; o som de cada instrumento e o ganho de cada flyback, para todas.'; }
+  else { preset('um', false); $('cfgMsg').textContent = 'Padrão: montagem fixa. Rotas, acorde e oitava ficam salvos por música; o som de cada instrumento e o ganho de cada flyback, para todas.'; }
 }
 $('cfgReset').onclick = () => { if (!current) return; store.del(cfgChave()); initialCfg(); };
 $('cfgDown').onclick = () => {
@@ -1495,6 +1504,7 @@ function renderStrips(){
     const guarda = campo => {
       if (dois()) return;
       if (campo === 'ganho'){ ganhoArco[i] = k.ganho; store.set('ganhos', ganhoArco); return; }
+      if (campo === 'oct') return;                 /* a oitava é da música: vai no saveCfg */
       sons[c.som || PAPEIS[i]][campo] = k[campo]; store.set('sons', sons);
       aplicarSons(); setTimeout(renderStrips);
     };
@@ -1518,7 +1528,7 @@ function renderStrips(){
     const som = !dois() && c.som && c.som !== PAPEIS[i] ? ' · som de ' + c.som : '';
     s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome', title: som ? 'este arco toca ' + c.som + ' nesta música, e soa como ' + c.som : '' }, nomeCanal(i) + som), mudo, solo), fontes,
       faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('agudo' + i, 'Agudo máx', agudo, av),
-      linhaCtl('oct' + i, 'Oitava', oct, 'transpõe o canal'),
+      linhaCtl('oct' + i, 'Oitava', oct, dois() ? 'transpõe o canal' : 'transpõe o canal nesta música'),
       linhaCtl('pick' + i, 'Acorde', pick, 'que nota do acorde o arco toca. "Repartir": os arcos com a mesma faixa e essa opção dividem as notas dela, uma em cada, como as vozes de um teclado'),
       linhaCtl('env' + i, 'Envelope', env, 'OOK: só liga e desliga · batida: cai rápido · médio · longo: quase reto · corda: vai apagando até a próxima nota'),
       linhaCtl('vel' + i, 'Dinâmica', vel, 'seguir ou não a intensidade (velocity) de cada nota do MIDI'), stat);
