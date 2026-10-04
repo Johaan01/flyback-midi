@@ -412,19 +412,29 @@ def main():
         guardar()
         log(f'[{n}/{len(fila)}] {titulo} ({duracao // 60}:{duracao % 60:02d})')
 
+        # A internet caiu por três minutos numa madrugada e dez músicas seguidas viraram "sem
+        # áudio", com duas tentativas a 20 s. Agora são cinco, esperando cada vez mais (até 8 min
+        # no total): uma queda curta passa, e um vídeo que não existe mais ainda desiste.
         audio = None
-        for _ in range(args.tentativas):
+        for t in range(5):
             try:
                 audio = baixar(url, vid)
                 break
             except Exception as ex:
                 atual['erro'] = f'download: {ex}'
                 log(f'   download falhou: {ex}')
-                time.sleep(20)
+                time.sleep(30 * 2 ** t)
         if not audio:
             atual['situacao'] = 'sem audio'
             guardar()
             continue
+        if artista == 'artista não identificado' and musica == 'sem título':
+            # os dados falharam (sem internet) e o download passou depois: busca de novo, senão
+            # a música entra no acervo como "artista não identificado - sem título"
+            artista, musica, duracao = metadados(url)
+            atual['titulo'] = titulo = nome_livre(saida, artista, musica, vid, estado)
+            guardar()
+            log(f'   é {titulo}')
         if not duracao:            # o YouTube nem sempre informa; o áudio baixado sempre sabe
             try:
                 import soundfile as sf
