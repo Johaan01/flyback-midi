@@ -138,7 +138,8 @@ class Falha(RuntimeError):
         self.instrumentos = instrumentos or []
 
 
-def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0, aviso=None, instrumentos='auto'):
+def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0, aviso=None, instrumentos='auto',
+                orientacao=1.0):
     """Roda o transcrever.py à parte. Devolve o relatório, ou levanta Falha com o motivo.
 
     `aviso(etapa, pct)`, se vier, recebe o andamento: a separação ("separando… 40%") e a
@@ -150,6 +151,7 @@ def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0, aviso=None, 
     limite = max(1800, 8 * (duracao or 300))
     cmd = [sys.executable, str(AQUI / 'transcrever.py'), str(audio), '--titulo', titulo,
            '--saida', str(saida), '--modelo', modelo, '--instrumentos', instrumentos, '--relatorio', str(rel),
+           '--orientacao', str(orientacao),
            '--trecho', str(trecho)]
     env = dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONUTF8='1')
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
@@ -306,6 +308,25 @@ def auditar(arq):
         return [f'auditoria não rodou: {str(ex)[:120]}']
 
 
+def conferir_voz(audio, arq):
+    """(% do canto da gravação com nota na faixa de voz, aviso ou None), num processo à parte
+    como a transcrição: separa o canto de novo (cerca de 1 min) e compara (conferir_voz.py)."""
+    import conferir_voz as C
+    with tempfile.TemporaryDirectory() as d:
+        j = Path(d) / 'voz.json'
+        r = subprocess.run([sys.executable, str(AQUI / 'conferir_voz.py'), str(audio), str(arq), '--json', str(j)],
+                           capture_output=True, text=True, encoding='utf-8', errors='replace',
+                           env=dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONUTF8='1'))
+        if not j.is_file():
+            return None, f'conferência de voz não rodou: {(r.stdout + r.stderr).strip()[-160:]}'
+        v = next(iter(json.loads(j.read_text(encoding='utf-8')).values()))
+    if v['cobre'] >= C.LIMITE:
+        return v['cobre'], None
+    onde = ', '.join(f'{int(a // 60)}:{int(a % 60):02d}' for a, _ in v['trechos'][:6])
+    return v['cobre'], (f'a faixa de voz cobre só {v["cobre"]}% do canto da gravação'
+                        + (f'; sem nota a partir de {onde}' if onde else ''))
+
+
 def nome_livre(saida, artista, musica, vid, estado):
     """'Artista - Música', e com o id do vídeo se outro vídeo já usou o mesmo nome."""
     # barra vira hífen (AC/DC -> AC-DC, como na pasta de bandas; "War Pigs / Luke's Wall"), o
@@ -335,6 +356,9 @@ def main():
     ap.add_argument('--instrumentos-por', metavar='ARQ',
                     help='.json {id do vídeo: "voice,electric_bass,..."}: a lista de cada música, no lugar '
                          'da detecção automática. Quem não estiver nele usa a automática')
+    ap.add_argument('--orientacao-com-lista', type=float, default=2.0, metavar='N',
+                    help='orientação (cfg_coef) quando a música tem lista própria; com a automática é 1. '
+                         'Thunderstruck com a lista certa: voz cobrindo 38%% do canto com 1, 65%% com 2')
     ap.add_argument('--sem-auditoria', action='store_true',
                     help='não conferir a montagem de 6 flybacks de cada música (auditar_montagem.py)')
     args = ap.parse_args()
@@ -417,7 +441,8 @@ def main():
             trecho = 10.0 if t == 1 else 5.0
             try:
                 rel = transcrever(audio, titulo, saida, args.modelo, duracao, trecho,
-                                  instrumentos=listas.get(vid) or 'auto')
+                                  instrumentos=listas.get(vid) or 'auto',
+                                  orientacao=args.orientacao_com_lista if listas.get(vid) else 1.0)
                 log(f'   {args.modelo}: pronto em {(time.time() - inicio) / 60:.1f} min · '
                     f'{", ".join(rel.get("instrumentos") or []) or "sem lista"}')
                 break
@@ -437,7 +462,8 @@ def main():
         if listas.get(vid):
             rel['origem'] = (f'MuScriptor {rel["modelo"]} (Kyutai/Mirelo) rodado localmente, transcrição automática '
                              f'do áudio, sem transcritor humano; instrumentos escolhidos à mão: '
-                             f'{", ".join(rel.get("instrumentos") or []).replace("_", " ")}')
+                             f'{", ".join(rel.get("instrumentos") or []).replace("_", " ")}'
+                             + (f'; orientação {args.orientacao_com_lista:g}' if args.orientacao_com_lista != 1 else ''))
         entrada = creditar(saida, arq, artista, musica, url, rel['modelo'], rel)
         atual.update(situacao='feito', modelo=rel['modelo'], arquivo=arq.name,
                      instrumentos=rel.get('instrumentos'), segundos=rel.get('segundos'),
@@ -445,15 +471,21 @@ def main():
         atual.pop('erro', None)
         guardar()
         para_o_mirelo(saida, estado)       # sai da lista se tinha ido para ela antes
-        audio.unlink(missing_ok=True)
         novos += 1
         log(f'   cabe em 2: {entrada["aproveitamento"]}% · em 6: {entrada["aproveitamento6"]}% · voz: {entrada["vocal"]}')
         if not args.sem_auditoria:
             avisos = auditar(arq)
+            cobre, aviso = conferir_voz(audio, arq)
+            if cobre is not None:
+                atual['voz_coberta'] = cobre
+                log(f'   a faixa de voz cobre {cobre}% do canto da gravação')
+            if aviso:
+                avisos.append(aviso)
             atual['avisos'] = avisos
             guardar()
             for a in avisos:
                 log(f'   ! {a}')
+        audio.unlink(missing_ok=True)
 
     from collections import Counter
     log('fim do lote: ' + ', '.join(f'{k} {v}' for k, v in Counter(v['situacao'] for v in estado.values()).items()))

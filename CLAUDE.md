@@ -27,7 +27,8 @@ Arquivos de apoio, fora das páginas:
 | `tools/popularidade.json` | O que as duas APIs responderam, guardado. Faz as rodadas seguintes não precisarem de internet e darem o mesmo resultado |
 | `tools/transcrever.py` | Gera MIDI a partir de uma gravação: separa os stems e transcreve cada um. **A única ferramenta que precisa de pacotes além da biblioteca padrão** (torch, torchaudio, librosa, basic-pitch) — é opcional, e nada no site depende dela |
 | `tools/instrumentos.py` | Descobre a instrumentação de uma gravação para condicionar o MuScriptor: PANNs (AudioSet) aplicado a cada stem do Demucs. Voz pelo peso do stem de voz, baixo e bateria pelos rótulos, o resto traduzido para os grupos do MuScriptor |
-| `tools/lote.py` | Transcreve uma playlist do YouTube sozinho, retomável: `large` com a lista de instrumentos de cada música (`--instrumentos-por`) ou a automática, segunda tentativa com a separação em blocos menores, e o que ainda falhar vai para `para-o-mirelo.md` com os instrumentos a marcar. Credita cada música no `creditos.json` e confere a montagem de 6 flybacks dela |
+| `tools/lote.py` | Transcreve uma playlist do YouTube sozinho, retomável: `large` com a lista de instrumentos de cada música (`--instrumentos-por`, e aí orientação 2) ou a automática, segunda tentativa com a separação em blocos menores, e o que ainda falhar vai para `para-o-mirelo.md` com os instrumentos a marcar. Credita cada música no `creditos.json`, confere a montagem de 6 flybacks dela e quanto do canto da gravação virou nota |
+| `tools/conferir_voz.py` | Separa o canto da gravação (Demucs) e mede quanto dele tem nota na faixa de voz do MIDI, com os trechos sem nota. O lote roda depois de cada música; abaixo de 60%, aviso |
 | `tools/auditar_montagem.py` | Abre cada MIDI no próprio `index.html` (Playwright) com N flybacks e mede, faixa a faixa, quanto do tempo de nota soa em algum arco: aponta instrumento sem arco, melodia calada em trecho longo e acorde preso num arco com arco vazio ao lado — o que o site, uma nota por arco, não deixa ver |
 | `tools/medir_canais.py` | Mede o aproveitamento de todo o acervo em 2 e em 6 flybacks e grava no `creditos.json` — é o que o site usa nos filtros "2 canais" e "+ de 2 canais" |
 | `tools/servidor.py` | O outro lado da janela "Baixar músicas": busca no YouTube, fila, download, transcrição na GPU daqui ou no Mirelo, crédito e push para o GitHub, com o andamento de cada etapa. Só biblioteca padrão; chama `lote.py` e `mirelo.py` |
@@ -347,6 +348,27 @@ muito e a máquina está livre.
 | 3 | 2% — desanda | | | 8% |
 
 Com 2, instrumento listado que o modelo deixaria de fora aparece. Mas com instrumento **errado** na lista ele inventa e o canto vai junto: Borboletas com órgão e metais listados (não tem nenhum dos dois) saiu com 473 notas de "metais" — o canto — e a voz caiu de 524 para 88 notas. Como o detector automático erra justamente o "resto" (em BLOODY STREAM viu órgão no lugar da guitarra), 2 só vale com lista conhecida: `--orientacao 2 --instrumentos ...` no `transcrever.py`. Com a lista certa de Livin' On A Prayer, o synth apareceu com 332 notas (Mirelo: 962) e a voz ficou igual. O piano de Borboletas não aparece em orientação nenhuma: é o limite do modelo local.
+
+**Thunderstruck: orientação 2 com a lista certa trouxe a voz que faltava.** O dono do projeto
+ouviu "quase metade" das vozes faltando, e `tools/conferir_voz.py` confirmou: a faixa de voz cobria
+45% do canto da gravação. O que faltava eram os gritos "Thunder!" e o "ah-ah-ah" do coro da
+introdução (0:20–0:52) — no stem de voz, ataques a cada 3,6 s com probabilidade de altura 0,01: não
+há nota ali para o pYIN, e o modelo também não escrevia. A primeira versão saiu com a lista
+automática, que incluía um violão que a música não tem. Refeita:
+
+| Thunderstruck | voz cobre do canto |
+|---|---|
+| `large`, lista automática (com violão) | 45% |
+| `large`, voz + guitarra distorcida + baixo + bateria | 38% |
+| `large`, a mesma lista, orientação 2 | **65%** |
+| `medium`, a mesma lista, orientação 2 | 38% |
+
+Com orientação 2 o `large` passou a escrever os gritos (B4) e o coro grave (D3–F#3), e guitarra,
+baixo e bateria ficaram com o mesmo número de notas — não inventou nada. Por isso o `lote.py` usa
+orientação 2 quando a música tem lista própria (`--orientacao-com-lista`) e 1 com a automática, que
+erra o "resto" e com 2 inventaria em cima do erro. Tentado e descartado: completar os buracos da voz
+com o pYIN do stem (45% → 50%) e transformar grito sem altura em estouro curto, como a bateria
+(65% → 67% sobre a versão boa) — não pagam a complexidade.
 
 **O site da Kyutai (muscriptor.kyutai.org) roda o `medium`.** É o `muscriptor serve` do próprio
 pacote — a mesma versão 0.3.0 instalada aqui, com a página em `web_dist`: `POST /transcribe` com

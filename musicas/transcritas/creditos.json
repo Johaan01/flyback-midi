@@ -93,11 +93,11 @@
   "artista": "AC/DC",
   "licenca": "obra protegida — uso educacional sem fins lucrativos",
   "credito": "interpretação de AC/DC; \"Thunderstruck\"",
-  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar, acoustic_guitar",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, distorted electric guitar, electric bass, drums; orientação 2",
   "fonte": "https://www.youtube.com/watch?v=lhg9bYNLvOg",
   "vocal": "sim · faixa \"voice\"",
-  "aproveitamento": 49,
-  "aproveitamento6": 76,
+  "aproveitamento": 52,
+  "aproveitamento6": 77,
   "estilo": "Rock"
  },
  "Black Sabbath - War Pigs - Luke's Wall.mid": {
