@@ -26,13 +26,15 @@ import json
 import sys
 import threading
 import time
+import urllib.parse
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 
 MEDIR = """() => {
   const n = nCanais();
-  const rotas = tracks.map((t, k) => canaisDe(assign[k]).filter(c => c < n));
+  /* a faixa toca também pelas linhas dela ligadas noutros arcos */
+  const rotas = tracks.map((t, k) => [...new Set(canaisDe(assign[k]).concat(...tracks.map((x, j) => x.linha === t.name ? canaisDe(assign[j]) : [])))].filter(c => c < n));
   const porAltura = ch.slice(0, n).map(c => {
     const m = new Map();
     c.segs.forEach(s => (m.get(s.n) || m.set(s.n, []).get(s.n)).push(s));
@@ -59,7 +61,7 @@ MEDIR = """() => {
     });
     const u = t.uniao || [];
     const ocupa = u.reduce((a, [i, f]) => a + f - i, 0);
-    return { nome: t.name, familia: fam, notas: t.notes.length, polifonia: polifonia(t),
+    return { nome: t.name, familia: fam, notas: t.notes.length, polifonia: polifonia(t), parte: !!(t.linha || t.junta),
              arcos: rotas[k].map(c => c + 1), soa: tempo ? soa / tempo : null, falta: tempo ? falta / tempo : null,
              ocupa: ocupa / duration, lead: k === lead };
   });
@@ -75,8 +77,8 @@ def problemas(m):
     """Lista de avisos, em português, do que a montagem deixa de fora."""
     out = []
     for f in m['faixas']:
-        if not f['notas']:
-            continue
+        if not f['notas'] or f.get('parte'):
+            continue                # linha separada e faixa de outra versão: sem arco é escolha
         if not f['arcos'] and (f['familia'] == 'bateria' or f['ocupa'] >= .05):
             out.append(f'"{f["nome"]}" ({f["familia"]}) não tem flyback — {f["ocupa"] * 100:.0f}% da música')
             continue
@@ -124,11 +126,20 @@ def auditar(arquivos, flybacks=6):
             pg.evaluate('localStorage.clear()')        # a montagem padrão, não a deste navegador
             pg.goto(base)
             pg.wait_for_function("typeof openBuffer === 'function'")
+            pg.wait_for_selector('#libList button', timeout=30000)
             pg.select_option('#espN', str(flybacks))
             time.sleep(.3)
+            acervo = RAIZ / 'musicas'
             for arq in arquivos:
-                pg.evaluate("async b => openBuffer(new Uint8Array(b).buffer, {})", list(Path(arq).read_bytes()))
-                time.sleep(.2)
+                a = Path(arq).resolve()
+                if acervo in a.parents:
+                    # pelo endereço, como quem abre do acervo: as outras versões da música entram juntas
+                    pg.goto(base + '?m=' + urllib.parse.quote(a.relative_to(acervo).as_posix()))
+                    pg.wait_for_selector('#tracks .trk', timeout=30000)
+                    time.sleep(.4)
+                else:
+                    pg.evaluate("async b => openBuffer(new Uint8Array(b).buffer, {})", list(Path(arq).read_bytes()))
+                    time.sleep(.2)
                 out[arq] = pg.evaluate(MEDIR)
             nav.close()
             if erros:

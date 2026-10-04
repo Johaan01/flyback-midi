@@ -156,7 +156,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 .lane:first-child{border-top:0}
 .lane-h{border-left:3px solid var(--cor);padding:3px 8px;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center;overflow:hidden;container-type:size}
 .lane-h .l1{display:flex;align-items:baseline;gap:6px;white-space:nowrap;min-width:0}
-.lane-h .nome{font-size:12.5px;font-weight:600;color:var(--cor)}
+.lane-h .nome{font-size:12.5px;font-weight:600;color:var(--cor);flex:none}
 .lane-h .sub{font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis}
 .lane-h .nota{font-family:"IBM Plex Mono",monospace;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .lane-h .fontes{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -171,7 +171,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
 .strip{flex:1 1 0;min-width:136px;max-width:220px;display:flex;flex-direction:column;gap:5px;padding:8px;border:1px solid var(--rule);border-top:3px solid var(--cor);border-radius:3px;background:var(--fundo)}
 .strip.mudo{opacity:.55}
 .strip-h{display:flex;align-items:center;gap:4px}
-.strip-h .nome{flex:1;font-weight:600;font-size:12.5px;color:var(--cor);white-space:nowrap}
+.strip-h .nome{flex:1;min-width:0;font-weight:600;font-size:12.5px;color:var(--cor);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip .somde{margin:0;font-size:11px;color:var(--cor);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .strip-h button{padding:1px 7px;font-size:11.5px;font-family:"IBM Plex Mono",monospace}
 .strip .fontes{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-4px}
 .ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:nowrap}
@@ -250,7 +251,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radiu
         <p class="musica" id="titulo">nenhuma música aberta</p>
         <div class="presets hide" id="presets" role="group" aria-label="Distribuição automática"></div>
         <p class="verdict" id="verdict"></p>
-        <p class="legenda hide" id="legenda">Montagem fixa: 1 voz · 2 baixo · 3 guitarra · 4 bateria · 5 teclado · 6 extra. O som de cada flyback vale para todas as músicas.</p>
+        <p class="legenda hide" id="legenda">Montagem fixa: 1 voz · 2 baixo · 3 guitarra · 4 bateria · 5 e 6 extra (teclado, segunda voz, outro instrumento ou linhas do acorde). O som segue o instrumento.</p>
         <div class="juntar hide" id="juntar">
           <select id="juntarSel" aria-label="Juntar faixas de outra versão"></select>
           <input type="file" id="juntarArq" accept=".mid,.midi,.kar,.rmi" hidden>
@@ -646,7 +647,10 @@ const pelaP2 = () => esp.n <= 2;          /* o áudio do computador aciona os fl
 const dois = () => esp.n === 2;           /* presets e configuração clássicos, de dois lados */
 const mascara = () => (1 << nCanais()) - 1;
 const canaisDe = m => { const r = []; for (let i = 0; i < MAX; i++) if (m >> i & 1) r.push(i); return r; };
-const nomeCanal = i => esp.n >= 3 ? (i + 1) + ' · ' + PAPEIS[i] : 'Canal ' + (i + 1);
+/* o 5 e o 6 recebem o que a música tiver — teclado, segunda voz, outro instrumento, uma linha
+   do acorde —, e chamá-los de "teclado" enganava; o 5 continua sendo onde o teclado cai */
+const ROTULO = ['voz', 'baixo', 'guitarra', 'bateria', 'extra', 'extra'];
+const nomeCanal = i => esp.n >= 3 ? (i + 1) + ' · ' + ROTULO[i] : 'Canal ' + (i + 1);
 const subCanal = i => (pelaP2() ? (i ? 'direito · ' : 'esquerdo · ') : '') + 'GPIO ' + esp.pinos[i];
 const algumSolo = () => ch.slice(0, nCanais()).some(c => c.solo);
 const soa = i => i < nCanais() && (algumSolo() ? ch[i].solo : !ch[i].mudo);
@@ -812,7 +816,20 @@ function repartir(t, arcos, teto){
   return new Map(ordem.map((c, a) => [c, por[a]]));
 }
 /* as notas da faixa `t` (índice `k`) que o arco `i` toca */
+/* as notas da faixa que uma linha dela, ligada noutro arco, já toca: saem da faixa */
+function foraDe(t, i){
+  const filhas = tracks.filter((x, j) => x.linha === t.name && assign[j] && !(assign[j] >> i & 1));
+  if (!filhas.length) return null;
+  const chave = i + ':' + filhas.map(x => x.name + assign[tracks.indexOf(x)]).join('|');
+  if (!t.fora || t.fora.chave !== chave){
+    const set = new Set(); filhas.forEach(x => x.notes.forEach(n => set.add(n.de)));
+    t.fora = { chave, notas: t.notes.filter(n => !set.has(n)) };
+  }
+  return t.fora.notas;
+}
 function notasPara(t, k, i){
+  const sem = !t.linha && separadas.length ? foraDe(t, i) : null;
+  if (sem) return sem;
   if (ch[i].ctl.pick !== 'div' || isDrum(t)) return notasDe(t);
   const arcos = canaisDe(assign[k]).filter(c => c < nCanais() && ch[c].ctl.pick === 'div');
   if (arcos.length < 2) return t.notes;
@@ -988,13 +1005,14 @@ function renderTracks(){
     if (t.linha) row.classList.add('linha');
     const meta = el('span', { class: 'meta' }, t.notes.length + ' notas · ' + nm(lo) + ' – ' + nm(hi) + (isDrum(t) ? ' · percussão' : '') + papel);
     if (!t.linha && !isDrum(t) && (t.poli = t.poli || polifonia(t)) >= 1.2){
-      const ja = separadas.includes(t.name);
+      const ja = separadas.includes(t.name) || separadas.includes('acorde:' + t.name);
       const b = el('button', { class: 'mini', title: ja ? 'tira as linhas da lista' : 'uma faixa por linha do acorde, da mais aguda à mais grave, cada uma com o seu flyback' },
         ja ? 'juntar as linhas' : 'separar em linhas');
       b.onclick = () => ja ? juntarLinhas(t.name) : separarEscolhida(k);
       meta.appendChild(b);
     }
-    const rotulo = t.linha ? 'linha ' + t.nLinha + ' de ' + t.deLinhas + (t.nLinha === 1 ? ' (aguda)' : t.nLinha === t.deLinhas ? ' (grave)' : '') : t.name;
+    const rotulo = !t.linha ? t.name : (t.acorde ? 'notas de cima do acorde, linha ' : 'linha ') + t.nLinha + ' de ' + t.deLinhas
+      + (t.deLinhas < 2 ? '' : t.nLinha === 1 ? ' (aguda)' : t.nLinha === t.deLinhas ? ' (grave)' : '');
     const name = el('div', { class: 'nm', title: t.name }, rotulo, meta);
     const seg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Saída de ' + t.name });
     const muda = m => { assign[k] = m; renderTracks(); reschedule(); saveCfg(); };
@@ -1243,14 +1261,17 @@ function umPorFlyback(n){
         mesma família —, se soar em 5% da música: em So Far Away uma guitarra presente em 69% da
         música não tinha arco, e em Still Loving You a distorcida dividia o arco da limpa. Ganha
         o seu, tocando a nota de baixo (a de cima, se for voz).
+     Entre a segunda voz e a faixa das brechas entra o instrumento que só uma versão juntada tem,
+     se não repetir as notas desta (repete < 0,4). Juntar sozinho ao abrir foi tentado e saiu:
+     o piano e o pad do Mirelo em Borboletas repetem 90% das notas do violão daqui — o modelo
+     local pôs o piano dentro do violão —, e só enchiam a lista.
      Os degraus: primeiro a faixa que não toca em arco nenhum — em Sweet Home Alabama a segunda
      voz levava o último arco e os solos da guitarra distorcida, 36% da música, sumiam —; depois a
      segunda voz; por fim a faixa que já soa nas brechas de outra e ganharia arco próprio — o pad
-     de Borboletas tirava o arco da segunda voz da dupla. E se ainda sobrar arco, a segunda voz o
-     leva com bem menos (1% da música): arco livre não custa nada a ninguém — e, sobrando mais, a
-     terceira voz também (o coro em terças de So Far Away, as vozes empilhadas de We Will Rock You).
-     O que sobra fica calado. Já houve um passo 3, as outras notas do acorde da guitarra nos arcos
-     livres, e o dono do projeto ouviu "tons nos lugares errados" em Scorpions, Breaking the Law,
+     de Borboletas tirava o arco da segunda voz da dupla. Depois vêm as notas de cima do acorde
+     (encherComLinhas) e, no que ainda sobrar, a segunda voz pequena e a terceira (vozesNasSobras).
+     O que ainda sobra recebe as linhas do acompanhamento (encherComLinhas, no preset). Já houve
+     um passo 3, as outras notas do acorde da guitarra espalhadas pelos arcos livres, e o dono do projeto ouviu "tons nos lugares errados" em Scorpions, Breaking the Law,
      Symphony of Destruction e na "guitarra extra" de Simple Man: com um arco, só a nota de baixo de
      cada acorde soava, e o erro de transcrição nas notas de dentro ficava escondido; espalhado,
      cada nota interna errada virava um arco tocando fora do lugar. Antes disso ele já tinha
@@ -1261,11 +1282,16 @@ function umPorFlyback(n){
   const proprio = new Set(dono.filter(i => i >= 0));
   const pelaDuracao = l => l.map(i => ({ i, t: tempo(i) })).filter(q => q.t >= duration * .05).sort((a, b) => b.t - a.t);
   const sem = com.filter(i => !proprio.has(i) && fam.get(i) !== 'bateria');
+  /* das versões juntadas, só o instrumento que esta não tem e que não repete notas dela */
+  const daqui = com.map(i => tracks[i]), temos = new Set(daqui.map(instrumentoDe));
+  const novas = tracks.map((t, i) => i).filter(i => tracks[i].junta && !tracks[i].linha && tracks[i].notes.length
+    && !isDrum(tracks[i]) && !temos.has(instrumentoDe(tracks[i])) && repete(tracks[i], daqui) < .4);
+  novas.forEach(i => fam.set(i, familia(tracks[i])));
   const sv = li >= 0 && fam.get(li) === 'voz' ? vozesJuntas(tracks[li]) : 0;
   const quer = pelaDuracao(sem.filter(i => !out[i]))
     .concat(sv >= duration * .05 ? [{ i: li, voz: true }] : [])
-    .concat(pelaDuracao(sem.filter(i => out[i])))
-    .concat(sv >= duration * .01 && sv < duration * .05 ? [{ i: li, voz: true }] : []);
+    .concat(pelaDuracao(novas))
+    .concat(pelaDuracao(sem.filter(i => out[i])));
   quer.forEach(q => {
     if (!vazios.length) return;
     const c = vazios.shift();
@@ -1273,11 +1299,6 @@ function umPorFlyback(n){
     if (q.voz){ out[q.i] |= 1 << c; ajustes.push([0, { pick: 'div' }], [c, { pick: 'div' }]); }
     else { out[q.i] = 1 << c; pr[q.i] = 2; ajustes.push([c, { pick: fam.get(q.i) === 'voz' ? 'hi' : 'lo' }]); }
   });
-  if (li >= 0 && fam.get(li) === 'voz')
-    for (let k = canaisDe(out[li]).length + 1; k >= 3 && vazios.length && vozesJuntas(tracks[li], k) >= duration * .01; k++){
-      const c = vazios.shift();
-      dono[c] = li; out[li] |= 1 << c; ajustes.push([c, { pick: 'div' }]);
-    }
   return out;
 }
 /* controles de canal que o último preset quer: [canal, {pick}] */
@@ -1316,10 +1337,13 @@ const sons = (() => {
   });
   return out;
 })();
+/* typeof, e não isFinite: isFinite(false) é true, e o ganho de quem nunca teve a montagem
+   antiga saía 0 — o som do computador mudo */
+const numero = v => typeof v === 'number' && isFinite(v);
 const ganhoArco = PAPEIS.map((f, i) => {
   const g = (store.get('ganhos') || [])[i];
-  const a = Array.isArray(montagemAntiga) && montagemAntiga[i] && montagemAntiga[i].ganho;
-  return isFinite(g) ? +g : isFinite(a) ? +a : 70;
+  const a = Array.isArray(montagemAntiga) && montagemAntiga[i] ? montagemAntiga[i].ganho : undefined;
+  return numero(g) ? g : numero(a) ? a : 70;
 });
 /* o instrumento que manda no arco: a faixa de maior prioridade nele, e no empate a de mais notas */
 function familiaDoArco(i){
@@ -1364,6 +1388,7 @@ function preset(p, user){
   if (!dois()) ch.slice(0, nCanais()).forEach((c, i) => { c.ctl.pick = PICK_PAPEL[i]; });
   assign = dois() ? computePreset(p).map(l => LETRA_MASC[l] || 0) : computePresetN(p);
   if (dois()) tracks.forEach((t, k) => { if (t.junta || t.linha) assign[k] = 0; });
+  if (!dois() && p === 'um'){ encherComLinhas(); vozesNasSobras(); }
   ajustes.forEach(([c, a]) => Object.assign(ch[c].ctl, a));
   if (ajustes.length) renderStrips();
   renderTracks(); reschedule(); if (user) saveCfg();
@@ -1553,8 +1578,10 @@ function renderStrips(){
     const env = sel('env' + i, OPC.env, k.env, v => k.env = v, 'env');
     const vel = sel('vel' + i, OPC.vel, k.vel ? 'sim' : 'nao', v => k.vel = v === 'sim', 'vel');
     const stat = el('p', { class: 'stat' }, c.stat);
-    const som = !dois() && c.som && c.som !== PAPEIS[i] ? ' · som de ' + c.som : '';
-    s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome', title: som ? 'este arco toca ' + c.som + ' nesta música, e soa como ' + c.som : '' }, nomeCanal(i) + som), mudo, solo), fontes,
+    const som = !dois() && c.som && c.som !== ROTULO[i]
+      ? el('p', { class: 'somde', title: 'este arco toca ' + c.som + ' nesta música, e soa como ' + c.som }, 'som de ' + c.som)
+      : !dois() ? el('p', { class: 'somde', 'aria-hidden': 'true' }, ' ') : null;   /* a linha fica, para os módulos alinharem */
+    s.append(el('div', { class: 'strip-h' }, el('span', { class: 'nome', title: nomeCanal(i) }, nomeCanal(i)), mudo, solo), som || '', fontes,
       faixaCtl('gain' + i, 'Ganho', ganho, gv), faixaCtl('agudo' + i, 'Agudo máx', agudo, av),
       linhaCtl('oct' + i, 'Oitava', oct, dois() ? 'transpõe o canal' : 'transpõe o canal nesta música'),
       linhaCtl('pick' + i, 'Acorde', pick, 'que nota do acorde o arco toca. "Repartir": os arcos com a mesma faixa e essa opção dividem as notas dela, uma em cada, como as vozes de um teclado'),
@@ -1692,8 +1719,9 @@ async function openBuffer(buf, info){
   }
   separadas = [];
   for (const nome of (salvo && Array.isArray(salvo.linhas) ? salvo.linhas : [])){
-    const k = tracks.findIndex(t => t.name === nome && !t.linha);
-    if (k >= 0) separarFaixa(k, false);
+    const acorde = nome.startsWith('acorde:'), pai = acorde ? nome.slice(7) : nome;
+    const k = tracks.findIndex(t => t.name === pai && !t.linha);
+    if (k >= 0) separarFaixa(k, false, acorde);
   }
   initialCfg();
   ['play', 'stop', 'wavGo', 'cfgDown', 'cfgReset'].forEach(id => $(id).disabled = false);
@@ -1723,10 +1751,24 @@ async function openBuffer(buf, info){
    — a de baixo de um acorde de seis cordas não some. Quantas linhas: quantas notas a faixa soa juntas em trecho de mais de
    0,3 s por pelo menos 1% da música (vozesJuntas), de 2 a 6; linha com menos de 3% das notas sai. */
 let separadas = [];
-function separarLinhas(t){
+/* as notas que soam enquanto outra mais grave da mesma faixa soa: as de cima do acorde, sem as
+   notas soltas do riff nem a de baixo */
+function deCimaDoAcorde(t){
+  const ns = t.notes.slice().sort((a, b) => a.t0 - b.t0), vivas = [], out = [];
+  for (const x of ns){
+    const m = x.t0 + .03;
+    for (let j = vivas.length - 1; j >= 0; j--) if (vivas[j].t1 <= m) vivas.splice(j, 1);
+    if (vivas.some(y => y.n < x.n) || ns.some(y => y !== x && y.n < x.n && Math.abs(y.t0 - x.t0) <= .03)) out.push(x);
+    vivas.push(x);
+  }
+  return out;
+}
+function separarLinhas(t, soAcorde){
+  const fonte = soAcorde ? { notes: deCimaDoAcorde(t) } : t;
+  if (fonte.notes.length < 4) return [];
   let k = 2;
-  while (k < 6 && vozesJuntas(t, k + 1) >= duration * .01) k++;
-  const notas = t.notes.slice().sort((a, b) => a.t0 - b.t0);
+  while (k < 6 && vozesJuntas(fonte, k + 1) >= duration * .01) k++;
+  const notas = fonte.notes.slice().sort((a, b) => a.t0 - b.t0);
   const alt = notas.map(x => x.n).sort((a, b) => b - a);
   const centro = Array.from({ length: k }, (_, j) => alt[Math.min(alt.length - 1, Math.floor((j + .5) * alt.length / k))]);
   const por = Array.from({ length: k }, () => []), soa = new Array(k).fill(null);
@@ -1750,25 +1792,81 @@ function separarLinhas(t){
     for (let i = m - 1; i >= 0; i--){
       const x = g[i];
       if (soa[a] && soa[a].t1 > x.t0) soa[a].t1 = x.t0;
-      const c = Object.assign({}, x); por[a].push(c); soa[a] = c;
+      const c = Object.assign({}, x, { de: x }); por[a].push(c); soa[a] = c;
       a = P[i][a];
     }
     j = f;
   }
   const media = l => l.reduce((s, x) => s + x.n, 0) / l.length;
-  return por.filter(l => l.length >= Math.max(3, t.notes.length * .03)).sort((a, b) => media(b) - media(a));
+  return por.filter(l => l.length >= Math.max(3, fonte.notes.length * .03)).sort((a, b) => media(b) - media(a));
+}
+/* Os arcos que a montagem fixa ainda deixou vazios recebem as notas de cima do acorde do
+   acompanhamento, para a trilha sair mais cheia — o meio-termo do dono do projeto entre "aguda,
+   do meio, grave", herança dos dois flybacks, e o acorde espalhado por inteiro, que expunha o
+   erro da transcrição nas notas de dentro. A faixa inteira fica no arco dela (o riff de nota
+   única nunca sai do 3); só as notas que soam com outra mais grave da mesma faixa viram linhas
+   fixas, num registro cada, e vão para os vazios de baixo para cima, enquanto ficarem uma
+   quarta abaixo da voz (o teto que não deixa mascarar o canto). O arco da faixa deixa de tocar
+   o que foi para elas (foraDe). Uma primeira versão trocava a faixa pela linha de baixo dela, e
+   o riff de Back In Black, espalhado pelas linhas por registro, perdia as notas de cima: o arco
+   3 soava 35% do tempo. Primeiro a faixa que mais nota deixa de tocar com um arco só. */
+function encherComLinhas(){
+  const n = nCanais();
+  const usado = c => tracks.some((t, k) => assign[k] >> c & 1);
+  const vazios = [5, 4, 2].filter(c => c < n && !usado(c));
+  if (!vazios.length) return;
+  const li = prio.indexOf(3);
+  const teto = li >= 0 && familia(tracks[li]) === 'voz' ? avgPitch(tracks[li]) - 5 : Infinity;
+  const perde = t => (polifonia(t) - 1) * t.uniao.reduce((a, [x, y]) => a + y - x, 0);
+  const cand = tracks.filter((t, k) => assign[k] && prio[k] === 2 && !t.linha && !isDrum(t)
+      && !['voz', 'baixo', 'bateria'].includes(familia(t)) && polifonia(t) >= 1.3)
+    .sort((a, b) => perde(b) - perde(a));
+  for (const t of cand){
+    if (!vazios.length) return;
+    let ls = tracks.map((x, j) => j).filter(j => tracks[j].linha === t.name && tracks[j].acorde);
+    if (!ls.length){
+      const media = l => l.reduce((a, x) => a + x.n, 0) / l.length;
+      if (!separarLinhas(t, true).some(l => media(l) <= teto)) continue;
+      separarFaixa(tracks.indexOf(t), true, true);
+      ls = tracks.map((x, j) => j).filter(j => tracks[j].linha === t.name && tracks[j].acorde);
+    }
+    for (let j = ls.length - 1; j >= 0 && vazios.length; j--){
+      if (avgPitch(tracks[ls[j]]) > teto) break;
+      const c = vazios.shift();
+      assign[ls[j]] = 1 << c; prio[ls[j]] = 2;
+      ajustes.push([c, { pick: 'lo' }]);
+    }
+  }
+}
+/* O que sobrar depois das linhas: a segunda voz com bem menos (1% da música) e a terceira — o coro
+   em terças de So Far Away, as vozes empilhadas de We Will Rock You. Vinha antes das linhas, como
+   "arco livre não custa nada", e em Back In Black levava o 6 com uma segunda voz que soa 2% do
+   tempo, no lugar de uma linha do acorde da guitarra. */
+function vozesNasSobras(){
+  const n = nCanais(), li = prio.indexOf(3);
+  if (li < 0 || familia(tracks[li]) !== 'voz') return;
+  const usado = c => tracks.some((t, k) => assign[k] >> c & 1);
+  const vazios = [5, 4, 2].filter(c => c < n && !usado(c));
+  for (let q = canaisDe(assign[li]).length + 1; vazios.length && vozesJuntas(tracks[li], q) >= duration * .01; q++){
+    const c = vazios.shift();
+    assign[li] |= 1 << c;
+    ajustes.push([0, { pick: 'div' }], [c, { pick: 'div' }]);
+  }
 }
 /* põe as linhas da faixa `k` logo abaixo dela, desligadas; `rotas` mexe em assign e prio, que
    ao abrir a música ainda são da anterior (a configuração os refaz) */
-function separarFaixa(k, rotas){
+/* `acorde`: linhas só das notas de cima do acorde (deCimaDoAcorde) — as da montagem, que deixam
+   a faixa inteira no arco dela; sem isso, linhas de todas as notas, as de "separar em linhas" */
+function separarFaixa(k, rotas, acorde){
   const t = tracks[k];
-  const linhas = separarLinhas(t);
-  if (linhas.length < 2) return 0;
-  const novas = linhas.map((notes, j) => ({ name: t.name + ' · linha ' + (j + 1), gm: t.gm, prog: t.prog, chan: t.chan,
-    mtrk: t.mtrk, notes, linha: t.name, nLinha: j + 1, deLinhas: linhas.length, uniao: uniao(notes) }));
+  const linhas = separarLinhas(t, acorde);
+  if (linhas.length < (acorde ? 1 : 2)) return 0;
+  const nome = acorde ? ' · acorde ' : ' · linha ';
+  const novas = linhas.map((notes, j) => ({ name: t.name + nome + (j + 1), gm: t.gm, prog: t.prog, chan: t.chan,
+    mtrk: t.mtrk, notes, linha: t.name, acorde: !!acorde, nLinha: j + 1, deLinhas: linhas.length, uniao: uniao(notes) }));
   tracks.splice(k + 1, 0, ...novas);
   if (rotas){ assign.splice(k + 1, 0, ...novas.map(() => 0)); prio.splice(k + 1, 0, ...novas.map(() => 0)); }
-  separadas.push(t.name);
+  separadas.push(acorde ? 'acorde:' + t.name : t.name);
   return novas.length;
 }
 function separarEscolhida(k){
@@ -1780,7 +1878,7 @@ function separarEscolhida(k){
 function juntarLinhas(nome){
   for (let k = tracks.length - 1; k >= 0; k--)
     if (tracks[k].linha === nome){ tracks.splice(k, 1); assign.splice(k, 1); prio.splice(k, 1); }
-  separadas = separadas.filter(x => x !== nome);
+  separadas = separadas.filter(x => x !== nome && x !== 'acorde:' + nome);
   renderTracks(); reschedule(); saveCfg();
   $('cfgMsg').textContent = nome + ': linhas tiradas da lista.';
 }
@@ -1830,19 +1928,42 @@ function juntarVersao(buf, rotulo, arquivo, desvio){
   juntas.push({ arquivo, rotulo, desvio: d });
   return list;
 }
+const outrasVersoes = item => lib.filter(it => it.tipo === 'MIDI' && !it.local && it.arquivo !== item.arquivo
+  && tituloBase(it.titulo) === tituloBase(item.titulo));
 function montarJuntar(){
   const box = $('juntar'), sel = $('juntarSel');
   box.classList.toggle('hide', !current);
   if (!current) return;
-  const base = tituloBase(current.lib ? current.lib.titulo : current.title);
   const ja = new Set(juntas.map(j => j.arquivo));
-  const outras = lib.filter(it => it.tipo === 'MIDI' && !it.local && it.arquivo !== (current.lib && current.lib.arquivo)
-    && !ja.has(it.arquivo) && tituloBase(it.titulo) === base);
+  const outras = (current.lib ? outrasVersoes(current.lib) : []).filter(it => !ja.has(it.arquivo));
   sel.textContent = '';
-  sel.appendChild(new Option(outras.length ? 'Juntar faixas de outra versão…' : 'Juntar faixas de outro arquivo…', ''));
+  sel.appendChild(new Option(outras.length ? 'Juntar faixas de outra versão…' : juntas.length ? 'Versões juntadas: ' + juntas.map(j => j.rotulo).join(', ') : 'Juntar faixas de outro arquivo…', ''));
   outras.forEach(it => sel.appendChild(new Option(rotuloDe(it) + ' · ' + it.titulo, it.arquivo)));
   sel.appendChild(new Option('arquivo do computador…', '__arq'));
+  if (juntas.length) sel.appendChild(new Option('tirar as faixas juntadas', '__tirar'));
   sel.value = '';
+}
+/* tira as faixas de outras versões (e as linhas delas) e grava, para a música não voltar a
+   juntá-las sozinha ao abrir */
+function tirarJuntadas(){
+  for (let k = tracks.length - 1; k >= 0; k--)
+    if (tracks[k].junta || (tracks[k].linha && / · /.test(tracks[k].linha) && juntas.some(j => tracks[k].linha.endsWith(' · ' + j.rotulo)))){
+      tracks.splice(k, 1); assign.splice(k, 1); prio.splice(k, 1);
+    }
+  separadas = separadas.filter(n => tracks.some(t => t.name === n));
+  juntas = [];
+  let end = 0; tracks.forEach(t => t.notes.forEach(n => { if (n.t1 > end) end = n.t1; })); duration = end + .3;
+  renderTracks(); reschedule(); saveCfg(); montarJuntar();
+  $('cfgMsg').textContent = 'Faixas juntadas tiradas. A música fica só com as dela.';
+}
+/* nome do instrumento sem a versão, para comparar "acoustic_piano · Mirelo" com "acoustic piano" */
+const instrumentoDe = t => fold((t.junta ? t.name.slice(0, -(' · ' + t.junta).length) : t.name).replace(/_/g, ' ')).replace(/\s+\d+$/, '').trim();
+/* fração das notas de `t` que já estão, na mesma altura e no mesmo ataque, em alguma das faixas
+   `outras`: o "órgão" de uma versão que é a guitarra da outra tem as mesmas notas */
+function repete(t, outras){
+  const ja = new Set();
+  outras.forEach(o => o.notes.forEach(n => { const b = Math.round(n.t0 * 20); ja.add(n.n * 1e6 + b); ja.add(n.n * 1e6 + b - 1); ja.add(n.n * 1e6 + b + 1); }));
+  return t.notes.length ? t.notes.filter(n => ja.has(n.n * 1e6 + Math.round(n.t0 * 20))).length / t.notes.length : 0;
 }
 async function juntarEscolhida(buf, rotulo, arquivo){
   const n = tracks.length;
@@ -1858,6 +1979,7 @@ $('juntarSel').onchange = async () => {
   const v = $('juntarSel').value;
   if (!v || !current) return;
   if (v === '__arq'){ $('juntarArq').click(); montarJuntar(); return; }
+  if (v === '__tirar'){ tirarJuntadas(); return; }
   const it = lib.find(x => x.arquivo === v);
   try {
     const r = await fetch(libUrl(v));

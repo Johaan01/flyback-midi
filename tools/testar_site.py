@@ -111,6 +111,8 @@ def player(nav, base, telas):
     confere(rotas.get('voice', [0])[0] == 1 and rotas.get('electric_bass') == [2] and rotas.get('acoustic_guitar', [0])[0] == 3
             and rotas.get('drums') == [4] and 5 in rotas.get('synth_pad', []) + rotas.get('acoustic_piano', []),
             f'montagem fixa: 1 voz, 2 baixo, 3 violão, 4 bateria, 5 teclado ({rotas})')
+    g = pg.evaluate("ch.slice(0, 6).map(c => c.ctl.ganho)")
+    confere(g == [70] * 6, f'ganho padrão de 70% em todo flyback, num navegador sem nada salvo ({g})')
     env = pg.evaluate("ch.slice(0, 6).map(c => c.ctl.env)")
     confere(env[0] == 'medio' and env[2] == 'corda' and env[3] == 'percussivo',
             f'som padrão da montagem: voz em médio, violão em corda, bateria em batida ({env})')
@@ -161,7 +163,8 @@ def player(nav, base, telas):
             f'a segunda guitarra ganha arco próprio, na nota grave, e a segunda voz reparte com o 1 ({rotas})')
     # repartir à mão: a guitarra de Iron Man em três arcos
     abrir(pg, base, 'transcritas/Black Sabbath - Iron Man.mid')
-    r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name)), v = prio.indexOf(3);
+    r = pg.evaluate("""() => { juntarLinhas(tracks.find(t => /guitar/.test(t.name) && !t.linha).name);
+        const g = tracks.findIndex(t => /guitar/.test(t.name)), v = prio.indexOf(3);
         assign[g] = (1 << 2) | (1 << 4) | (1 << 5); [2, 4, 5].forEach(i => { ch[i].ctl.pick = 'div'; }); rebuild();
         const teto = avgPitch(tracks[v]) - 5;
         const acima = [4, 5].flatMap(i => ch[i].segs.filter(s => s.n > teto)).length;
@@ -195,7 +198,7 @@ def player(nav, base, telas):
     confere(r['nome'] == 'voice' and len(r['arcos']) == 2 and r['arcos'][0] == 1 and r['alturas'][0] > r['alturas'][1],
             f'a segunda voz da dupla vai para outro arco, e a de cima fica no 1 ({r})')
     a = r['arcos'][1] - 1
-    r = pg.evaluate(f"[ch[{a}].som, ch[{a}].ctl.env, ch[0].ctl.env, document.querySelectorAll('#strips .strip .nome')[{a}].textContent]")
+    r = pg.evaluate(f"[ch[{a}].som, ch[{a}].ctl.env, ch[0].ctl.env, document.querySelectorAll('#strips .strip')[{a}].textContent]")
     confere(r[0] == 'voz' and r[1] == r[2] and 'som de voz' in r[3],
             f'o arco da segunda voz soa como voz, e o mixer diz isso ({r})')
     abrir(pg, base, 'transcritas/Victor & Leo - Borboletas (Mirelo).mid')
@@ -206,6 +209,12 @@ def player(nav, base, telas):
 
     print('linhas')
     abrir(pg, base, 'transcritas/Dave Rodgers - Deja Vu.mid')
+    botao = pg.locator('#tracks .trk', has_text='electric piano').first.locator('button.mini')
+    r = pg.evaluate("""() => { const teto = avgPitch(tracks[prio.indexOf(3)]) - 5;
+        return tracks.filter(t => t.acorde && assign[tracks.indexOf(t)]).map(t => [t.name, Math.round(avgPitch(t)), Math.round(teto)]); }""")
+    confere(r and all(a <= t for _, a, t in r), f'a montagem põe as notas de cima do acorde do teclado no arco vazio, só abaixo da voz ({r})')
+    if botao.inner_text() == 'juntar as linhas':
+        botao.click(); time.sleep(.3)
     pg.locator('#tracks .trk', has_text='electric piano').first.locator('button.mini').click(); time.sleep(.5)
     r = pg.evaluate("""() => tracks.filter(t => t.linha === 'electric piano').map(t => [Math.round(avgPitch(t)), +polifonia(t).toFixed(2), assign[tracks.indexOf(t)]])""")
     alturas = [a for a, _, _ in r]
