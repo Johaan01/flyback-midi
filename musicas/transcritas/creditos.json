@@ -189,11 +189,11 @@
   "artista": "Bon Jovi",
   "licenca": "obra protegida — uso educacional sem fins lucrativos",
   "credito": "interpretação de Bon Jovi; \"Livin' On A Prayer\"",
-  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos detectados pelo PANNs: voice, electric_bass, drums, distorted_electric_guitar",
+  "transcricao": "MuScriptor large (Kyutai/Mirelo) rodado localmente, transcrição automática do áudio, sem transcritor humano; instrumentos escolhidos à mão: voice, synth pad, distorted electric guitar, electric bass, drums; orientação 2",
   "fonte": "https://www.youtube.com/watch?v=lDK9QqIzhwk",
   "vocal": "sim · faixa \"voice\"",
   "aproveitamento": 78,
-  "aproveitamento6": 71,
+  "aproveitamento6": 69,
   "estilo": "Rock"
  },
  "Avenged Sevenfold - So Far Away.mid": {
