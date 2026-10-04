@@ -88,7 +88,8 @@ def gerar():
             # site mostra em cada linha, em vez de pasta — a mesma música pode existir nas versões.
             texto = (info.get('transcricao') or '') + (info.get('credito') or '')
             if 'MuScriptor' in texto:
-                item['origem'] = 'muscriptor' if 'localmente' in texto else 'mirelo'
+                # o site da Kyutai roda o medium, o mesmo que a GPU daqui: é MuScriptor, não Mirelo
+                item['origem'] = 'muscriptor' if 'localmente' in texto or 'kyutai.org' in texto else 'mirelo'
             itens.append(item)
 
     ordem = ordem_das_pastas()

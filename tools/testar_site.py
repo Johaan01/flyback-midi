@@ -19,6 +19,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.parse
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -70,7 +71,7 @@ def estado(pg):
 
 
 def abrir(pg, base, caminho):
-    pg.goto(base + '?m=' + caminho)
+    pg.goto(base + '?m=' + urllib.parse.quote(caminho))
     pg.wait_for_selector('#tracks .trk', timeout=30000)
     time.sleep(.3)
 
@@ -107,7 +108,7 @@ def player(nav, base, telas):
     e = estado(pg)
     confere(e['pistas'] == 6 and e['canais'] == 6, 'seis pistas e seis canais')
     rotas = {e['nomes'][k]: [i + 1 for i in range(6) if m >> i & 1] for k, m in enumerate(e['assign'])}
-    confere(rotas.get('voice') == [1] and rotas.get('electric_bass') == [2] and rotas.get('acoustic_guitar', [0])[0] == 3
+    confere(rotas.get('voice', [0])[0] == 1 and rotas.get('electric_bass') == [2] and rotas.get('acoustic_guitar', [0])[0] == 3
             and rotas.get('drums') == [4] and 5 in rotas.get('synth_pad', []) + rotas.get('acoustic_piano', []),
             f'montagem fixa: 1 voz, 2 baixo, 3 violão, 4 bateria, 5 teclado ({rotas})')
     env = pg.evaluate("ch.slice(0, 6).map(c => c.ctl.env)")
@@ -146,11 +147,22 @@ def player(nav, base, telas):
     abrir(pg, base, 'transcritas/AC-DC - Back In Black.mid')
     r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name));
         return { canais: canaisDe(assign[g]).map(i => i + 1), picks: canaisDe(assign[g]).map(i => ch[i].ctl.pick) }; }""")
-    confere(len(r['canais']) == 3 and sorted(r['picks']) == ['hi', 'lo', 'lo2'],
-            f'acorde bem abaixo da voz espalha a guitarra por três flybacks ({r})')
+    confere(len(r['canais']) == 3 and set(r['picks']) == {'div'},
+            f'a guitarra reparte as notas por três flybacks ({r})')
     abrir(pg, base, 'transcritas/Black Sabbath - Iron Man.mid')
-    r = pg.evaluate("() => { const g = tracks.findIndex(t => /guitar/.test(t.name)); return canaisDe(assign[g]).length; }")
-    confere(r == 1, f'topo do acorde na altura da voz não entra, para não mascarar o canto ({r} flyback)')
+    r = pg.evaluate("""() => { const g = tracks.findIndex(t => /guitar/.test(t.name)), v = prio.indexOf(3);
+        const teto = avgPitch(tracks[v]) - 5, arcos = canaisDe(assign[g]);
+        const acima = arcos.slice(1).flatMap(i => ch[i].segs.filter(s => s.n > teto)).length;
+        const notas = arcos.map(i => ch[i].segs.length);
+        return { arcos: arcos.map(i => i + 1), acima, notas }; }""")
+    confere(len(r['arcos']) > 1 and not r['acima'] and all(r['notas']),
+            f'nos arcos extras da guitarra nada fica a menos de uma quarta da voz ({r})')
+    abrir(pg, base, 'transcritas/Victor & Leo - Borboletas.mid')
+    r = pg.evaluate("""() => { const v = prio.indexOf(3), arcos = canaisDe(assign[v]);
+        const media = i => { const s = ch[i].segs; return s.reduce((a, x) => a + x.n, 0) / s.length; };
+        return { nome: tracks[v].name, arcos: arcos.map(i => i + 1), alturas: arcos.map(i => Math.round(media(i))) }; }""")
+    confere(r['nome'] == 'voice' and len(r['arcos']) == 2 and r['arcos'][0] == 1 and r['alturas'][0] > r['alturas'][1],
+            f'a segunda voz da dupla vai para outro arco, e a de cima fica no 1 ({r})')
     abrir(pg, base, 'transcritas/Borboletas.mid')
     pg.click('#presets button:nth-child(1)')      # Montagem fixa, por cima do ajuste salvo antes
     r = pg.evaluate("() => tracks.filter((t, k) => assign[k] >> 4 & 1).map(t => [t.name, prio[tracks.indexOf(t)]])")

@@ -43,7 +43,8 @@ mixer com um módulo por canal e o painel da saída.
 - **Saída serial para ESP32.** Chrome ou Edge. Protocolo em `docs/protocolo-serial.md`. O painel
   "Linhas enviadas" mostra o que vai para a porta, também sem ESP ligado.
 - **Mixer.** Cada canal tem silenciar e solo, ganho, agudo máximo, oitava, que nota tirar do
-  acorde, envelope e dinâmica.
+  acorde (ou "repartir": os arcos com a mesma faixa dividem as notas dela, como as vozes de um
+  teclado), envelope e dinâmica.
 - **Atalhos.** Espaço toca e pausa, setas andam 5 s, Home volta ao início. Arrastar um arquivo
   para a janela abre.
 - **Sem internet.** Funciona sem conexão depois da primeira visita. Em tela pequena os painéis

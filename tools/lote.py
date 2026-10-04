@@ -3,12 +3,18 @@
     python tools/lote.py "https://www.youtube.com/playlist?list=..."
     python tools/lote.py --lista links.txt              # um endereço por linha
     python tools/lote.py --situacao                     # o que já foi, o que falhou, o que falta
+    python tools/lote.py URL --listar                   # só os vídeos, para escrever as listas
+    python tools/lote.py URL --instrumentos-por listas.json
 
 Feito para ficar rodando sem ninguém olhando. Por música:
 
 1. baixa o áudio (yt-dlp) para um cache temporário, que só some depois do MIDI pronto;
-2. roda o transcrever.py num processo à parte, com `--instrumentos auto` e o `large`. Processo à
-   parte de propósito: depois de um erro de CUDA o estado do processo não é confiável, e uma
+2. roda o transcrever.py num processo à parte, com o `large` e a lista de instrumentos da música
+   (`--instrumentos-por`, um .json {id do vídeo: "voice,electric_bass,..."}) ou, sem ela, a
+   detecção automática. A lista certa é o que mais pesa no resultado: é ela que o MuScriptor
+   recebe como condicionamento, e a automática erra o "resto" (em BLOODY STREAM viu órgão no
+   lugar da guitarra). Kickstart My Heart com voz, guitarra distorcida, baixo e bateria saiu
+   perto do Mirelo. Processo à parte de propósito: depois de um erro de CUDA o estado do processo não é confiável, e uma
    música ruim não pode contaminar as seguintes;
 3. se o `large` falhar, tenta de novo de outro jeito: processo novo e a separação em blocos
    de 5 s em vez de 10, que é onde a placa aperta. Não cai para o `medium` — o dono do projeto
@@ -16,7 +22,11 @@ Feito para ficar rodando sem ninguém olhando. Por música:
    `para-o-mirelo.md` na pasta de saída, com o endereço e os instrumentos detectados, para
    rodar à mão no Mirelo marcando aqueles instrumentos; e o lote segue;
 4. mede o aproveitamento em 2 e em 6 flybacks e grava o crédito no creditos.json da pasta:
-   artista e título do YouTube, o endereço, o modelo e os instrumentos detectados.
+   artista e título do YouTube, o endereço, o modelo e os instrumentos;
+5. confere a montagem de 6 flybacks no próprio site (auditar_montagem.py): instrumento sem
+   arco, melodia calada em trecho longo, acorde preso num arco com arco vazio ao lado. Os
+   avisos vão para o log e para o `.lote.json` — é o que olhar antes de publicar, em vez de
+   abrir cada MIDI num editor para ver as notas sobrepostas que o site não mostra.
 
 O estado fica em `.lote.json` na pasta de saída e é gravado depois de cada música: interromper
 e rodar de novo continua de onde parou, e o que já foi não é refeito. O que falhou também não,
@@ -128,7 +138,7 @@ class Falha(RuntimeError):
         self.instrumentos = instrumentos or []
 
 
-def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0, aviso=None):
+def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0, aviso=None, instrumentos='auto'):
     """Roda o transcrever.py à parte. Devolve o relatório, ou levanta Falha com o motivo.
 
     `aviso(etapa, pct)`, se vier, recebe o andamento: a separação ("separando… 40%") e a
@@ -139,7 +149,7 @@ def transcrever(audio, titulo, saida, modelo, duracao, trecho=10.0, aviso=None):
     # larga, só para não deixar uma música travada segurar o lote inteiro
     limite = max(1800, 8 * (duracao or 300))
     cmd = [sys.executable, str(AQUI / 'transcrever.py'), str(audio), '--titulo', titulo,
-           '--saida', str(saida), '--modelo', modelo, '--instrumentos', 'auto', '--relatorio', str(rel),
+           '--saida', str(saida), '--modelo', modelo, '--instrumentos', instrumentos, '--relatorio', str(rel),
            '--trecho', str(trecho)]
     env = dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONUTF8='1')
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
@@ -286,6 +296,16 @@ def creditar(saida, arq, artista, musica, url, modelo, rel):
     return entrada
 
 
+def auditar(arq):
+    """O que a montagem de 6 flybacks deixa de fora nesta música, pelo próprio site. Sem o
+    Playwright, a conferência fica para depois (tools/auditar_montagem.py) e o lote segue."""
+    try:
+        import auditar_montagem as A
+        return A.problemas(A.auditar([arq])[arq])
+    except Exception as ex:
+        return [f'auditoria não rodou: {str(ex)[:120]}']
+
+
 def nome_livre(saida, artista, musica, vid, estado):
     """'Artista - Música', e com o id do vídeo se outro vídeo já usou o mesmo nome."""
     # barra vira hífen (AC/DC -> AC-DC, como na pasta de bandas; "War Pigs / Luke's Wall"), o
@@ -310,6 +330,13 @@ def main():
     ap.add_argument('--refazer-falhas', action='store_true',
                     help='tentar de novo o que foi para a lista do Mirelo ou ficou sem áudio')
     ap.add_argument('--situacao', action='store_true', help='só mostrar o estado do lote')
+    ap.add_argument('--listar', action='store_true',
+                    help='só listar os vídeos (id e título), para escrever a lista de instrumentos')
+    ap.add_argument('--instrumentos-por', metavar='ARQ',
+                    help='.json {id do vídeo: "voice,electric_bass,..."}: a lista de cada música, no lugar '
+                         'da detecção automática. Quem não estiver nele usa a automática')
+    ap.add_argument('--sem-auditoria', action='store_true',
+                    help='não conferir a montagem de 6 flybacks de cada música (auditar_montagem.py)')
     args = ap.parse_args()
 
     saida = Path(args.saida)
@@ -340,6 +367,11 @@ def main():
         except Exception as ex:
             log(f'não consegui ler {e}: {ex}')
     log(f'{len(fila)} vídeos na fila; {sum(1 for v, _ in fila if estado.get(v, {}).get("situacao") == "feito")} já feitos')
+    if args.listar:
+        for vid, titulo_yt in fila:
+            print(f'{vid}\t{titulo_yt}\t{estado.get(vid, {}).get("situacao", "")}')
+        return
+    listas = json.loads(Path(args.instrumentos_por).read_text(encoding='utf-8')) if args.instrumentos_por else {}
 
     novos = 0
     for n, (vid, titulo_yt) in enumerate(fila, 1):
@@ -384,7 +416,8 @@ def main():
             # da segunda em diante, processo novo e separação em blocos menores
             trecho = 10.0 if t == 1 else 5.0
             try:
-                rel = transcrever(audio, titulo, saida, args.modelo, duracao, trecho)
+                rel = transcrever(audio, titulo, saida, args.modelo, duracao, trecho,
+                                  instrumentos=listas.get(vid) or 'auto')
                 log(f'   {args.modelo}: pronto em {(time.time() - inicio) / 60:.1f} min · '
                     f'{", ".join(rel.get("instrumentos") or []) or "sem lista"}')
                 break
@@ -401,6 +434,10 @@ def main():
             log('   foi para a lista do Mirelo')
             continue
         arq = Path(rel['arquivo'])
+        if listas.get(vid):
+            rel['origem'] = (f'MuScriptor {rel["modelo"]} (Kyutai/Mirelo) rodado localmente, transcrição automática '
+                             f'do áudio, sem transcritor humano; instrumentos escolhidos à mão: '
+                             f'{", ".join(rel.get("instrumentos") or []).replace("_", " ")}')
         entrada = creditar(saida, arq, artista, musica, url, rel['modelo'], rel)
         atual.update(situacao='feito', modelo=rel['modelo'], arquivo=arq.name,
                      instrumentos=rel.get('instrumentos'), segundos=rel.get('segundos'),
@@ -411,6 +448,12 @@ def main():
         audio.unlink(missing_ok=True)
         novos += 1
         log(f'   cabe em 2: {entrada["aproveitamento"]}% · em 6: {entrada["aproveitamento6"]}% · voz: {entrada["vocal"]}')
+        if not args.sem_auditoria:
+            avisos = auditar(arq)
+            atual['avisos'] = avisos
+            guardar()
+            for a in avisos:
+                log(f'   ! {a}')
 
     from collections import Counter
     log('fim do lote: ' + ', '.join(f'{k} {v}' for k, v in Counter(v['situacao'] for v in estado.values()).items()))

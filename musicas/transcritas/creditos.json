@@ -207,5 +207,29 @@
   "aproveitamento": 49,
   "aproveitamento6": 64,
   "estilo": "Metal"
+ },
+ "Mötley Crüe - Kickstart My Heart.mid": {
+  "autor": "Mötley Crüe",
+  "artista": "Mötley Crüe",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Mötley Crüe; \"Kickstart My Heart\"",
+  "transcricao": "MuScriptor pelo Mirelo (interface web, mirelo.ai), transcrição automática do áudio, sem transcritor humano; instrumentos marcados à mão: distorted electric guitar, electric bass, drums, voice",
+  "fonte": "https://www.youtube.com/watch?v=CzRFOP-lDG8",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 56,
+  "aproveitamento6": 78,
+  "estilo": "Metal"
+ },
+ "Dave Rodgers - Deja Vu.mid": {
+  "autor": "Dave Rodgers",
+  "artista": "Dave Rodgers",
+  "licenca": "obra protegida — uso educacional sem fins lucrativos",
+  "credito": "interpretação de Dave Rodgers; \"Deja Vu\"",
+  "transcricao": "MuScriptor medium (Kyutai/Mirelo) rodado no site da Kyutai (muscriptor.kyutai.org), transcrição automática do áudio, sem transcritor humano; instrumentos marcados à mão: voice, synth pad, electric piano, electric bass, drums (o synth pad não saiu)",
+  "fonte": "https://www.youtube.com/watch?v=jFsQS4AhZms",
+  "vocal": "sim · faixa \"voice\"",
+  "aproveitamento": 78,
+  "aproveitamento6": 63,
+  "estilo": "Eletrônica"
  }
 }

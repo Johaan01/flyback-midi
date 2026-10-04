@@ -30,7 +30,7 @@ MANUAL = {'coda': 'Anime', 'baitaca': 'Gaúcha', 'purcell henry': 'Baroque',
           # grafados de outro jeito no MusicBrainz ("Daryl Hall & John Oates")
           'hall and oates': 'Pop', 'bill haley and the comets': 'Rock', 'presidents of the usa': 'Rock',
           '1910 fruitgum company': 'Pop', 'all 4 one': 'Soul', 'manhattans': 'Soul', 'desree': 'Soul',
-          'marusha': 'Eletrônica'}
+          'marusha': 'Eletrônica', 'dave rodgers': 'Eletrônica'}
 
 
 def main():
