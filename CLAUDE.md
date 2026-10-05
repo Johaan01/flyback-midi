@@ -34,6 +34,7 @@ Arquivos de apoio, fora das páginas:
 | `tools/servidor.py` | O outro lado da janela "Baixar músicas": busca no YouTube, fila, download, transcrição na GPU daqui ou no Mirelo, crédito e push para o GitHub, com o andamento de cada etapa. Só biblioteca padrão; chama `lote.py` e `mirelo.py` |
 | `tools/mirelo.py` | Transcrição pela API do Mirelo: sobe o áudio, pede a detecção de instrumentos, cria o job e baixa o MIDI. A chave fica só na máquina do servidor |
 | `tools/generos.py` | Preenche o gênero (`estilo`) de bandas e transcritas pelo MusicBrainz, uma consulta por artista; o que ele não classifica vai em `MANUAL` |
+| `firmware/flyback-esp32/` | O firmware do ESP32: recebe o protocolo serial e toca cada canal pelo LEDC. A lógica do circuito (`LOGICA_INVERTIDA`) é uma constante no topo |
 | `USO-EDUCACIONAL.md` | Finalidade do acervo, atribuição e canal de remoção. É o documento que sustenta a pasta `bandas` |
 | `tools/servir.py` | Servidor local para teste, inclusive pelo celular na mesma rede |
 | `tools/testar_site.py` | Abre o `index.html` num Chrome de verdade (Playwright) e exercita os dois modos de saída, o roteamento, o WAV e a serial com porta simulada. Opcional; precisa de `pip install playwright` |
@@ -265,7 +266,7 @@ Só no modo ESP. Web Serial, texto por linha, eventos com carimbo em ms enviados
 
 O painel da saída ESP32 tem o número de flybacks, a placa (ESP32 ou ESP32-S3, cada uma com a lista de pinos livres em módulo comum e seis padrão), um seletor de pino por canal que marca pino repetido, um botão "testar" por canal (um lá de 0,6 s, para achar qual flyback é qual) e o registro das linhas enviadas. **O registro funciona sem ESP conectado**: com ele aberto, tocar gera o mesmo fluxo que iria para a porta, e é o que serve para escrever e conferir o firmware.
 
-Testado com porta simulada em `tools/testar_site.py`; ainda não há firmware.
+Testado com porta simulada em `tools/testar_site.py`. O firmware está em `firmware/flyback-esp32/` (descrito no fim do protocolo). A página manda o mapa de pinos também antes de cada `R`, porque muitas placas reiniciam ao abrir a porta e o mapa mandado na conexão se perdia no boot; o firmware, por sua vez, já nasce com os pinos padrão da página. A polaridade do circuito (o NPN no pino 4 do 555 corta o arco com o GPIO em ALTO) fica no firmware, e não na página: o silêncio tem de estar certo também sem ela, no boot e com o navegador fechado.
 
 ### tom.html — gerador de tom
 
@@ -526,7 +527,7 @@ andamento na janela, e "abrir" tocando o MIDI do servidor.
 
 ## O que está aberto
 
-- **Firmware** que consuma o protocolo serial, incluindo `P` para o mapa de pinos. O lado do navegador está pronto e testado com porta simulada; o painel "Linhas enviadas" mostra o fluxo sem ESP ligado.
+- **Firmware na bancada.** `firmware/flyback-esp32/` foi escrito pelo protocolo e ainda não rodou numa placa. O primeiro teste é num ESP32 comum com dois flybacks e lógica invertida.
 - **Saída multicanal pelo áudio.** Com uma interface de áudio de 6 saídas, o Web Audio poderia acionar seis flybacks sem ESP (`destination.channelCount`). O WAV de N canais já existe; a saída ao vivo não.
 - **Receber arquivo compartilhado** de outro aplicativo no celular (Web Share Target). Hoje se abre pelo seletor de arquivos ou pelo acervo.
 

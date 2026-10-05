@@ -324,7 +324,8 @@ def serial(nav, base):
     pg.click('#play'); time.sleep(1.2); pg.click('#play'); time.sleep(.2)
     l = linhas()
     t = [int(x.split()[2]) for x in l if x.startswith('N ')]
-    confere(l[0] == 'R' and l[-1] == 'X' and len(t) > 5 and t == sorted(t), f'tocar: R, {len(t)} notas em ordem, X')
+    confere(l[:7] == ['P 0 4', 'P 1 21', 'P 2 6', 'P 3 7', 'P 4 15', 'P 5 16', 'R'] and l[-1] == 'X' and len(t) > 5 and t == sorted(t),
+            f'tocar: o mapa de pinos de novo, R, {len(t)} notas em ordem, X')
     pg.evaluate('window.__serial.bytes = ""')
     pg.select_option('#espN', '2')
     l = linhas()

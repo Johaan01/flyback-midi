@@ -2494,6 +2494,7 @@ function serialStart(at){
   });
   ev.sort((a, b) => a.t - b.t);
   ser.q = ev; ser.i = 0; ser.at = at; ser.base = actx.currentTime;
+  serialPinos();       /* de novo a cada começo: o ESP pode ter reiniciado ao abrir a porta */
   serialWrite('R');
   const pump = () => {
     if (!playing || !serialAtivo()) return;
@@ -2509,15 +2510,16 @@ function serialStart(at){
   pump(); ser.timer = setInterval(pump, 20);
 }
 function serialHalt(){ clearInterval(ser.timer); ser.timer = 0; serialWrite('X'); }
-/* Qual GPIO cada canal aciona. Vai a cada conexão e a cada mudança; canal acima do número de
-   flybacks vai com -1, que libera o pino. */
+/* Qual GPIO cada canal aciona. Vai a cada conexão, a cada mudança e antes de cada "R" de tocar ou
+   testar: muitas placas ESP32 reiniciam quando a porta serial é aberta, e o que chega durante o
+   boot se perde. Canal acima do número de flybacks vai com -1, que libera o pino. */
 function serialPinos(){
   if (!serialAtivo()) return;
   for (let c = 0; c < MAX; c++) serialWrite('P ' + c + ' ' + (c < esp.n ? esp.pinos[c] : -1));
 }
 function testar(i){
   if (!ser.writer || playing) return;
-  serialWrite('R'); serialWrite('N ' + i + ' 0 440.00'); serialWrite('F ' + i + ' 600');
+  serialPinos(); serialWrite('R'); serialWrite('N ' + i + ' 0 440.00'); serialWrite('F ' + i + ' 600');
 }
 function atualizarTestes(){ document.querySelectorAll('#pinos button').forEach(b => b.disabled = !ser.writer || playing); }
 async function serialClose(lost){
