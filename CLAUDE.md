@@ -527,7 +527,7 @@ andamento na janela, e "abrir" tocando o MIDI do servidor.
 
 ## O que está aberto
 
-- **Firmware na bancada.** `firmware/flyback-esp32/` foi escrito pelo protocolo e ainda não rodou numa placa. O primeiro teste é num ESP32 comum com dois flybacks e lógica invertida.
+- **Firmware na bancada.** `firmware/flyback-esp32/` foi escrito pelo protocolo, sem compilar, e ainda não rodou numa placa. O primeiro teste é num ESP32 comum com dois flybacks V3.5 (lógica invertida), feito no computador que tem o ESP: o roteiro, para o Claude Code de lá seguir, é `docs/bancada-esp32.md`, que tem no fim uma seção de resultados — é por ela que esta máquina fica sabendo o que aconteceu. `firmware/testar_serial.py` testa o ESP pela serial sem o site. Depois vem o envelope no arco da placa V5 (`docs/envelope-v5.md`), ainda sem placa: protocolo v2, ENV por PWM, calibração.
 - **Saída multicanal pelo áudio.** Com uma interface de áudio de 6 saídas, o Web Audio poderia acionar seis flybacks sem ESP (`destination.channelCount`). O WAV de N canais já existe; a saída ao vivo não.
 - **Receber arquivo compartilhado** de outro aplicativo no celular (Web Share Target). Hoje se abre pelo seletor de arquivos ou pelo acervo.
 
