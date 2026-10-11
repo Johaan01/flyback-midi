@@ -14,13 +14,14 @@
 
 // ------------------------------------------------------------------ ajuste para o seu circuito
 
-// true:  GPIO em ALTO CORTA o arco. É o circuito com um NPN aterrando o pino 4 (reset) do 555:
-//        com o pino em ALTO o transistor conduz e o 555 para; com o pino em BAIXO, ou sem sinal
-//        nenhum, o 555 oscila e o arco fica ligado.
-// false: GPIO em ALTO LIBERA o arco.
+// false: GPIO em ALTO LIBERA o arco. É a placa V3.6: a NOTA entra pelo 6N136 e passa pelo Q1 até o
+//        RESET do 555, e as duas inversões se anulam. ESP desligado, em boot ou com o cabo solto
+//        deixa o LED do 6N136 apagado, e o arco cortado: o lado seguro sozinho.
+// true:  GPIO em ALTO CORTA o arco. É a V3.5 antiga, com um NPN direto no pino 4 do 555: sem
+//        sinal nenhum, o 555 oscila e o arco fica ligado.
 // A polaridade fica aqui, e não na página, porque o silêncio tem de estar certo também quando a
 // página não está conectada: no boot, com o navegador fechado, com a aba travada.
-const bool LOGICA_INVERTIDA = true;
+const bool LOGICA_INVERTIDA = false;
 
 const uint32_t BAUD = 115200;        // o mesmo escolhido na página (115200 é o padrão dela)
 
@@ -36,6 +37,10 @@ const int PINOS_PADRAO[6] = {18, 19, 21, 22, 23, 25};
 // Nota que passa disso sem nenhum evento novo no canal é cortada: se o navegador travar no
 // meio de uma nota, o "F" dela nunca chega, e o arco não pode ficar ligado para sempre.
 const uint32_t NOTA_MAXIMA_MS = 20000;
+
+// "D c d f", o tom contínuo do gerador de tom: dura isto e cada "D" novo renova. Se a página parar
+// de repetir (aba travada, cabo solto), o arco apaga sozinho.
+const uint32_t DIRETO_MS = 2000;
 
 // ------------------------------------------------------------------ geração do tom (LEDC)
 // Cada canal tem um timer só dele, para cada um ter a sua frequência. O ESP32 comum tem 4
@@ -63,7 +68,8 @@ const int FILA = 96;
 struct Canal {
   int pino = -1;
   bool soando = false;
-  uint32_t desde = 0;
+  bool direto = false;                         // tocando um "D"
+  uint32_t desde = 0, diretoAte = 0;
   Evento fila[FILA];
   int n = 0;
 };
@@ -82,9 +88,25 @@ static void duty(int c, uint32_t d) {
 }
 
 static void silencia(int c) {
+  canal[c].direto = false;
   if (canal[c].pino < 0) return;
   duty(c, SILENCIO);
   canal[c].soando = false;
+}
+
+// "D c d f": tom contínuo de f Hz com o arco aberto d ‰ de cada período (500 = onda quadrada, o
+// volume máximo; menos que isso, mais baixo). d = 0 termina o tom. Esvazia a fila do canal.
+static void tomDireto(int c, int d, float f) {
+  if (c < 0 || c > 5 || canal[c].pino < 0) return;
+  Canal &k = canal[c];
+  k.n = 0;
+  uint32_t hz = (uint32_t)lroundf(f);
+  if (d <= 0 || hz < 10 || ledc_set_freq(modoDe(c), timerDe(c), hz) != ESP_OK) { silencia(c); return; }
+  if (d > 900) d = 900;
+  uint32_t aberto = (uint32_t)d * CHEIO / 1000;
+  duty(c, LOGICA_INVERTIDA ? CHEIO - aberto : aberto);
+  k.soando = true; k.direto = true;
+  k.desde = millis(); k.diretoAte = k.desde + DIRETO_MS;
 }
 
 static void toca(int c, float f) {
@@ -146,6 +168,7 @@ static void fixaPino(int c, int g) {
 static void enfileira(int c, uint32_t quando, float f) {
   if (c < 0 || c > 5 || canal[c].pino < 0) return;
   Canal &k = canal[c];
+  if (k.direto) silencia(c);                   // nota de música cancela o tom contínuo
   if (k.n >= FILA) { perdidos++; return; }
   int i = k.n;
   while (i > 0 && (int32_t)(k.fila[i - 1].quando - quando) > 0) { k.fila[i] = k.fila[i - 1]; i--; }
@@ -163,7 +186,8 @@ static void executa() {
       k.n--;
       if (e.f > 0) toca(c, e.f); else silencia(c);
     }
-    if (k.soando && !k.n && agora - k.desde > NOTA_MAXIMA_MS) silencia(c);
+    if (k.direto) { if ((int32_t)(agora - k.diretoAte) > 0) silencia(c); }
+    else if (k.soando && !k.n && agora - k.desde > NOTA_MAXIMA_MS) silencia(c);
   }
 }
 
@@ -175,6 +199,7 @@ static void trata(char *s) {
     case 'X': for (int i = 0; i < 6; i++) { silencia(i); canal[i].n = 0; } break;
     case 'N': if (sscanf(s + 1, "%d %ld %f", &c, &t, &f) == 3 && t >= 0) enfileira(c, t0 + (uint32_t)t, f); break;
     case 'F': if (sscanf(s + 1, "%d %ld", &c, &t) == 2 && t >= 0) enfileira(c, t0 + (uint32_t)t, 0); break;
+    case 'D': { int d; if (sscanf(s + 1, "%d %d %f", &c, &d, &f) == 3) tomDireto(c, d, f); break; }
     case '?':                                  // para conferir pelo monitor serial
       Serial.printf("lógica %s · %d canais · pinos", LOGICA_INVERTIDA ? "invertida" : "direta", CANAIS);
       for (int i = 0; i < 6; i++) Serial.printf(" %d", canal[i].pino);

@@ -339,6 +339,35 @@ def serial(nav, base):
     pg.close()
 
 
+def tom(nav, base):
+    print('gerador de tom pelo ESP (V3.6), com porta simulada')
+    pg = nav.new_page(viewport={'width': 1300, 'height': 900})
+    erros = []
+    pg.on('pageerror', lambda e: erros.append(str(e)))
+    pg.add_init_script(SERIAL_FALSA)
+    pg.goto(base + 'tom.html')
+    pg.evaluate("localStorage.clear(); localStorage.setItem('flyback:esp', JSON.stringify({placa: 'esp32', pinos: [18, 19, 21, 22, 23, 25]}))")
+    pg.goto(base + 'tom.html')
+    linhas = lambda: pg.evaluate('window.__serial.bytes').splitlines()
+    pg.click('#modoEsp'); pg.click('#serGo'); time.sleep(.3)
+    confere(linhas()[:7] == ['X', 'P 0 18', 'P 1 19', 'P 2 21', 'P 3 22', 'P 4 23', 'P 5 25'],
+            'ao conectar: X e os pinos do painel do player')
+    pg.evaluate("vol = 100; ch[0].ganho = 100; mostrarTudo()")
+    pg.click('#play'); time.sleep(1.3)
+    d = [x for x in linhas() if x == 'D 0 500 440.00']
+    confere(len(d) >= 3, f'tocando, o "D" do canal se repete a cada 500 ms, com fração 50% no volume máximo ({len(d)})')
+    confere(pg.evaluate('ch[0].gn.gain.value') == 0 and pg.is_disabled('#w0'),
+            'pelo ESP o áudio do computador fica mudo e a forma de onda, travada em quadrada')
+    pg.select_option('#fb0', '2'); time.sleep(.2)
+    confere(linhas()[-2:] == ['D 0 0 440.00', 'D 2 500 440.00'], 'trocar o flyback apaga o anterior e acende o novo')
+    pg.click('#play'); time.sleep(.3)
+    confere(linhas()[-1] == 'D 2 0 440.00', 'parar manda fração 0')
+    pg.click('#modoAudio'); time.sleep(.2)
+    confere(linhas()[-1] == 'X', 'voltar ao áudio silencia o ESP')
+    confere(not erros, 'nenhum erro na página')
+    pg.close()
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--telas', action='store_true', help='guardar capturas de tela')
@@ -363,6 +392,7 @@ def main():
                 sys.exit('não achei Chrome nem Edge instalados')
             player(nav, base, args.telas)
             serial(nav, base)
+            tom(nav, base)
             nav.close()
     finally:
         srv.shutdown()

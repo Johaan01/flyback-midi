@@ -25,6 +25,7 @@ computador.
 | `N c t f` | No instante `t` ms, o canal `c` passa a tocar `f` Hz. |
 | `F c t` | No instante `t` ms, o canal `c` silencia. |
 | `X` | Silencia todos os canais agora e esvazia as filas. |
+| `D c d f` | Tom contínuo, do gerador de tom: o canal `c` toca `f` Hz com o arco aberto `d` ‰ de cada período (500 = onda quadrada, o máximo; 0 termina). Dura 2 s, e cada `D` novo renova: se a página parar, o arco apaga sozinho. Esvazia a fila do canal; `N`, `F`, `R` ou `X` cancelam. |
 
 - `c` é o índice do canal, de `0` a `5` — o "Canal 1" da página é o `0`.
 - `t` é inteiro, em milissegundos desde o último `R`.
@@ -126,17 +127,22 @@ Dev Module" (o ESP32 comum, o "S1" de `hardware-decisoes.md`). Só usa o que vem
 - **Nota pelo LEDC**, um timer por canal: cada canal tem a sua frequência. O ESP32 comum tem 8
   timers e cobre os 6 canais; o S3 tem 4, e lá só os canais 1 a 4 tocam. Onda quadrada de 50%,
   resolução de 13 bits — de 9,5 Hz a 9,7 kHz; com 10 bits nada abaixo de 76 Hz sairia.
-- **Lógica invertida** é a constante `LOGICA_INVERTIDA`, no topo do sketch: `true` quando o GPIO
-  em ALTO corta o arco (o NPN que aterra o pino 4 do 555). Fica no firmware, e não na página,
-  porque o silêncio tem de estar certo também sem a página: no boot, com o navegador fechado, com
-  a aba travada. Na nota, a polaridade não muda nada (50% é 50%); só o silêncio muda.
+- **Polaridade** é a constante `LOGICA_INVERTIDA`, no topo do sketch. Na placa **V3.6** é
+  `false`: a nota entra pelo 6N136 e passa pelo Q1 até o RESET do 555, as duas inversões se
+  anulam, e GPIO em ALTO libera o arco. Na V3.5 antiga (um NPN direto no pino 4) é `true`. Fica no
+  firmware, e não na página, porque o silêncio tem de estar certo também sem a página: no boot,
+  com o navegador fechado, com a aba travada. Na nota, a polaridade não muda nada (50% é 50%).
+- **Tom contínuo** (`D`): o gerador de tom (`tom.html`), no modo "ESP32 pela serial", manda um
+  `D` a cada 500 ms por canal tocando; o volume da página vira a fração aberta d, e o volume do
+  arco segue sen(π·d), máximo em 50%.
 - **Pinos padrão** iguais aos da página (18, 19, 21, 22, 23, 25 no ESP32), parados no silêncio
   antes até de a serial abrir: se o mapa se perder no boot, o firmware já está no lugar.
 - **Nota presa**: passou de 20 s sem nenhum evento novo no canal, silencia — é o caso de o
   navegador travar no meio de uma nota e o `F` nunca chegar.
 - `?` pelo monitor serial responde a lógica, os pinos e os eventos perdidos.
 
-**Cuidado com a lógica invertida.** Nesse circuito, a falta de sinal libera o arco: enquanto o ESP
+**Na V3.6 o lado seguro é o natural:** ESP desligado, em boot ou com o cabo solto deixa o LED do
+6N136 apagado, e o arco cortado. **Na V3.5 antiga é o contrário:** a falta de sinal libera o arco: enquanto o ESP
 reinicia (uns 300 ms), trava ou está desligado com a placa de potência ligada, o 555 oscila e o
 flyback fica ligado direto. Ligue a potência só com o ESP já rodando, desligue antes de tirar o
 USB, e prefira um resistor de pull-up (10 kΩ ao 3,3 V) no pino, que mantém o arco cortado durante

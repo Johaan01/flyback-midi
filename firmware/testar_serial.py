@@ -5,9 +5,9 @@
     python firmware/testar_serial.py COM5 --canais 2 --baud 115200
 
 Espera o "flyback-esp32 pronto" do boot (abrir a porta reinicia muitas placas), pergunta o
-estado com "?", toca um lá de 1 s em cada canal e uma escala curta no canal 1, e termina com "X"
-(silêncio). Com o osciloscópio no GPIO de cada canal: parado em ALTO no silêncio (lógica
-invertida), onda quadrada de 50% na nota. Feche este script antes de conectar pelo site: só um
+estado com "?", toca um lá de 1 s em cada canal, uma escala curta no canal 1 e um tom contínuo de
+3 s pelo "D" (o do gerador de tom), e termina com "X" (silêncio). Com o osciloscópio no GPIO de
+cada canal: parado em BAIXO no silêncio (placa V3.6, lógica direta), onda quadrada de 50% na nota. Feche este script antes de conectar pelo site: só um
 programa usa a porta por vez.
 """
 import argparse
@@ -61,6 +61,11 @@ def main():
         manda(f'N 0 {i * 300} {f:.2f}')
     manda(f'F 0 {len(ESCALA) * 300}')
     le(len(ESCALA) * 0.3 + 0.5)
+    print('canal 1: tom contínuo de 220 Hz por 3 s, com o "D" renovado a cada 0,5 s')
+    for _ in range(6):
+        manda('D 0 500 220.00'); le(0.5)
+    print('sem renovar: o ESP tem de apagar sozinho em 2 s')
+    le(2.5)
     manda('X'); manda('?'); le(0.5)
     s.close()
     print('pronto. Se ouviu (ou viu no osciloscópio) cada canal e a escala, o firmware está bom.')

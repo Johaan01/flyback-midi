@@ -8,29 +8,40 @@ esperado e deve ser corrigido no próprio `firmware/flyback-esp32/flyback-esp32.
 Ao terminar, anote o resultado em **Resultados**, no fim deste arquivo, e faça commit e push:
 é assim que a sessão do outro computador fica sabendo o que aconteceu.
 
+**Mudou em 11/out:** o teste passou a ser na placa **V3.6** (lógica direta). O firmware veio com
+`LOGICA_INVERTIDA = false` e ganhou a mensagem `D` (tom contínuo), e o gerador de tom (`tom.html`)
+ganhou o modo "ESP32 pela serial". Se este repositório foi clonado antes, rode `git pull` antes
+do passo 2.
+
 ## O teste de agora
 
 - **Placa:** ESP32 comum ("ESP32 Dev Module"; o "S1" de `hardware-decisoes.md`).
-- **Flybacks:** 2, placas **V3.5** — NE555 com um NPN aterrando o pino 4 (reset). Lógica
-  **invertida**: GPIO em ALTO corta o arco; BAIXO, solto ou ESP desligado, o arco fica livre.
-  É o `LOGICA_INVERTIDA = true` do firmware, que já vem assim.
+- **Flybacks:** 2, placas de controle **V3.6** — a NOTA entra pelo optoacoplador 6N136 e
+  passa pelo Q1 até o RESET do 555 monoestável (U13). As duas inversões se anulam: lógica
+  **direta**, GPIO em ALTO libera o arco; BAIXO, solto, em boot ou ESP desligado, o arco fica
+  cortado. É o `LOGICA_INVERTIDA = false` do firmware, que já vem assim.
+- **Áudio não serve:** a entrada da V3.6 é lógica, e o P2 do computador não a aciona. Tudo passa
+  pelo ESP: o player e o gerador de tom.
 - **Pinos:** canal 1 no GPIO 18, canal 2 no GPIO 19 (os padrões do site e do firmware).
-- **Firmware:** o v1, que só liga e desliga o arco na frequência da nota. O envelope
-  (`docs/envelope-v5.md`) é para a placa V5, que ainda não existe; não faz parte deste teste.
+- **Firmware:** o v1, que liga e desliga o arco na frequência da nota, mais o `D` do gerador de
+  tom: tom contínuo com a fração aberta de cada período (500 ‰ = onda quadrada, o volume
+  máximo), que apaga sozinho 2 s depois do último `D`. O envelope (`docs/envelope-v5.md`) é para
+  a placa V5, que ainda não existe; não faz parte deste teste.
 
 Contexto para quem não conhece o projeto: `CLAUDE.md` (seção "Saída serial") e
 `docs/protocolo-serial.md`, que descreve as mensagens e, no fim, o firmware.
 
 ## Segurança antes de tudo
 
-Com a lógica invertida, **falta de sinal libera o arco**: durante o boot do ESP (~300 ms), com o
-ESP travado ou desligado, o 555 oscila e o flyback fica ligado direto.
+Na V3.6 **falta de sinal corta o arco**: com o ESP em boot, travado, desligado ou com o cabo
+solto, o LED do 6N136 fica apagado e o 555 parado. O que liga o arco é o GPIO em ALTO.
 
 - Os passos 1 a 6 são **sem a placa de potência ligada** — o ESP sozinho, ou com o osciloscópio
   ou um LED (com resistor) nos GPIO 18 e 19.
-- Ligue a potência só com o ESP já rodando; desligue a potência antes de tirar o USB.
-- Recomendado: resistor de 10 kΩ de cada GPIO de nota ao 3,3 V, que segura o arco cortado
-  durante o boot.
+- Mesmo assim: ligue a potência com o ESP já rodando e desligue antes de tirar o USB. Um firmware
+  com `LOGICA_INVERTIDA = true` gravado por engano deixaria os GPIO em ALTO parados, com o arco
+  ligado direto — confira a linha "lógica direta" no passo 5 antes de ligar a potência.
+- Não é preciso pull-up nos GPIO de nota (era para a V3.5). O R5 da placa fica.
 
 ## 1. Ferramentas
 
@@ -85,10 +96,12 @@ python firmware/testar_serial.py COM5
 
 Esperado:
 
-- `← flyback-esp32 pronto · lógica invertida (ALTO corta o arco) · 6 canais`
-- a resposta do `?` com os pinos `18 19 21 22 23 25`
-- no osciloscópio (ou no LED): GPIO 18 e 19 **em ALTO parados**; onda quadrada de 440 Hz e 50%
-  por 1 s em cada um, um de cada vez; depois a escala no 18; no fim, ALTO de novo.
+- `← flyback-esp32 pronto · lógica direta (ALTO libera o arco) · 6 canais`
+- a resposta do `?` com `lógica direta` e os pinos `18 19 21 22 23 25`
+- no osciloscópio (ou no LED): GPIO 18 e 19 **em BAIXO parados**; onda quadrada de 440 Hz e 50%
+  por 1 s em cada um, um de cada vez; depois a escala no 18; depois 220 Hz no 18 por uns 3 s
+  (o `D` renovado) e, sem renovar, **BAIXO de novo em até 2 s** — é o desligamento automático do
+  tom contínuo; no fim, BAIXO.
 
 O script fecha a porta ao terminar. Só um programa usa a porta por vez: feche monitor serial,
 Arduino IDE ou o próprio script antes do passo 7.
@@ -104,11 +117,22 @@ protocolo funcionam digitadas: `R`, `N 0 0 440.00`, `F 0 2000`, `X`, `?`.
 2. Painel de saída: **Flybacks 2**, **Placa ESP32**, pinos 18 e 19, 115200, **Conectar ESP32**.
 3. "testar" em cada canal: um lá de 0,6 s.
 4. Abrir uma música e tocar. Com 2 flybacks a serial manda só os canais 1 e 2.
+5. Desconectar no player (só uma página usa a porta por vez) e abrir o **gerador de tom**
+   (https://johaan01.github.io/flyback-midi/tom.html). Em "Saída", **ESP32 pela serial** →
+   **Conectar ESP32**. Ele usa os pinos do painel do player.
+6. Canal 1 no flyback 1, ▶: tom contínuo no GPIO 18, na frequência do slider. Ligar o canal 2,
+   com o flyback 2: o GPIO 19 junto, na frequência dele. O volume de cada canal vira a fração
+   aberta ("aberto 50%" no volume máximo; menos volume, pulso mais estreito). Trocar o flyback
+   de um canal move o tom para o outro GPIO. Fechar a aba com o tom tocando: o ESP apaga em 2 s.
 
 ## 8. Com os flybacks
 
 Só depois de 5 e 7 funcionarem. ESP rodando e conectado → ligar a potência → "testar" →
 música → parar → desligar a potência → só então tirar o USB.
+
+Com a potência ligada, o gerador de tom pelo ESP é o jeito de achar o vale de cada flyback e
+medir: frequência fixa num canal por vez, varredura, e o volume (a fração aberta) para ver quanto
+o arco perde abaixo de 50%. Anote em Resultados o que ouvir e medir em cada canal.
 
 ## Resultados
 
