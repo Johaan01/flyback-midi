@@ -133,7 +133,7 @@ Dev Module" (o ESP32 comum, o "S1" de `hardware-decisoes.md`). Só usa o que vem
   firmware, e não na página, porque o silêncio tem de estar certo também sem a página: no boot,
   com o navegador fechado, com a aba travada. Na nota, a polaridade não muda nada (50% é 50%).
 - **Tom contínuo** (`D`): o gerador de tom (`tom.html`), no modo "ESP32 pela serial", manda um
-  `D` a cada 500 ms por canal tocando; o volume da página vira a fração aberta d, e o volume do
+  `D` a cada 500 ms para a saída escolhida, uma por vez; o volume da página vira a fração aberta d, e o volume do
   arco segue sen(π·d), máximo em 50%.
 - **Pinos padrão** iguais aos da página (18, 19, 21, 22, 23, 25 no ESP32), parados no silêncio
   antes até de a serial abrir: se o mapa se perder no boot, o firmware já está no lugar.

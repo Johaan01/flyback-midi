@@ -120,10 +120,10 @@ protocolo funcionam digitadas: `R`, `N 0 0 440.00`, `F 0 2000`, `X`, `?`.
 5. Desconectar no player (só uma página usa a porta por vez) e abrir o **gerador de tom**
    (https://johaan01.github.io/flyback-midi/tom.html). Em "Saída", **ESP32 pela serial** →
    **Conectar ESP32**. Ele usa os pinos do painel do player.
-6. Canal 1 no flyback 1, ▶: tom contínuo no GPIO 18, na frequência do slider. Ligar o canal 2,
-   com o flyback 2: o GPIO 19 junto, na frequência dele. O volume de cada canal vira a fração
-   aberta ("aberto 50%" no volume máximo; menos volume, pulso mais estreito). Trocar o flyback
-   de um canal move o tom para o outro GPIO. Fechar a aba com o tom tocando: o ESP apaga em 2 s.
+6. Pelo ESP o gerador tem um canal só. Saída 1, ▶: tom contínuo no GPIO 18, na frequência do
+   slider; o osciloscópio à direita desenha o pulso que sai no pino. O volume vira a fração
+   aberta ("aberto 50%" no volume máximo; menos volume, pulso mais estreito). Escolher a saída 2
+   move o tom para o GPIO 19 e apaga o 18. Fechar a aba com o tom tocando: o ESP apaga em 2 s.
 
 ## 8. Com os flybacks
 
