@@ -356,10 +356,13 @@ def tom(nav, base):
     pg.click('#play'); time.sleep(1.3)
     d = [x for x in linhas() if x == 'D 0 500 440.00']
     confere(len(d) >= 3, f'tocando, o "D" do canal se repete a cada 500 ms, com fração 50% no volume máximo ({len(d)})')
-    confere(pg.evaluate('ch[0].gn.gain.value') == 0 and pg.is_disabled('#w0'),
-            'pelo ESP o áudio do computador fica mudo e a forma de onda, travada em quadrada')
-    pg.select_option('#fb0', '2'); time.sleep(.2)
-    confere(linhas()[-2:] == ['D 0 0 440.00', 'D 2 500 440.00'], 'trocar o flyback apaga o anterior e acende o novo')
+    confere(pg.evaluate('ch[0].gn.gain.value') == 0 and not pg.is_visible('#w0'),
+            'pelo ESP o áudio do computador fica mudo e a forma de onda some: é sempre quadrada')
+    caixa = lambda sel: pg.locator(sel).bounding_box()
+    confere(not pg.is_visible('#on1') and not pg.is_visible('#g1') and caixa('#cv')['x'] > caixa('#fbs')['x'] + caixa('#fbs')['width'],
+            'pelo ESP um canal só: a saída e os controles à esquerda, o osciloscópio à direita')
+    pg.click('#fbs [data-fb="2"]'); time.sleep(.2)
+    confere(linhas()[-2:] == ['D 0 0 440.00', 'D 2 500 440.00'], 'trocar a saída apaga a anterior e acende a nova')
     pg.click('#play'); time.sleep(.3)
     confere(linhas()[-1] == 'D 2 0 440.00', 'parar manda fração 0')
     pg.click('#modoAudio'); time.sleep(.2)

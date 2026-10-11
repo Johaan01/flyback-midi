@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#041e3c">
-<meta name="description" content="Gerador de tom contínuo em dois canais, um para cada flyback, pelo áudio do computador ou pelo ESP32: frequência livre no slider, forma de onda à escolha e varredura.">
+<meta name="description" content="Gerador de tom contínuo para os flybacks, em dois canais pelo áudio do computador ou numa saída do ESP32: frequência livre no slider, forma de onda à escolha e varredura.">
 <title>Gerador de tom</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icones/icone.svg" type="image/svg+xml">
@@ -124,6 +124,26 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
 .saida .linha{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:12px;font-size:13px;color:var(--dim)}
 .saida .linha select{width:auto}
 .saida .linha label{display:flex;align-items:center;gap:6px}
+.fbs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:4px}
+.fbs button{display:flex;flex-direction:column;align-items:center;padding:6px 2px;font-size:15px;font-weight:500;line-height:1.2}
+.fbs button small{font-size:11px;font-weight:400;color:var(--dim);font-family:"IBM Plex Mono",monospace}
+.fbs button[aria-pressed=true]{background:var(--panel);border-color:var(--ch1)}
+.soEsp{display:none}
+/* modo ESP: um canal só, a saída do ESP e os controles à esquerda, o pulso do GPIO à direita */
+body.esp .soEsp{display:block}
+body.esp .soAudio,body.esp .ch.b,body.esp .chip.b,body.esp .note.b{display:none}
+body.esp .palco{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:stretch}
+body.esp .palco .screen{order:2;min-height:240px}
+body.esp .palco #cv{position:absolute;inset:0;height:100%}
+body.esp .palco .chans{order:1;display:block;margin-top:0}
+body.esp .chip.a,body.esp .note.a{top:8px}
+body.esp .pair{grid-template-columns:1fr;margin-bottom:14px}
+body.esp .boxes{grid-template-columns:repeat(2,1fr)}
+@media(max-width:760px){
+  body.esp .palco{grid-template-columns:1fr}
+  body.esp .palco .screen{order:0;min-height:170px}
+}
+@media(max-width:860px){body.esp .boxes{grid-template-columns:1fr}}
 
 @media(pointer:coarse){
   input[type=range]{height:34px}
@@ -159,18 +179,15 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
         <span id="serMsg">desconectado</span>
       </div>
       <div class="linha">
-        <label>canal esquerdo → <select id="fb0" aria-label="Flyback do canal esquerdo"></select></label>
-        <label>canal direito → <select id="fb1" aria-label="Flyback do canal direito"></select></label>
-      </div>
-      <div class="linha">
         <label><input type="checkbox" id="monitorTom"> ouvir também no computador</label>
       </div>
     </div>
   </div>
 
+  <div class="palco">
   <div class="screen">
     <canvas id="cv"></canvas>
-    <span class="chip a">1▸</span>
+    <span class="chip a" id="chipA">1▸</span>
     <span class="chip b">2▸</span>
     <span class="note a" id="nota0"></span>
     <span class="note b" id="nota1"></span>
@@ -179,7 +196,11 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
 
   <div class="chans">
     <section class="ch a">
-      <h2><span>Canal esquerdo</span><button class="onoff" id="on0" aria-pressed="true">ligado</button></h2>
+      <h2><span id="t0">Canal esquerdo</span><button class="onoff soAudio" id="on0" aria-pressed="true">ligado</button></h2>
+      <div class="ctl soEsp">
+        <label>Saída do ESP</label>
+        <div class="fbs" id="fbs" role="group" aria-label="Saída do ESP"></div>
+      </div>
       <div class="ctl">
         <div class="row"><label for="f0">Frequência</label><span class="val big" id="fv0">440,00 Hz</span></div>
         <input type="range" id="f0" min="0" max="2000" value="1000" aria-label="Frequência do canal esquerdo">
@@ -192,7 +213,7 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
         </div>
       </div>
       <div class="pair">
-        <div class="ctl">
+        <div class="ctl soAudio">
           <label for="w0">Forma de onda</label>
           <select id="w0"></select>
         </div>
@@ -236,6 +257,7 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
       </div>
     </section>
   </div>
+  </div>
 
   <div class="boxes">
     <div class="box">
@@ -261,7 +283,7 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
       </div>
     </div>
 
-    <div class="box">
+    <div class="box soAudio">
       <h2>Intervalo entre os dois</h2>
       <p>Acerta o canal direito a partir do esquerdo. Batimento de 1 Hz é o jeito clássico de ouvir se os dois arcos estão casados.</p>
       <div class="btns">
@@ -288,9 +310,9 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
   </div>
 
   <div class="tip">
-    <p><strong>Onda quadrada é o timbre real do arco.</strong> O comparador do driver quadrateia o sinal de qualquer jeito, então senoide e triangular servem para medir e comparar, não para prever como vai soar. Para ouvir o que o flyback vai fazer, deixe em quadrada.</p>
-    <p><strong>Placa V3.6: use "ESP32 pela serial".</strong> A nota entra por um 6N136, uma entrada lógica que o áudio do computador não aciona. Pelo ESP o tom é sempre quadrado, e o volume vira a fração de cada período em que o arco fica aberto: 100% dá 50%, o máximo do arco (o volume segue sen(π·fração)). Com a página parada ou fechada, o ESP apaga o arco sozinho em 2 s.</p>
-    <p><strong>Cada canal vai para um flyback.</strong> A separação é dura, por <code>ChannelMergerNode</code>: o lado desligado sai com amostra zero, sem vazamento de um driver para o outro.</p>
+    <p class="soAudio"><strong>Onda quadrada é o timbre real do arco.</strong> O comparador do driver quadrateia o sinal de qualquer jeito, então senoide e triangular servem para medir e comparar, não para prever como vai soar. Para ouvir o que o flyback vai fazer, deixe em quadrada.</p>
+    <p><strong>Placa V3.6: use "ESP32 pela serial".</strong> A nota entra por um 6N136, uma entrada lógica que o áudio do computador não aciona. Pelo ESP o tom vai para uma saída por vez, a escolhida, e é sempre quadrado, e o volume vira a fração de cada período em que o arco fica aberto: 100% dá 50%, o máximo do arco (o volume segue sen(π·fração)). Com a página parada ou fechada, o ESP apaga o arco sozinho em 2 s.</p>
+    <p class="soAudio"><strong>Cada canal vai para um flyback.</strong> A separação é dura, por <code>ChannelMergerNode</code>: o lado desligado sai com amostra zero, sem vazamento de um driver para o outro.</p>
     <p><strong>Acima de uns 5 kHz o arco perde corpo</strong> e vira sopro. Uma varredura de 50 Hz a 2 kHz costuma cobrir a região onde o par rende mais.</p>
   </div>
 
@@ -345,7 +367,9 @@ const ch = [{ on: true,  f: 440, onda: 'square', ganho: 70, osc: null, gn: null,
 let actx = null, merger = null, tocando = false, vol = 50, travado = false, razaoTravada = 1;
 let varrendo = false, varreVolta = true, varreT0 = 0, wake = null, wakeWanted = false, idle = 2;
 let saida = 'audio', monitor = false;
-const fb = [0, 1];                                         /* no modo ESP, o flyback (0 a 5) de cada canal */
+let alvo = 0;                                              /* no modo ESP, a saída (0 a 5) que recebe o tom */
+/* no modo ESP só o canal esquerdo existe, e o play basta para ele soar */
+const vivo = i => saida === 'esp' ? i === 0 : ch[i].on;
 
 /* ---------- áudio ---------- */
 function ensureCtx(){
@@ -365,10 +389,10 @@ function ensureCtx(){
   });
   return actx;
 }
-const nivel = i => tocando && ch[i].on && (saida === 'audio' || monitor) ? (vol / 100) * (ch[i].ganho / 100) : 0;
+const nivel = i => tocando && vivo(i) && (saida === 'audio' || monitor) ? (vol / 100) * (ch[i].ganho / 100) : 0;
 function aplicarGanho(i){
   const c = ch[i];
-  enviar(i);
+  if (i === 0) enviar();
   if (!c.gn) return;
   const t = actx.currentTime;
   c.gn.gain.cancelScheduledValues(t);
@@ -377,7 +401,7 @@ function aplicarGanho(i){
 }
 function aplicarFreq(i){
   const c = ch[i];
-  enviar(i);
+  if (i === 0) enviar();
   if (!c.osc) return;
   const t = actx.currentTime;
   c.osc.frequency.cancelScheduledValues(t);
@@ -389,7 +413,7 @@ let guardaT = 0;
 function guardar(){
   clearTimeout(guardaT);                                   /* a varredura mexe na frequência a cada quadro: não grava a cada quadro */
   guardaT = setTimeout(() => store.set('tom',
-    { v: vol, t: travado, s: saida, m: monitor, fb: fb.slice(), c: ch.map(c => ({ on: c.on, f: c.f, onda: c.onda, ganho: c.ganho })) }), 400);
+    { v: vol, t: travado, s: saida, m: monitor, a: alvo, c: ch.map(c => ({ on: c.on, f: c.f, onda: c.onda, ganho: c.ganho })) }), 400);
 }
 function mostrar(i){
   const c = ch[i];
@@ -402,7 +426,7 @@ function mostrar(i){
   const cents = Math.round(1200 * Math.log2(c.f / hz(n)));
   const sel = $('nt' + i), alvoN = n >= NOTA_LO && n <= NOTA_HI && !cents ? String(n) : '';
   if (sel.value !== alvoN) sel.value = alvoN;
-  $('nota' + i).textContent = c.on ? curto(c.f) + '   ' + nm(n) + (cents ? (cents > 0 ? ' +' : ' −') + Math.abs(cents) : '') : '';
+  $('nota' + i).textContent = vivo(i) ? curto(c.f) + '   ' + nm(n) + (cents ? (cents > 0 ? ' +' : ' −') + Math.abs(cents) : '') : '';
   $('on' + i).setAttribute('aria-pressed', String(c.on));
   $('on' + i).textContent = c.on ? 'ligado' : 'desligado';
   $('gv' + i).textContent = c.ganho + '%' + (saida === 'esp' ? ' · aberto ' + br((abertoDe(i) / 10).toFixed(0)) + '%' : '');
@@ -417,7 +441,7 @@ function mostrarTudo(){
   $('play').textContent = tocando ? '⏸' : '▶';
   $('play').setAttribute('aria-label', tocando ? 'Parar' : 'Tocar');
   $('empty').classList.toggle('hide', tocando);
-  const vivos = ch.filter(c => c.on);
+  const vivos = ch.filter((c, i) => vivo(i));
   $('live').textContent = tocando && vivos.length ? vivos.map(c => curto(c.f)).join('  ·  ') : '';
   guardar();
 }
@@ -459,8 +483,8 @@ function tocar(on){
 
 /* ---------- saída: áudio do computador ou ESP32 pela serial ----------
    A placa V3.6 recebe a nota por um 6N136: a entrada é lógica, e o áudio do computador não a
-   aciona. No modo ESP o tom vai pela serial com "D c d f" (docs/protocolo-serial.md): f Hz no
-   flyback c, com o arco aberto d ‰ de cada período. O volume vira essa fração — o volume do arco
+   aciona. No modo ESP fica um canal só, e o tom vai pela serial com "D c d f"
+   (docs/protocolo-serial.md): f Hz na saída c escolhida, com o arco aberto d ‰ de cada período. O volume vira essa fração — o volume do arco
    segue sen(π·d), máximo em 500 ‰ —, e a página repete o "D" a cada 500 ms: se ela parar, o ESP
    apaga o arco sozinho em 2 s. Os pinos são os do painel de saída do player (flyback:esp), que
    tem a mesma lista de placas. A V3.5 continua no áudio, pelo P2. */
@@ -473,22 +497,23 @@ function espCfg(){
   const pinos = Array.isArray(e.pinos) && e.pinos.length === 6 && e.pinos.every(g => Number.isInteger(+g)) ? e.pinos.map(Number) : PINOS_PADRAO[placa];
   return { placa, pinos, baud: BAUDS.includes(+e.baud) ? +e.baud : 115200 };
 }
-const ser = { port: null, writer: null, enc: new TextEncoder(), timer: 0, ult: [0, 0], fila: [0, 0], enviado: ['', ''] };
+const ser = { port: null, writer: null, enc: new TextEncoder(), timer: 0, ult: 0, fila: 0, enviado: '' };
 function serialWrite(l){ if (ser.writer) ser.writer.write(ser.enc.encode(l + '\n')).catch(() => fechar(true)); }
 const abertoDe = i => Math.round(1000 * Math.asin(Math.min(1, (vol / 100) * (ch[i].ganho / 100))) / Math.PI);
-const linhaD = i => 'D ' + fb[i] + ' ' + (tocando && ch[i].on ? abertoDe(i) : 0) + ' ' + ch[i].f.toFixed(2);
-/* o "D" do canal, no máximo de 40 em 40 ms: a varredura e o arrasto do slider mexem a cada quadro */
-function enviar(i, ja){
+const abertoAgora = () => tocando ? abertoDe(0) : 0;
+const linhaD = () => 'D ' + alvo + ' ' + abertoAgora() + ' ' + ch[0].f.toFixed(2);
+/* o "D", no máximo de 40 em 40 ms: a varredura e o arrasto do slider mexem a cada quadro */
+function enviar(ja){
   if (saida !== 'esp' || !ser.writer) return;
-  const l = linhaD(i);
-  if (!ja && l === ser.enviado[i]) return;
-  const espera = 40 - (performance.now() - ser.ult[i]);
-  clearTimeout(ser.fila[i]);
-  if (!ja && espera > 0){ ser.fila[i] = setTimeout(() => enviar(i, true), espera); return; }
-  serialWrite(l); ser.enviado[i] = l; ser.ult[i] = performance.now();
+  const l = linhaD();
+  if (!ja && l === ser.enviado) return;
+  const espera = 40 - (performance.now() - ser.ult);
+  clearTimeout(ser.fila);
+  if (!ja && espera > 0){ ser.fila = setTimeout(() => enviar(true), espera); return; }
+  serialWrite(l); ser.enviado = l; ser.ult = performance.now();
 }
-/* a cada 500 ms, o "D" de quem está tocando: é o que mantém o arco aberto no ESP */
-function manter(){ for (let i = 0; i < N; i++) if (tocando && ch[i].on && abertoDe(i) > 0) enviar(i, true); }
+/* a cada 500 ms, de novo o "D": é o que mantém o arco aberto no ESP */
+function manter(){ if (abertoAgora() > 0) enviar(true); }
 function pinos(){
   if (saida !== 'esp' || !ser.writer) return;
   espCfg().pinos.forEach((g, c) => serialWrite('P ' + c + ' ' + g));
@@ -498,16 +523,16 @@ async function conectar(){
   try {
     const port = await navigator.serial.requestPort();
     await port.open({ baudRate: +$('baud').value });
-    ser.port = port; ser.writer = port.writable.getWriter(); ser.enviado = ['', ''];
+    ser.port = port; ser.writer = port.writable.getWriter(); ser.enviado = '';
     serialWrite('X'); pinos();
     ser.timer = setInterval(manter, 500);
-    for (let i = 0; i < N; i++) enviar(i, true);
+    enviar(true);
     $('serGo').textContent = 'Desconectar'; $('baud').disabled = true;
     $('serMsg').textContent = 'conectado a ' + $('baud').value + ' baud';
   } catch (e) { if (e && e.name !== 'NotFoundError') $('serMsg').textContent = 'não conectou: ' + e.message; }
 }
 async function fechar(caiu){
-  clearInterval(ser.timer); ser.timer = 0; ser.fila.forEach(clearTimeout);
+  clearInterval(ser.timer); ser.timer = 0; clearTimeout(ser.fila);
   const { port, writer } = ser; ser.port = ser.writer = null;
   try { if (writer){ if (!caiu) await writer.write(ser.enc.encode('X\n')); writer.releaseLock(); } } catch (e) {}
   try { if (port) await port.close(); } catch (e) {}
@@ -519,25 +544,35 @@ function mostrarSaida(){
   $('modoAudio').setAttribute('aria-pressed', String(!esp));
   $('modoEsp').setAttribute('aria-pressed', String(esp));
   $('espBloco').classList.toggle('hide', !esp);
+  document.body.classList.toggle('esp', esp);
   $('saidaTxt').textContent = esp
-    ? 'Placa V3.6: o tom vai pelo ESP32, um flyback por canal. Pinos do painel de saída do player, placa ' + NOME_PLACA[c.placa] + '. O volume vira a fração aberta do arco.'
+    ? 'Placa V3.6: o tom vai pelo ESP32 para uma saída por vez. Pinos do painel de saída do player, placa ' + NOME_PLACA[c.placa] + '. O volume vira a fração aberta do arco.'
     : 'Placa V3.5: o tom sai pelo áudio do computador (P2), canal esquerdo num flyback e direito no outro, com separação dura.';
-  for (let i = 0; i < N; i++){
-    const sel = $('fb' + i);
-    if (sel.options.length !== 6){ sel.textContent = ''; for (let k = 0; k < 6; k++) sel.appendChild(new Option('', String(k))); }
-    [...sel.options].forEach((o, k) => { o.textContent = 'flyback ' + (k + 1) + ' · GPIO ' + c.pinos[k]; });
-    sel.value = String(fb[i]);
-  }
+  $('t0').textContent = esp ? 'ESP32' : 'Canal esquerdo';
+  /* o S3 tem timer para 4 canais só (o firmware avisa); as saídas 5 e 6 ficam fora */
+  const usaveis = c.placa === 's3' ? 4 : 6;
+  if (alvo >= usaveis) alvo = 0;
+  [...$('fbs').children].forEach((b, k) => {
+    b.lastChild.textContent = 'GPIO ' + c.pinos[k];
+    b.disabled = k >= usaveis;
+    b.setAttribute('aria-pressed', String(k === alvo));
+  });
+  $('chipA').textContent = esp ? 'saída ' + (alvo + 1) + ' · GPIO ' + c.pinos[alvo] : '1▸';
   $('monitorTom').checked = monitor;
-  if (esp && fb[0] === fb[1] && ch[0].on && ch[1].on) $('saidaTxt').textContent += ' Os dois canais estão no mesmo flyback: vale o último.';
+}
+function escolherSaida(k){
+  if (k === alvo) return;
+  if (ser.writer) serialWrite('D ' + alvo + ' 0 ' + ch[0].f.toFixed(2));   /* a saída que ficou para trás apaga */
+  alvo = k;
+  enviar(true); mostrarSaida(); guardar();
 }
 function mudarSaida(m){
   if (m === saida) return;
   if (saida === 'esp' && ser.writer) serialWrite('X');     /* saindo do ESP: o arco apaga já */
   saida = m;
   if (actx) for (let i = 0; i < N; i++) aplicarGanho(i);
-  if (m === 'esp') for (let i = 0; i < N; i++) enviar(i, true);
-  mostrarSaida(); mostrarTudo();
+  if (m === 'esp') enviar(true);
+  mostrarSaida(); mostrarTudo(); sizeCanvas();
 }
 
 /* ---------- varredura ---------- */
@@ -553,7 +588,7 @@ function passoVarredura(){
   let u = ((performance.now() - varreT0) % (varreVolta ? dur * 2 : dur)) / dur;
   if (u > 1) u = 2 - u;                                    /* a volta refaz o mesmo caminho ao contrário */
   const f = a * Math.pow(b / a, u);                        /* passeio logarítmico: sobe parelho ao ouvido em toda a faixa */
-  for (let i = 0; i < N; i++) if (ch[i].on){ ch[i].f = f; aplicarFreq(i); }
+  for (let i = 0; i < N; i++) if (vivo(i)){ ch[i].f = f; aplicarFreq(i); }
   mostrarTudo();
 }
 
@@ -593,7 +628,7 @@ function aplicarEstado(e){
   if (typeof e.v === 'number') vol = Math.max(0, Math.min(100, Math.round(e.v)));
   if (e.s === 'esp') saida = 'esp';
   monitor = !!e.m;
-  if (Array.isArray(e.fb)) e.fb.forEach((v, i) => { if (i < N && Number.isInteger(v) && v >= 0 && v < 6) fb[i] = v; });
+  if (Number.isInteger(e.a) && e.a >= 0 && e.a < 6) alvo = e.a;
   travado = !!e.t;
   (e.c || []).forEach((d, i) => {
     if (i >= N || !d) return;
@@ -662,12 +697,13 @@ BAUDS.forEach(b => $('baud').appendChild(new Option(String(b), String(b))));
 $('modoAudio').addEventListener('click', () => mudarSaida('audio'));
 $('modoEsp').addEventListener('click', () => mudarSaida('esp'));
 $('monitorTom').addEventListener('change', e => { monitor = e.target.checked; if (actx) for (let i = 0; i < N; i++) aplicarGanho(i); guardar(); });
-for (let i = 0; i < N; i++) $('fb' + i).addEventListener('change', e => {
-  const antes = fb[i];
-  fb[i] = +e.target.value;
-  if (ser.writer && fb[1 - i] !== antes) serialWrite('D ' + antes + ' 0 ' + ch[i].f.toFixed(2));   /* o flyback que ficou para trás apaga */
-  enviar(i, true); mostrarSaida(); guardar();
-});
+for (let k = 0; k < 6; k++){
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.fb = String(k);
+  b.append(String(k + 1), document.createElement('small'));
+  b.addEventListener('click', () => escolherSaida(k));
+  $('fbs').appendChild(b);
+}
 if ('serial' in navigator){
   $('serGo').addEventListener('click', conectar);
   navigator.serial.addEventListener('disconnect', e => { if (e.target === ser.port) fechar(true); });
@@ -712,7 +748,7 @@ function sizeCanvas(){
   cv.height = Math.max(1, Math.round(r.height * d));
   idle = 2;
 }
-addEventListener('resize', sizeCanvas);
+if ('ResizeObserver' in window) new ResizeObserver(sizeCanvas).observe(cv); else addEventListener('resize', sizeCanvas);
 function grid(w, h){
   g.fillStyle = 'rgba(160,200,240,.30)';
   for (let c = 0; c <= 10; c++) for (let r = 0; r <= 40; r++) g.fillRect(Math.round(c * w / 10), Math.round(r * h / 40), 1, 1);
@@ -726,6 +762,18 @@ function draw(){
   const w = cv.width, h = cv.height; if (!w || !h) return;
   g.fillStyle = '#041e3c'; g.fillRect(0, 0, w, h); grid(w, h);
   const d = Math.min(devicePixelRatio || 1, 2), taxa = actx ? actx.sampleRate : 48000;
+  if (saida === 'esp'){
+    /* pelo ESP não há forma de onda a medir: desenha o que sai no GPIO, três períodos com a fração aberta */
+    const fr = abertoAgora() / 1000, alto = h * .3, baixo = h * .78, per = w / 3;
+    g.beginPath(); g.moveTo(0, baixo);
+    for (let k = 0; k < 3 && fr > 0; k++){
+      const x0 = k * per, x1 = x0 + fr * per;
+      g.lineTo(x0, baixo); g.lineTo(x0, alto); g.lineTo(x1, alto); g.lineTo(x1, baixo);
+    }
+    g.lineTo(w, baixo);
+    g.strokeStyle = '#d6e33c'; g.lineWidth = 1.5 * d; g.lineJoin = 'miter'; g.stroke();
+    return;
+  }
   ch.forEach((c, i) => {
     if (!c.an) return;
     c.an.getFloatTimeDomainData(c.data);
