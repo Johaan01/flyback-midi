@@ -23,6 +23,7 @@ import argparse
 import functools
 import http.server
 import json
+import subprocess
 import sys
 import threading
 import time
@@ -115,6 +116,10 @@ def auditar(arquivos, flybacks=6):
     srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Calado, directory=str(RAIZ)))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     out = {}
+    if any((RAIZ / 'musicas') in Path(a).resolve().parents for a in arquivos):
+        # o site abre pelo endereço (?m=) só o que está no índice: música recém-transcrita pelo
+        # lote ainda não está, e a página esperava as faixas até o tempo esgotar
+        subprocess.run([sys.executable, str(RAIZ / 'tools' / 'gerar_acervo.py')], capture_output=True)
     try:
         with sync_playwright() as p:
             nav = p.chromium.launch(channel='chrome', headless=True)
