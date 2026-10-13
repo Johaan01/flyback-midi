@@ -758,6 +758,7 @@ function buildSegs(i){
     if (b && !cur) cur = { start: e.t, end: null, n: b.n, v: b.v };
   }
   if (cur && cur.end === null){ cur.end = duration; if (cur.end > cur.start) segs.push(cur); }
+  curtas(segs);
   segs.forEach(s => { s.n += 12 * oct; s.f = hz(s.n); });
   /* limite de agudo: desce de oitava até caber. Vale para o P2 e para a serial, porque mexe na
      nota, não no áudio */
@@ -768,6 +769,22 @@ function buildSegs(i){
     while (s.f > lim && s.n > 12){ s.n -= 12; s.f = hz(s.n); }
   });
   return segs;
+}
+/* Nota mais curta que NOTA_MINIMA, isolada, não é tom no arco: são uns poucos ciclos entre ligar
+   e desligar, e se ouve como estalo — o dono do projeto ouviu isso nos MIDIs de fonte, sobretudo
+   em notas curtas e agudas. No acervo eram 41 mil notas de menos de 30 ms nas bandas (guitarra
+   abafada, nota fantasma) e 4 mil curtas e agudas nos clássicos (apojatura e ornamento). A curta
+   se estende no silêncio que vem depois, até NOTA_MINIMA ou até encostar na seguinte: o arco não
+   desliga entre as duas. Nota curta colada na seguinte fica como está — o arco só troca de
+   frequência, sem estalo; fundir as duas, como foi tentado, juntava uma escala rápida inteira
+   numa nota só (Carmen perdia 8% dos ataques). */
+const NOTA_MINIMA = .06;
+function curtas(segs){
+  segs.forEach((s, k) => {
+    if (s.end - s.start >= NOTA_MINIMA) return;
+    const livre = k + 1 < segs.length ? segs[k + 1].start : duration;
+    s.end = Math.max(s.end, Math.min(s.start + NOTA_MINIMA, livre));
+  });
 }
 /* "Repartir". Os arcos com essa opção que recebem a mesma faixa dividem as notas dela como as
    vozes de um teclado polifônico: cada nota nova vai para um arco livre. É o que escolher uma
@@ -871,10 +888,16 @@ const BATIDA = {
    a peça que menos carrega o ritmo. Ficam bumbo, caixa, palma e tons. */
 function notasDe(t){
   if (!isDrum(t)) return t.notes;
-  if (!t.batidas) t.batidas = t.notes.filter(x => BATIDA[x.n]).map(x => {
-    const b = BATIDA[x.n];
-    return { n: b[0], t0: x.t0, t1: x.t0 + b[1], v: x.v, p: b[2] };
-  });
+  if (!t.batidas){
+    /* percussão de programa (tom melódico, taiko...) não segue o mapa do canal 10: cada nota
+       vira um tom, grave, médio ou agudo pela altura */
+    const tom = x => x.n < 48 ? BATIDA[41] : x.n < 60 ? BATIDA[45] : BATIDA[48];
+    const peca = efeitoGM(t) ? () => null : t.chan !== 9 && PERC_GM.has(t.prog) ? tom : x => BATIDA[x.n];
+    t.batidas = t.notes.filter(x => peca(x)).map(x => {
+      const b = peca(x);
+      return { n: b[0], t0: x.t0, t1: x.t0 + b[1], v: x.v, p: b[2] };
+    });
+  }
   return t.batidas;
 }
 function rebuild(){
@@ -1032,7 +1055,14 @@ function renderTracks(){
 function reschedule(){ const wasP = playing, at = position(); pause(); rebuild(); analyse(); drawRollBase(); atualizarFontes(); idle = 2; if (wasP) start(at); }
 
 function avgPitch(t){ let s = 0; for (const n of t.notes) s += n.n; return s / t.notes.length; }
-function isDrum(t){ return t.chan === 9 || (!t.gm && /drum|bateri|percus|kit/i.test(t.name)); }
+/* Percussão fora do canal 10, pelo programa General MIDI: agogô, woodblock, taiko, tom melódico e
+   bateria eletrônica (113, 115-118) tocam como batida; prato invertido e efeitos (119-127: ruído
+   de traste, respiração, tiro, helicóptero) não tocam. Nos MIDIs de fonte eram 146 faixas assim
+   que o site tocava como nota — "808 Tom" com 1.664 notas, um woodblock de uma nota só em Rock
+   Around the Clock —, e é o que o dono do projeto ouviu como "batidas estranhas". */
+const PERC_GM = new Set([113, 115, 116, 117, 118]);
+const efeitoGM = t => t.chan !== 9 && t.prog >= 119;
+function isDrum(t){ return t.chan === 9 || PERC_GM.has(t.prog) || efeitoGM(t) || (!t.gm && /drum|bateri|percus|kit/i.test(t.name)); }
 function isBass(t){ return /bass|baix|contrabai/i.test(t.name) && !/bassoon|fagote/i.test(t.name); }
 function isGuitar(t){ return /guit|gtr|viol[aã]o|viola\b|dist|overdr|clean/i.test(t.name) && !isBass(t) && !(t.gm && t.name === 'Viola'); }
 
@@ -1219,6 +1249,21 @@ function ataques(t){
   if (t._ataques === undefined) t._ataques = new Set(notasDe(t).map(n => Math.round(n.t0 * 50))).size;
   return t._ataques;
 }
+/* Os ataques que a faixa daria num arco, que toca uma nota por vez: em cada instante (50 ms) só
+   a nota de cima (`grave` falso) ou a de baixo, como instante × 12 + classe da nota. Classe, e
+   não altura: a mesma melodia uma oitava acima, no flautim, não é detalhe novo. */
+function eventosMono(t, grave){
+  const k = grave ? '_evGrave' : '_evAgudo';
+  if (!t[k]){
+    const m = new Map();
+    for (const x of notasDe(t)){
+      const q = Math.round(x.t0 * 20), o = m.get(q);
+      if (o === undefined || (grave ? x.n < o : x.n > o)) m.set(q, x.n);
+    }
+    t[k] = new Set([...m].map(([q, nota]) => q * 12 + ((nota % 12) + 12) % 12));
+  }
+  return t[k];
+}
 function umPorFlyback(n){
   const occ = occupancy(), nb = occ.length ? occ[0].length : 0;
   const tam = occ.map(a => { let c = 0; for (let k = 0; k < nb; k++) c += a[k]; return c; });
@@ -1277,28 +1322,70 @@ function umPorFlyback(n){
      cada nota interna errada virava um arco tocando fora do lugar. Antes disso ele já tinha
      achado o recurso "pouco elegante". Quem quiser o acorde inteiro põe a faixa em mais arcos com
      "repartir", à mão. */
-  const vazios = [5, 4, 2].filter(c => c < n && dono[c] < 0);
-  const tempo = i => tracks[i].uniao.reduce((a, [x, y]) => a + y - x, 0);
+  /* O 2 e o 4 entram por último: numa orquestra não há baixo nem bateria pela família — o
+     contrabaixo só é baixo pelo nome —, e os dois ficavam vazios. */
+  const vazios = [5, 4, 2, 1, 3].filter(c => c < n && dono[c] < 0);
   const proprio = new Set(dono.filter(i => i >= 0));
-  const pelaDuracao = l => l.map(i => ({ i, t: tempo(i) })).filter(q => q.t >= duration * .05).sort((a, b) => b.t - a.t);
   const sem = com.filter(i => !proprio.has(i) && fam.get(i) !== 'bateria');
+  /* Quem ganha cada arco vazio é a faixa que traz mais ataques novos — instante e nota que
+     nenhum arco ainda toca —, e não a que soa mais tempo. Pela duração ganhava o acompanhamento
+     de nota longa, e a linha cheia de detalhe ficava de fora: no Barbeiro de Sevilha os arcos
+     tinham contrabaixo, fagote e violoncelo, a mesma linha grave três vezes, e não os violinos
+     do tema. A faixa dobrada (flauta e violino em uníssono) não traz nada de novo e não ganha
+     arco; a que traz menos de 3% dos ataques da música também não. O arco do baixo só aceita
+     linha grave. */
+  const cob = new Set(), todos = new Set();
+  /* a nota que o arco vai tocar de fato: o dono pelo papel do arco; quem ganha arco vazio, a de
+     cima se for voz e a de baixo no resto (é o `pick` que dar() põe). Medir pela de cima e tocar
+     a de baixo dava arco à guitarra dobrada: em Dancing with Myself, o 6 repetia o 3 */
+  const evs = (i, c) => eventosMono(tracks[i], dono[c] === i ? PICK_PAPEL[c] === 'lo' : fam.get(i) !== 'voz');
+  const cobrir = (i, c) => evs(i, c).forEach(e => cob.add(e));
+  dono.forEach((i, c) => { if (i >= 0 && fam.get(i) !== 'bateria') cobrir(i, c); });
+  com.forEach(i => { if (fam.get(i) !== 'bateria') eventosMono(tracks[i], false).forEach(e => todos.add(e)); });
+  const limiar = Math.max(5, todos.size * .03);
+  const novo = (i, c) => {
+    let k = 0;
+    for (const e of evs(i, c)) if (!cob.has(e) && !cob.has(e - 12) && !cob.has(e + 12)) k++;
+    return k;
+  };
+  const melhor = (l, c) => {
+    let bi = -1, bv = limiar;
+    l.forEach(i => {
+      if (proprio.has(i) || (c === 1 && avgPitch(tracks[i]) >= 55)) return;
+      const v = novo(i, c);
+      if (v >= bv){ bv = v; bi = i; }
+    });
+    return bi;
+  };
   /* das versões juntadas, só o instrumento que esta não tem e que não repete notas dela */
   const daqui = com.map(i => tracks[i]), temos = new Set(daqui.map(instrumentoDe));
   const novas = tracks.map((t, i) => i).filter(i => tracks[i].junta && !tracks[i].linha && tracks[i].notes.length
     && !isDrum(tracks[i]) && !temos.has(instrumentoDe(tracks[i])) && repete(tracks[i], daqui) < .4);
   novas.forEach(i => fam.set(i, familia(tracks[i])));
   const sv = li >= 0 && fam.get(li) === 'voz' ? vozesJuntas(tracks[li]) : 0;
-  const quer = pelaDuracao(sem.filter(i => !out[i]))
-    .concat(sv >= duration * .05 ? [{ i: li, voz: true }] : [])
-    .concat(pelaDuracao(novas))
-    .concat(pelaDuracao(sem.filter(i => out[i])));
-  quer.forEach(q => {
-    if (!vazios.length) return;
-    const c = vazios.shift();
-    dono[c] = q.i;
-    if (q.voz){ out[q.i] |= 1 << c; ajustes.push([0, { pick: 'div' }], [c, { pick: 'div' }]); }
-    else { out[q.i] = 1 << c; pr[q.i] = 2; ajustes.push([c, { pick: fam.get(q.i) === 'voz' ? 'hi' : 'lo' }]); }
-  });
+  const dar = (i, c) => {
+    vazios.splice(vazios.indexOf(c), 1);
+    cobrir(i, c); dono[c] = i; proprio.add(i);
+    out[i] = 1 << c; pr[i] = 2; ajustes.push([c, { pick: fam.get(i) === 'voz' ? 'hi' : 'lo' }]);
+  };
+  /* cada degrau enche os arcos que conseguir antes de passar ao próximo */
+  const degrau = l => {
+    for (let mudou = true; mudou && vazios.length;){
+      mudou = false;
+      for (const c of vazios.slice()){
+        const i = melhor(l, c);
+        if (i >= 0){ dar(i, c); mudou = true; break; }
+      }
+    }
+  };
+  degrau(sem.filter(i => !out[i]));
+  if (sv >= duration * .05 && vazios.length){
+    const c = vazios.find(x => x !== 1 && x !== 3) ?? vazios[0];
+    vazios.splice(vazios.indexOf(c), 1);
+    dono[c] = li; out[li] |= 1 << c; ajustes.push([0, { pick: 'div' }], [c, { pick: 'div' }]);
+  }
+  degrau(novas);
+  degrau(sem.filter(i => out[i] && !proprio.has(i)));
   return out;
 }
 /* controles de canal que o último preset quer: [canal, {pick}] */
