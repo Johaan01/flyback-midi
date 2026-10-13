@@ -89,14 +89,14 @@ Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `to
 
 ## O que já vem no acervo
 
-1.409 músicas em cinco pastas:
+1.454 músicas em cinco pastas:
 
 | Pasta | Conteúdo |
 |---|---|
 | `bandas` | 1.239 transcrições de rock, metal e pop, **uma pasta por artista** — 122 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
 | `classicos` | 65 obras orquestrais conhecidas, todas com 6 partes ou mais, por região de origem do compositor: 44 do [PDMX](https://zenodo.org/records/15571083) (partituras do MuseScore em domínio público ou CC0 — Ode à Alegria, 40ª de Mozart, Quebra-Nozes, Lago dos Cisnes, Carmen, Boléro, Danúbio Azul, Os Planetas…) e 21 do [Mutopia Project](https://www.mutopiaproject.org) (Brandemburgo, 5ª de Beethoven, Aleluia, Novo Mundo…). As 569 peças de piano e solo do Mutopia saíram em out/2026: com uma ou duas partes, não davam o que tocar a seis flybacks |
 | `folk russo` | 45 canções tradicionais e soviéticas — Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika, Kamarinskaya, Kazachok, Podmoskovnye Vechera. Quase todas em domínio público; as de autor conhecido e ainda protegido estão marcadas uma a uma |
-| `transcritas` | 50 MIDIs gerados do áudio pelo MuScriptor (44 na GPU daqui, 6 no Mirelo), sempre "Artista - Música", com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
+| `transcritas` | 95 MIDIs gerados do áudio pelo MuScriptor (89 na GPU daqui, 6 no Mirelo), sempre "Artista - Música", com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
 | `exemplos` | 10 arranjos de temas em domínio público feitos para os dois flybacks (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki), mais Ode à Alegria e um riff em Guitar Pro |
 
 No site, três botões escolhem o que listar: **tudo**, **antigas** (as transcrições de pessoas e

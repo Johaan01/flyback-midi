@@ -20,6 +20,7 @@ Arquivos de apoio, fora das páginas:
 | `musicas/` | Acervo. Tudo que estiver aqui aparece no site |
 | `tools/gerar_acervo.py` | Gera `musicas/index.json`, a lista do acervo, juntando `creditos.json` e `pastas.txt`. Só biblioteca padrão |
 | `tools/compor_rock.py` | Compõe os arranjos de `musicas/exemplos` numa notação de texto própria, com configuração pronta para cada um |
+| `tools/juntar_faixas.py` | Acrescenta a um MIDI faixas de outra transcrição da mesma gravação, alinhadas em segundos: para ficar com a voz de uma versão e o baixo e a bateria de outra |
 | `tools/baixar_pdmx.py` | Traz para `musicas/classicos` as obras orquestrais escolhidas à mão do PDMX (partituras do MuseScore em domínio público/CC0), com crédito; a seleção está em `SELECAO` |
 | `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um. Não rodar sem querer: traria de volta as 569 peças de piano e solo que saíram |
 | `tools/curar_acervo.py` | Enxuga `classicos` e o rearruma em `<região>/<compositor>/`. Lê cada MIDI e mede o aproveitamento em dois canais monofônicos |
@@ -175,14 +176,14 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
-O acervo tem 1.409 músicas em cinco pastas de primeiro nível:
+O acervo tem 1.454 músicas em cinco pastas de primeiro nível:
 
 | Pasta | Quantas | O que é |
 |---|---|---|
 | `bandas` | 1.239 | transcrições de fã, **uma pasta por artista** (122 deles) |
 | `classicos` | 65 | obras orquestrais conhecidas com 6 partes ou mais, em `<região>/<compositor>/`: 44 do PDMX e 21 do Mutopia |
 | `folk russo` | 45 | tradicional e soviético, pasta plana |
-| `transcritas` | 50 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo, sempre "Artista - Música"; a versão do Mirelo de uma música que também foi feita aqui leva "(Mirelo)" no fim, para as duas ficarem juntas na lista. O grupo é o artista, do crédito |
+| `transcritas` | 95 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo, sempre "Artista - Música"; a versão do Mirelo de uma música que também foi feita aqui leva "(Mirelo)" no fim, para as duas ficarem juntas na lista. O grupo é o artista, do crédito |
 | `exemplos` | 10 | arranjos do projeto para dois flybacks, mais casos de teste |
 
 Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o filtro inútil: a lista era um balaio só. `tools/curar_acervo.py` resolveu as duas coisas ao mesmo tempo.
@@ -389,6 +390,8 @@ orientação 2 quando a música tem lista própria (`--orientacao-com-lista`) e 
 erra o "resto" e com 2 inventaria em cima do erro. Tentado e descartado: completar os buracos da voz
 com o pYIN do stem (45% → 50%) e transformar grito sem altura em estouro curto, como a bateria
 (65% → 67% sobre a versão boa) — não pagam a complexidade.
+
+**O detector não ouve bateria eletrônica nem baixo de sintetizador.** No lote de out/2026 (45 músicas, 30 com lista própria), três com a detecção automática saíram sem arco de baixo ou de bateria: The Man Who Sold the World do Midge Ure, il vento d'oro e Snake Eater. Os stems do Demucs mostravam os dois — bateria pesando 0,30 a 0,56 na mistura, baixo 0,27 a 0,39 —, mas o PANNs deu "Drum kit" 0,01 a 0,02 e "Bass guitar" 0,11 a 0,14, abaixo dos cortes. Refeitas com baixo e bateria na lista e orientação 2, ganharam os arcos, mas a voz caiu em duas (96% → 51% do canto). O que ficou no acervo foi a primeira transcrição mais só as faixas novas, por `tools/juntar_faixas.py`. Próximo passo, se voltar a acontecer: usar o peso do stem também para baixo e bateria, como já se faz com a voz — falta calibrar com gravações que não têm os dois. A outra falha da noite foi de voz: Dazed and Confused cobre 40% do canto com a lista certa, e nem `medium` nem orientação 1 passam de 42%; os lamentos do Plant não viram nota, é caso para o Mirelo.
 
 **O site da Kyutai (muscriptor.kyutai.org) roda o `medium`.** É o `muscriptor serve` do próprio
 pacote — a mesma versão 0.3.0 instalada aqui, com a página em `web_dist`: `POST /transcribe` com
