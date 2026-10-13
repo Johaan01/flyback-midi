@@ -64,8 +64,12 @@ def log(*a):
     print(datetime.now().strftime('%H:%M:%S'), *a, flush=True)
 
 
+# argumentos que vão em toda chamada do yt-dlp; --cookies-do-navegador põe aqui a sessão do navegador
+YTDLP_EXTRA = []
+
+
 def ytdlp(*args, timeout=600):
-    r = subprocess.run(['yt-dlp', '--no-warnings', *args], capture_output=True, text=True,
+    r = subprocess.run(['yt-dlp', '--no-warnings', *YTDLP_EXTRA, *args], capture_output=True, text=True,
                        encoding='utf-8', errors='replace', timeout=timeout)
     return r.returncode, r.stdout, r.stderr
 
@@ -114,7 +118,7 @@ def baixar(url, vid, aviso=None):
     pronto = sorted(CACHE.glob(f'{vid}.wav'))
     if pronto:
         return pronto[0]
-    cmd = ['yt-dlp', '--no-warnings', '--newline', '--no-playlist', '-x', '--audio-format', 'wav',
+    cmd = ['yt-dlp', '--no-warnings', *YTDLP_EXTRA, '--newline', '--no-playlist', '-x', '--audio-format', 'wav',
            '-o', str(CACHE / f'{vid}.%(ext)s'), url]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                             encoding='utf-8', errors='replace')
@@ -359,9 +363,15 @@ def main():
     ap.add_argument('--orientacao-com-lista', type=float, default=2.0, metavar='N',
                     help='orientação (cfg_coef) quando a música tem lista própria; com a automática é 1. '
                          'Thunderstruck com a lista certa: voz cobrindo 38%% do canto com 1, 65%% com 2')
+    ap.add_argument('--cookies-do-navegador', metavar='NAV',
+                    help='usar a sessão do navegador (firefox, chrome...) nos downloads. Em out/2026 o YouTube '
+                         'passou a responder 403 a todo download sem conta deste IP, com qualquer cliente do '
+                         'yt-dlp e mesmo com token anti-robô; com a sessão do Firefox voltou na hora')
     ap.add_argument('--sem-auditoria', action='store_true',
                     help='não conferir a montagem de 6 flybacks de cada música (auditar_montagem.py)')
     args = ap.parse_args()
+    if args.cookies_do_navegador:
+        YTDLP_EXTRA[:] = ['--cookies-from-browser', args.cookies_do_navegador]
 
     saida = Path(args.saida)
     saida = saida if saida.is_absolute() else RAIZ / saida

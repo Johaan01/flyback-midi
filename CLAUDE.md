@@ -20,7 +20,8 @@ Arquivos de apoio, fora das páginas:
 | `musicas/` | Acervo. Tudo que estiver aqui aparece no site |
 | `tools/gerar_acervo.py` | Gera `musicas/index.json`, a lista do acervo, juntando `creditos.json` e `pastas.txt`. Só biblioteca padrão |
 | `tools/compor_rock.py` | Compõe os arranjos de `musicas/exemplos` numa notação de texto própria, com configuração pronta para cada um |
-| `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um |
+| `tools/baixar_pdmx.py` | Traz para `musicas/classicos` as obras orquestrais escolhidas à mão do PDMX (partituras do MuseScore em domínio público/CC0), com crédito; a seleção está em `SELECAO` |
+| `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um. Não rodar sem querer: traria de volta as 569 peças de piano e solo que saíram |
 | `tools/curar_acervo.py` | Enxuga `classicos` e o rearruma em `<região>/<compositor>/`. Lê cada MIDI e mede o aproveitamento em dois canais monofônicos |
 | `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi, do acervo Lakh via rawl.rocks e do folk russo do FreeSheetMusic |
 | `tools/organizar_bandas.py` | Identifica, tira repetidas e arruma `musicas/bandas` por artista, medindo o quanto cada música é conhecida (Wikipedia e ListenBrainz). Com `--plano` serve a acervo sem artista, como o folk russo |
@@ -174,17 +175,19 @@ O botão "Enviar música para o acervo" aponta para `github.com/USUARIO/REPO/upl
 
 Abrir uma música do acervo troca o endereço para `?m=caminho`; esse endereço reabre a música.
 
-O acervo tem 1.934 músicas em cinco pastas de primeiro nível:
+O acervo tem 1.409 músicas em cinco pastas de primeiro nível:
 
 | Pasta | Quantas | O que é |
 |---|---|---|
 | `bandas` | 1.239 | transcrições de fã, **uma pasta por artista** (122 deles) |
-| `classicos` | 590 | Mutopia, em `<região>/<compositor>/` |
+| `classicos` | 65 | obras orquestrais conhecidas com 6 partes ou mais, em `<região>/<compositor>/`: 44 do PDMX e 21 do Mutopia |
 | `folk russo` | 45 | tradicional e soviético, pasta plana |
 | `transcritas` | 50 | geradas do áudio pelo MuScriptor, aqui ou no Mirelo, sempre "Artista - Música"; a versão do Mirelo de uma música que também foi feita aqui leva "(Mirelo)" no fim, para as duas ficarem juntas na lista. O grupo é o artista, do crédito |
 | `exemplos` | 10 | arranjos do projeto para dois flybacks, mais casos de teste |
 
 Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o filtro inútil: a lista era um balaio só. `tools/curar_acervo.py` resolveu as duas coisas ao mesmo tempo.
+
+**Out/2026: clássico só com orquestra.** Dos 590 do Mutopia, 218 tinham duas partes e 127 uma — piano e solo, simples demais para seis flybacks, e o dono do projeto nunca os usava. Pediu para tirar e trazer obras conhecidas "com uma carga de instrumentos melhor distribuída". Ficaram as 21 do Mutopia com 6 partes ou mais e que se reconhecem, e entraram 44 do PDMX (Long et al., 2024): 254 mil partituras do MuseScore que os autores marcaram como domínio público ou CC0, com MIDI e metadado (partes, favoritos, nota, autor). Kunst der Fuge e Classical Archives têm muito mais orquestra, mas limitam a 5 arquivos por dia sem assinatura; mfiles e midiworld não dão licença de redistribuição. A escolha do PDMX é à mão, em `tools/baixar_pdmx.py`: a busca automática por título trazia "Coldplay - Orphans" para o Can-can e "Sanctus" para o Cânone, e muita partitura é arranjo para banda marcial ou coro de clarinetes.
 
 **Por que artista, e não nível de popularidade.** As bandas já estiveram em `mais ouvidas` / `conhecidas` / `para fãs`, e foi pior: 554 caíam no último nível, que virava uma parede, e não havia como pedir "me mostra o AC/DC". Pior ainda, o nível de uma música **muda quando o número de escutas muda** — ela trocaria de pasta sozinha, e o link dela (`?m=caminho`) quebraria. Artista é coisa estável. A popularidade continua medida e gravada em `posicao`, e virou filtro na interface.
 
@@ -195,7 +198,7 @@ Eram 4.867 só em `classicos`, todos numa pasta por compositor, o que tornava o 
 O dono do projeto achou o menu "poluidíssimo": seis botões de filtro sempre à mostra (só as mais ouvidas, só com vocal, cabe em 2, pede 6, só IA, sortear) mais um botão por pasta. Ficou assim:
 
 - **Três vistas** (`VISTAS`, `naVista()`): **tudo**, **antigas** (tudo que não é `transcritas`) e **transcritas**; "meus" aparece quando há arquivo aberto do computador guardado. É a separação legado × modelo que o dono pediu, por campo de pasta e não por mudança de pasta.
-- **Grupo e gênero**, dois seletores (`montarFiltro()`). Nas transcritas o grupo é o **artista** do crédito (valor `a:` + nome dobrado), porque a pasta é uma só; no resto é a **pasta mais funda** (`p:`), com a de cima como `<optgroup>` — os 122 artistas de `bandas`, os 139 compositores de `classicos` pelas 9 regiões. O gênero sai de `estilo`, traduzido por `ESTILO_PT` (o Mutopia escreve em inglês), e se esconde quando a vista tem menos de dois; aí a busca ocupa o lugar dele.
+- **Grupo e gênero**, dois seletores (`montarFiltro()`). Nas transcritas o grupo é o **artista** do crédito (valor `a:` + nome dobrado), porque a pasta é uma só; no resto é a **pasta mais funda** (`p:`), com a de cima como `<optgroup>` — os 122 artistas de `bandas`, os 24 compositores de `classicos` pelas 6 regiões. O gênero sai de `estilo`, traduzido por `ESTILO_PT` (o Mutopia escreve em inglês), e se esconde quando a vista tem menos de dois; aí a busca ocupa o lugar dele.
 - **Filtros**, um menu que abre e fecha (`#libPop`; fecha com Esc ou clique fora): **com voz**, **2 canais** (`cabe2`, aproveitamento em 2 ≥ `APROV_MIN`), **+ de 2 canais** (`precisaMais`: não cabe em 2 e aproveitamento em 6 ≥ `APROV6_MIN`), **mais ouvidas** (`posicao <= TOPO`, só se o acervo tiver o campo) e **sortear uma**. O botão mostra quantos estão ligados.
 
 "Pede 6" saiu por pedido: muita música que não cabe em dois fica boa com quatro, e o nome mentia. "+ de 2 canais" diz o que o número mede.

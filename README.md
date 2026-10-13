@@ -89,12 +89,12 @@ Pelo computador, também dá para copiar os arquivos para `musicas/` e rodar `to
 
 ## O que já vem no acervo
 
-1.934 músicas em cinco pastas:
+1.409 músicas em cinco pastas:
 
 | Pasta | Conteúdo |
 |---|---|
 | `bandas` | 1.239 transcrições de rock, metal e pop, **uma pasta por artista** — 122 deles, de AC/DC a ZZ Top. Obras protegidas: leia `USO-EDUCACIONAL.md` |
-| `classicos` | 590 peças do [Mutopia Project](https://www.mutopiaproject.org), em domínio público ou Creative Commons, por região de origem do compositor: Alemanha e Áustria (217), Itália (82), França (74), Rússia e Leste Europeu (67), Américas (41), Tradicional e anônimo (31), Ibéria e América Latina (31), Nórdicos e Países Baixos (24) e Ilhas Britânicas (23) |
+| `classicos` | 65 obras orquestrais conhecidas, todas com 6 partes ou mais, por região de origem do compositor: 44 do [PDMX](https://zenodo.org/records/15571083) (partituras do MuseScore em domínio público ou CC0 — Ode à Alegria, 40ª de Mozart, Quebra-Nozes, Lago dos Cisnes, Carmen, Boléro, Danúbio Azul, Os Planetas…) e 21 do [Mutopia Project](https://www.mutopiaproject.org) (Brandemburgo, 5ª de Beethoven, Aleluia, Novo Mundo…). As 569 peças de piano e solo do Mutopia saíram em out/2026: com uma ou duas partes, não davam o que tocar a seis flybacks |
 | `folk russo` | 45 canções tradicionais e soviéticas — Kalinka, Katyusha, Korobeiniki, Ochi Chornye, Troika, Kamarinskaya, Kazachok, Podmoskovnye Vechera. Quase todas em domínio público; as de autor conhecido e ainda protegido estão marcadas uma a uma |
 | `transcritas` | 50 MIDIs gerados do áudio pelo MuScriptor (44 na GPU daqui, 6 no Mirelo), sempre "Artista - Música", com uma faixa por instrumento — voz, guitarra, baixo, teclas e bateria em faixas separadas. Obras protegidas, transcritor automático: leia `USO-EDUCACIONAL.md` |
 | `exemplos` | 10 arranjos de temas em domínio público feitos para os dois flybacks (Grieg, Bach, Beethoven, Pachelbel, Greensleeves, Korobeiniki), mais Ode à Alegria e um riff em Guitar Pro |
@@ -130,7 +130,8 @@ mesma música e normalmente só uma traz o vocal. Em *Highway to Hell*, por exem
 | Ferramenta | O que faz |
 |---|---|
 | `tools/compor_rock.py` | Gera os arranjos de `musicas/exemplos` |
-| `tools/baixar_mutopia.py` | Baixa os clássicos do Mutopia; rodado de novo, traz só as peças novas |
+| `tools/baixar_pdmx.py` | Traz as obras orquestrais escolhidas do PDMX para `classicos`, com o crédito de cada partitura |
+| `tools/baixar_mutopia.py` | Baixa os clássicos do Mutopia — não rode sem querer: traria de volta as 569 peças de piano e solo que saíram |
 | `tools/curar_acervo.py` | Enxuga e reorganiza `classicos` por região e compositor. O download bruto traz 4.867 arquivos, a maior parte método, estudo e parte de instrumento solta; a ferramenta mede quanto de cada peça sobrevive à redução a dois canais monofônicos e deixa o repertório que se reconhece |
 | `tools/baixar_bandas.py` | Baixa transcrições de midiworld, zeppelinmidi, maidenmidi, do acervo Lakh (via rawl.rocks) e do folk russo do FreeSheetMusic |
 | `tools/organizar_bandas.py` | Identifica, tira repetidas, mede a linha de canto e ordena `bandas` pelo quanto a música é conhecida, com Wikipedia e ListenBrainz |
