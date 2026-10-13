@@ -352,7 +352,7 @@ def tom(nav, base):
     pg.click('#modoEsp'); pg.click('#serGo'); time.sleep(.3)
     confere(linhas()[:7] == ['X', 'P 0 18', 'P 1 19', 'P 2 21', 'P 3 22', 'P 4 23', 'P 5 25'],
             'ao conectar: X e os pinos do painel do player')
-    pg.evaluate("vol = 100; ch[0].ganho = 100; mostrarTudo()")
+    pg.evaluate("ch[0].ganho = 100; mostrarTudo()")
     pg.click('#play'); time.sleep(1.3)
     d = [x for x in linhas() if x == 'D 0 500 440.00']
     confere(len(d) >= 3, f'tocando, o "D" do canal se repete a cada 500 ms, com fração 50% no volume máximo ({len(d)})')
