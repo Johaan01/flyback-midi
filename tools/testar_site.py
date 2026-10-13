@@ -365,8 +365,13 @@ def tom(nav, base):
     confere(linhas()[-2:] == ['D 0 0 440.00', 'D 2 500 440.00'], 'trocar a saída apaga a anterior e acende a nova')
     pg.click('#play'); time.sleep(.3)
     confere(linhas()[-1] == 'D 2 0 440.00', 'parar manda fração 0')
+    confere(caixa('#play')['y'] > caixa('#cv')['y'] + caixa('#cv')['height'] and caixa('#g0')['x'] > caixa('#play')['x'],
+            'o play e o volume ficam logo abaixo do osciloscópio')
     pg.click('#modoAudio'); time.sleep(.2)
     confere(linhas()[-1] == 'X', 'voltar ao áudio silencia o ESP')
+    pg.click('#w1 [data-onda="sawtooth"]')
+    confere(pg.evaluate('ch[1].onda') == 'sawtooth' and pg.get_attribute('#w1 [data-onda="sawtooth"]', 'aria-pressed') == 'true'
+            and pg.is_visible('#g1'), 'no áudio, a forma de onda é um botão por forma, e os dois volumes aparecem')
     confere(not erros, 'nenhum erro na página')
     pg.close()
 

@@ -7,7 +7,7 @@ Contexto do projeto para quem for continuar o desenvolvimento.
 Duas páginas web que geram áudio para alimentar **alto-falantes de plasma** — arcos elétricos de transformadores flyback que reproduzem som. O hardware é um projeto de eletrônica de potência separado; estas páginas são apenas a fonte de áudio.
 
 - `index.html` — abre MIDI ou Guitar Pro (do acervo ou do computador), roteia cada faixa de instrumento para um flyback e sintetiza onda quadrada. Dois flybacks pelo áudio estéreo, ou de 1 a 6 por um ESP32 na serial.
-- `tom.html` — gerador de tom contínuo, um por canal: frequência livre no slider, forma de onda à escolha e varredura. Sai pela saída de áudio, o P2 (V3.5), ou pelo ESP32 (V3.6). Cada canal tem o seu volume logo abaixo da frequência; não há volume geral.
+- `tom.html` — gerador de tom contínuo, um por canal: frequência livre no slider, forma de onda à escolha e varredura. Sai pela saída de áudio, o P2 (V3.5), ou pelo ESP32 (V3.6). Logo abaixo do osciloscópio ficam o play e o volume de cada canal (não há volume geral nem barra fixa no rodapé); a forma de onda é um botão por forma, com o desenho dela.
 
 As duas são **arquivo único, sem build, sem dependência de pacote**. Fontes do Google Fonts via CDN; o leitor de Guitar Pro vem do jsDelivr, carregado só quando um arquivo que não é MIDI é aberto. Devem funcionar abertas direto do disco e servidas pelo GitHub Pages.
 

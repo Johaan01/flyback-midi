@@ -22,7 +22,6 @@
   --rule:rgba(140,190,235,.22); --soft:rgba(140,190,235,.10);
   --ink:#dceaf7; --dim:#7fa5c8;
   --ch1:#d6e33c; --ch2:#43d3e6;
-  --bar:66px;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   -webkit-text-size-adjust:100%; text-size-adjust:100%;
@@ -30,7 +29,7 @@
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:#051a33;color:var(--ink);
   font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.55;
-  padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom,0px) + 12px)}
+  padding-bottom:env(safe-area-inset-bottom,0px)}
 .wrap{max-width:940px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
 h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em;line-height:1.25}
@@ -60,14 +59,25 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .btns{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
 .btns button,.btns .btn{padding:7px 13px;font-size:13px}
 
-.transport{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(5,26,51,.94);border-top:1px solid var(--rule);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  padding:9px max(16px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left))}
-.transport .in{max-width:940px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .play{width:46px;height:46px;display:grid;place-items:center;flex:none;font-size:15px}
+/* abaixo do osciloscópio: o play e o volume de cada canal */
+.comando{display:flex;align-items:center;gap:14px;margin-top:10px}
+.vols{flex:1;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 18px}
+.vols .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.vols label{font-size:13px}
+.vols .val{font-family:"IBM Plex Mono",monospace;font-size:12px;font-variant-numeric:tabular-nums}
+.vol.a label{color:var(--ch1)}
+.vol.b label{color:var(--ch2)}
+/* forma de onda: um botão por forma, com o desenho dela */
+.ondas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:2px}
+.ondas button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px 5px;font-size:11.5px;color:var(--dim)}
+.ondas svg{width:36px;height:16px;overflow:visible}
+.ondas polyline{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.ondas button[aria-pressed=true]{background:var(--panel);color:var(--ink)}
+.ch.a .ondas button[aria-pressed=true]{border-color:var(--ch1)}
+.ch.b .ondas button[aria-pressed=true]{border-color:var(--ch2)}
 .play[aria-pressed=true]{background:var(--panel);border-color:var(--ink)}
 .clock{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
-.live{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:20px;cursor:pointer;margin:0}
 input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--rule)}
 input[type=range]::-moz-range-track{height:2px;background:var(--rule)}
@@ -130,17 +140,18 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
 .soEsp{display:none}
 /* modo ESP: um canal só, a saída do ESP e os controles à esquerda, o pulso do GPIO à direita */
 body.esp .soEsp{display:block}
-body.esp .soAudio,body.esp .ch.b,body.esp .chip.b,body.esp .note.b{display:none}
+body.esp .soAudio,body.esp .ch.b,body.esp .chip.b,body.esp .note.b,body.esp .vol.b{display:none}
 body.esp .palco{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:stretch}
-body.esp .palco .screen{order:2;min-height:240px}
+body.esp .palco .visor{order:2;display:flex;flex-direction:column}
+body.esp .palco .screen{flex:1;min-height:240px}
 body.esp .palco #cv{position:absolute;inset:0;height:100%}
 body.esp .palco .chans{order:1;display:block;margin-top:0}
 body.esp .chip.a,body.esp .note.a{top:8px}
-body.esp .pair{grid-template-columns:1fr}
 body.esp .boxes{grid-template-columns:repeat(2,1fr)}
 @media(max-width:760px){
   body.esp .palco{grid-template-columns:1fr}
-  body.esp .palco .screen{order:0;min-height:170px}
+  body.esp .palco .visor{order:0}
+  body.esp .palco .screen{min-height:170px}
 }
 @media(max-width:860px){body.esp .boxes{grid-template-columns:1fr}}
 
@@ -184,6 +195,7 @@ body.esp .boxes{grid-template-columns:repeat(2,1fr)}
   </div>
 
   <div class="palco">
+  <div class="visor">
   <div class="screen">
     <canvas id="cv"></canvas>
     <span class="chip a" id="chipA">1▸</span>
@@ -191,6 +203,20 @@ body.esp .boxes{grid-template-columns:repeat(2,1fr)}
     <span class="note a" id="nota0"></span>
     <span class="note b" id="nota1"></span>
     <div class="empty" id="empty">parado</div>
+  </div>
+  <div class="comando">
+    <button class="play" id="play" aria-pressed="false" aria-label="Tocar">▶</button>
+    <div class="vols">
+      <div class="vol a">
+        <div class="row"><label for="g0" id="gl0">Volume 1</label><span class="val" id="gv0">50%</span></div>
+        <input type="range" id="g0" min="0" max="100" value="50" aria-label="Volume do canal esquerdo">
+      </div>
+      <div class="vol b">
+        <div class="row"><label for="g1">Volume 2</label><span class="val" id="gv1">50%</span></div>
+        <input type="range" id="g1" min="0" max="100" value="50" aria-label="Volume do canal direito">
+      </div>
+    </div>
+  </div>
   </div>
 
   <div class="chans">
@@ -211,19 +237,13 @@ body.esp .boxes{grid-template-columns:repeat(2,1fr)}
           <button type="button" data-ch="0" data-mul="2" aria-label="Dobro da frequência">×2</button>
         </div>
       </div>
-      <div class="ctl">
-        <div class="row"><label for="g0">Volume</label><span class="val" id="gv0">50%</span></div>
-        <input type="range" id="g0" min="0" max="100" value="50" aria-label="Volume do canal esquerdo">
+      <div class="ctl soAudio">
+        <label>Forma de onda</label>
+        <div class="ondas" id="w0" role="group" aria-label="Forma de onda do canal esquerdo"></div>
       </div>
-      <div class="pair">
-        <div class="ctl soAudio">
-          <label for="w0">Forma de onda</label>
-          <select id="w0"></select>
-        </div>
-        <div class="ctl">
-          <label for="nt0">Nota</label>
-          <select id="nt0"></select>
-        </div>
+      <div class="ctl">
+        <label for="nt0">Nota</label>
+        <select id="nt0"></select>
       </div>
     </section>
 
@@ -241,18 +261,12 @@ body.esp .boxes{grid-template-columns:repeat(2,1fr)}
         </div>
       </div>
       <div class="ctl">
-        <div class="row"><label for="g1">Volume</label><span class="val" id="gv1">50%</span></div>
-        <input type="range" id="g1" min="0" max="100" value="50" aria-label="Volume do canal direito">
+        <label>Forma de onda</label>
+        <div class="ondas" id="w1" role="group" aria-label="Forma de onda do canal direito"></div>
       </div>
-      <div class="pair">
-        <div class="ctl">
-          <label for="w1">Forma de onda</label>
-          <select id="w1"></select>
-        </div>
-        <div class="ctl">
-          <label for="nt1">Nota</label>
-          <select id="nt1"></select>
-        </div>
+      <div class="ctl">
+        <label for="nt1">Nota</label>
+        <select id="nt1"></select>
       </div>
     </section>
   </div>
@@ -318,13 +332,6 @@ body.esp .boxes{grid-template-columns:repeat(2,1fr)}
   <p class="foot" id="foot"></p>
 </div>
 
-<div class="transport">
-  <div class="in">
-    <button class="play" id="play" aria-pressed="false" aria-label="Tocar">▶</button>
-    <span class="clock live" id="live"></span>
-  </div>
-</div>
-
 <script>
 /* ---------- utilidades ---------- */
 const $ = id => document.getElementById(id);
@@ -354,6 +361,21 @@ const GH = (() => {
 
 /* Onda quadrada é o timbre do arco; as outras servem para medir e comparar. */
 const ONDAS = [['square', 'quadrada'], ['sine', 'senoide'], ['triangle', 'triangular'], ['sawtooth', 'dente de serra']];
+/* o desenho de cada forma no botão: dois períodos, fase u de 0 a 1 */
+const DESENHO = {
+  square: u => u < .5 ? 1 : -1,
+  sine: u => Math.sin(2 * Math.PI * u),
+  triangle: u => u < .25 ? 4 * u : u < .75 ? 2 - 4 * u : 4 * u - 4,
+  sawtooth: u => u < .5 ? 2 * u : 2 * u - 2
+};
+function iconeOnda(onda){
+  const pts = [];
+  for (let k = 0; k <= 360; k++){
+    const x = k / 10, u = (x / 18) % 1;
+    pts.push(x.toFixed(1) + ',' + (8 - 6 * DESENHO[onda](u)).toFixed(2));
+  }
+  return '<svg viewBox="0 0 36 16" aria-hidden="true"><polyline points="' + pts.join(' ') + '"/></svg>';
+}
 /* E0 (20,6 Hz) é a nota mais grave que cabe no limite de baixo; daí até o topo audível */
 const NOTA_LO = 16, NOTA_HI = 132;
 
@@ -426,8 +448,7 @@ function mostrar(i){
   $('on' + i).textContent = c.on ? 'ligado' : 'desligado';
   if (document.activeElement !== $('g' + i)) $('g' + i).value = String(c.ganho);
   $('gv' + i).textContent = c.ganho + '%' + (saida === 'esp' ? ' · aberto ' + br((abertoDe(i) / 10).toFixed(0)) + '%' : '');
-  $('w' + i).value = c.onda;
-  $('w' + i).disabled = saida === 'esp';                   /* pelo ESP o arco só liga e desliga: é sempre quadrada */
+  for (const b of $('w' + i).children) b.setAttribute('aria-pressed', String(b.dataset.onda === c.onda));
 }
 function mostrarTudo(){
   for (let i = 0; i < N; i++) mostrar(i);
@@ -435,8 +456,6 @@ function mostrarTudo(){
   $('play').textContent = tocando ? '⏸' : '▶';
   $('play').setAttribute('aria-label', tocando ? 'Parar' : 'Tocar');
   $('empty').classList.toggle('hide', tocando);
-  const vivos = ch.filter((c, i) => vivo(i));
-  $('live').textContent = tocando && vivos.length ? vivos.map(c => curto(c.f)).join('  ·  ') : '';
   guardar();
 }
 function setFreq(i, f){
@@ -543,6 +562,7 @@ function mostrarSaida(){
     ? 'Placa V3.6: o tom vai pelo ESP32 para uma saída por vez. Pinos do painel de saída do player, placa ' + NOME_PLACA[c.placa] + '. O volume vira a fração aberta do arco.'
     : 'Placa V3.5: o tom sai pela saída de áudio (P2), canal esquerdo num flyback e direito no outro, com separação dura.';
   $('t0').textContent = esp ? 'ESP32' : 'Canal esquerdo';
+  $('gl0').textContent = esp ? 'Volume' : 'Volume 1';
   /* o S3 tem timer para 4 canais só (o firmware avisa); as saídas 5 e 6 ficam fora */
   const usaveis = c.placa === 's3' ? 4 : 6;
   if (alvo >= usaveis) alvo = 0;
@@ -653,7 +673,13 @@ function recado(txt){
 /* ---------- montagem dos seletores ---------- */
 for (let i = 0; i < N; i++){
   const w = $('w' + i);
-  ONDAS.forEach(([v, t]) => w.appendChild(new Option(t, v)));
+  ONDAS.forEach(([v, t]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.onda = v; b.title = t; b.setAttribute('aria-label', t);
+    b.innerHTML = iconeOnda(v) + '<span>' + (v === 'sawtooth' ? 'serra' : t) + '</span>';
+    b.addEventListener('click', () => setOnda(i, v));
+    w.appendChild(b);
+  });
   const s = $('nt' + i);
   s.appendChild(new Option('—', ''));
   for (let n = NOTA_LO; n <= NOTA_HI; n++) s.appendChild(new Option(nm(n) + ' · ' + curto(hz(n)), String(n)));
@@ -664,7 +690,6 @@ for (let i = 0; i < N; i++){
   $('f' + i).addEventListener('input', e => setFreq(i, freqOf(+e.target.value)));
   $('fn' + i).addEventListener('input', e => { const v = parseFloat(e.target.value); if (isFinite(v) && v >= FMIN && v <= FMAX) setFreq(i, v); });
   $('fn' + i).addEventListener('blur', () => mostrar(i));
-  $('w' + i).addEventListener('change', e => setOnda(i, e.target.value));
   $('nt' + i).addEventListener('change', e => { if (e.target.value) setFreq(i, hz(+e.target.value)); });
   $('g' + i).addEventListener('input', e => { ch[i].ganho = +e.target.value; if (actx) aplicarGanho(i); mostrarTudo(); });
   $('on' + i).addEventListener('click', () => ligar(i, !ch[i].on));
