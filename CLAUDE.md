@@ -29,7 +29,7 @@ Arquivos de apoio, fora das páginas:
 | `tools/popularidade.json` | O que as duas APIs responderam, guardado. Faz as rodadas seguintes não precisarem de internet e darem o mesmo resultado |
 | `tools/transcrever.py` | Gera MIDI a partir de uma gravação: separa os stems e transcreve cada um. **A única ferramenta que precisa de pacotes além da biblioteca padrão** (torch, torchaudio, librosa, basic-pitch) — é opcional, e nada no site depende dela |
 | `tools/instrumentos.py` | Descobre a instrumentação de uma gravação para condicionar o MuScriptor: PANNs (AudioSet) aplicado a cada stem do Demucs. Voz pelo peso do stem de voz, baixo e bateria pelos rótulos, o resto traduzido para os grupos do MuScriptor |
-| `tools/lote.py` | Transcreve uma playlist do YouTube sozinho, retomável: `large` com a lista de instrumentos de cada música (`--instrumentos-por`, e aí orientação 2) ou a automática, segunda tentativa com a separação em blocos menores, e o que ainda falhar vai para `para-o-mirelo.md` com os instrumentos a marcar. Credita cada música no `creditos.json`, confere a montagem de 6 flybacks dela e quanto do canto da gravação virou nota |
+| `tools/lote.py` | Transcreve uma playlist do YouTube sozinho, retomável: `large` com a lista de instrumentos de cada música (`--instrumentos-por`; orientação 1, porque a 2 congela blocos) ou a automática, segunda tentativa com a separação em blocos menores, e o que ainda falhar vai para `para-o-mirelo.md` com os instrumentos a marcar. Credita cada música no `creditos.json`, confere a montagem de 6 flybacks dela e quanto do canto da gravação virou nota |
 | `tools/conferir_voz.py` | Separa o canto da gravação (Demucs) e mede quanto dele tem nota na faixa de voz do MIDI, com os trechos sem nota. O lote roda depois de cada música; abaixo de 60%, aviso |
 | `tools/auditar_montagem.py` | Abre cada MIDI no próprio `index.html` (Playwright) com N flybacks e mede, faixa a faixa, quanto do tempo de nota soa em algum arco: aponta instrumento sem arco e melodia calada em trecho longo — o que o site, uma nota por arco, não deixa ver |
 | `tools/medir_canais.py` | Mede o aproveitamento de todo o acervo em 2 e em 6 flybacks e grava no `creditos.json` — é o que o site usa nos filtros "2 canais" e "+ de 2 canais" |
@@ -404,6 +404,29 @@ orientação 2 quando a música tem lista própria (`--orientacao-com-lista`) e 
 erra o "resto" e com 2 inventaria em cima do erro. Tentado e descartado: completar os buracos da voz
 com o pYIN do stem (45% → 50%) e transformar grito sem altura em estouro curto, como a bateria
 (65% → 67% sobre a versão boa) — não pagam a complexidade.
+
+**Orientação 2 congela blocos — o padrão voltou a ser 1 (out/2026).** O dono do projeto ouviu em Eye
+of the Tiger, em 1:27, "as notas virarem uma coisa contínua, com todos os instrumentos". No MIDI, de
+86,56 a 90,56 s — 4,00 s cravados — guitarra, baixo e voz seguram a mesma nota e a bateria some. O
+MuScriptor transcreve em blocos fixos de 5 s (0–5, 5–10…), e nesse bloco o `large` parou de escrever
+no meio: as notas abertas ficam soando até o bloco seguinte fechá-las. `congelados.py` (no rascunho da
+sessão) acha isso em qualquer MIDI: buraco de 2 s ou mais sem ataque em faixa nenhuma, com nota
+segurada por cima e bateria tocando antes e depois. Nas 95 transcritas: 24 de 65 feitas com `large` e
+orientação 2 (37%), 2 de 22 com orientação 1, nenhuma das 7 do Mirelo. Refeito só o bloco de 80–95 s
+(o corte em 80 mantém a grade): `large` o2 congela 4,00 s; `large` o1, `medium` o1 e o2 e `large` o2
+com busca em feixe (`--beam 3`, 7× mais lento) não congelam. Por isso `--orientacao-com-lista` voltou
+a 1 por padrão. O ganho de Thunderstruck fica para quando valer pagar o risco, música a música.
+
+**A introdução de Eye of the Tiger não tem o riff em modelo nenhum.** O dono do projeto ouviu "a
+mesma nota repetindo até o começo da batida": o MIDI tem o abafado em C3, semicolcheias de 140 ms, e
+não tem os acentos em Si bemol e Lá bemol. `large` e `medium`, orientação 1 e 2, com e sem busca em
+feixe: todos escrevem C3, G3 e C4 e mais nada. É limite do modelo nesse trecho; a versão de fã em
+`bandas/Survivor` tem o riff.
+
+**Nota repetida colada precisa de respiro no arco.** Pela serial, trecho colado no anterior vai só
+com o "N" dele; na mesma frequência, o arco não desliga e a repetição some — a cavalgada vira uma nota
+só. No computador ela se ouvia pela rampa de 10 ms de cada trecho. `respiro()` desliga a de antes 25
+ms antes da seguinte (no máximo 40% dela).
 
 **O detector não ouve bateria eletrônica nem baixo de sintetizador.** No lote de out/2026 (45 músicas, 30 com lista própria), três com a detecção automática saíram sem arco de baixo ou de bateria: The Man Who Sold the World do Midge Ure, il vento d'oro e Snake Eater. Os stems do Demucs mostravam os dois — bateria pesando 0,30 a 0,56 na mistura, baixo 0,27 a 0,39 —, mas o PANNs deu "Drum kit" 0,01 a 0,02 e "Bass guitar" 0,11 a 0,14, abaixo dos cortes. Refeitas com baixo e bateria na lista e orientação 2, ganharam os arcos, mas a voz caiu em duas (96% → 51% do canto). O que ficou no acervo foi a primeira transcrição mais só as faixas novas, por `tools/juntar_faixas.py`. Próximo passo, se voltar a acontecer: usar o peso do stem também para baixo e bateria, como já se faz com a voz — falta calibrar com gravações que não têm os dois. A outra falha da noite foi de voz: Dazed and Confused cobre 40% do canto com a lista certa, e nem `medium` nem orientação 1 passam de 42%; os lamentos do Plant não viram nota, é caso para o Mirelo.
 

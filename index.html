@@ -763,6 +763,7 @@ function buildSegs(i){
   }
   if (cur && cur.end === null){ cur.end = duration; if (cur.end > cur.start) segs.push(cur); }
   curtas(segs);
+  respiro(segs);
   segs.forEach(s => { s.n += 12 * oct; s.f = hz(s.n); });
   /* limite de agudo: desce de oitava até caber. Vale para o P2 e para a serial, porque mexe na
      nota, não no áudio */
@@ -817,6 +818,18 @@ function curtas(segs){
     if (a.n === b.n && s.n !== a.n && s.d0 < ACORDE_JANELA && colado(a, s) && colado(s, b)){
       a.end = b.end; segs.splice(k, 2); k = Math.max(0, k - 2);
     }
+  }
+}
+/* Nota repetida colada na anterior: pela serial vai só o "N" da segunda, na mesma frequência, e o
+   arco não desliga — a repetição some. O dono do projeto ouviu a cavalgada de Eye of the Tiger,
+   semicolcheias de 140 ms em C3 coladas umas nas outras, virar uma nota só. No computador ela se
+   ouvia, porque cada trecho tem rampa de 6 ms no fim e 4 ms no começo; no arco, não. A de antes
+   desliga RESPIRO antes da seguinte (no máximo 40% dela, numa nota curtíssima). */
+const RESPIRO = .025;
+function respiro(segs){
+  for (let k = 0; k + 1 < segs.length; k++){
+    const s = segs[k], b = segs[k + 1];
+    if (s.n === b.n && b.start - s.end < 1e-6) s.end -= Math.min(RESPIRO, .4 * (s.end - s.start));
   }
 }
 /* "Repartir". Os arcos com essa opção que recebem a mesma faixa dividem as notas dela como as

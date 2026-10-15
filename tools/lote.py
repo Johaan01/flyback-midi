@@ -360,9 +360,10 @@ def main():
     ap.add_argument('--instrumentos-por', metavar='ARQ',
                     help='.json {id do vídeo: "voice,electric_bass,..."}: a lista de cada música, no lugar '
                          'da detecção automática. Quem não estiver nele usa a automática')
-    ap.add_argument('--orientacao-com-lista', type=float, default=2.0, metavar='N',
+    ap.add_argument('--orientacao-com-lista', type=float, default=1.0, metavar='N',
                     help='orientação (cfg_coef) quando a música tem lista própria; com a automática é 1. '
-                         'Thunderstruck com a lista certa: voz cobrindo 38%% do canto com 1, 65%% com 2')
+                         'Era 2 (Thunderstruck: voz cobrindo 38%% do canto com 1, 65%% com 2), mas com 2 o large '
+                         'pula pedaços de bloco: 24 de 65 músicas congelavam 2 a 9 s, contra 2 de 22 com 1')
     ap.add_argument('--cookies-do-navegador', metavar='NAV',
                     help='usar a sessão do navegador (firefox, chrome...) nos downloads. Em out/2026 o YouTube '
                          'passou a responder 403 a todo download sem conta deste IP, com qualquer cliente do '
