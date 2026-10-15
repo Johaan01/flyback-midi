@@ -757,11 +757,9 @@ function buildSegs(i){
       if (o){ o.c++; o.t = e.t; o.v = e.v; } else live.set(e.k, { c: 1, t: e.t, v: e.v });
     } else { const o = live.get(e.k); if (o && --o.c <= 0) live.delete(e.k); }
     const b = best();
-    /* `roubou`: a nota entrou com a anterior ainda soando; `antiga`: a nota já soava, por baixo,
-       e voltou quando a de cima acabou — ver curtas() */
-    let roubou = false;
-    if (cur && (!b || cur.n !== b.n)){ roubou = live.has(cur.k); cur.end = e.t; if (cur.end > cur.start + .005) segs.push(cur); cur = null; }
-    if (b && !cur) cur = { start: e.t, end: null, n: b.n, v: b.v, k: b.k, roubou, antiga: live.get(b.k).t < e.t - 1e-9 };
+    /* `antiga`: a nota já soava, por baixo, e voltou quando a de cima acabou — ver curtas() */
+    if (cur && (!b || cur.n !== b.n)){ cur.end = e.t; if (cur.end > cur.start + .005) segs.push(cur); cur = null; }
+    if (b && !cur) cur = { start: e.t, end: null, n: b.n, v: b.v, antiga: live.get(b.k).t < e.t - 1e-9 };
   }
   if (cur && cur.end === null){ cur.end = duration; if (cur.end > cur.start) segs.push(cur); }
   curtas(segs);
@@ -776,19 +774,22 @@ function buildSegs(i){
   });
   return segs;
 }
-/* Trecho curto no arco é estalo. Três casos, todos ouvidos pelo dono do projeto:
-   - nota longa interrompida por uma curta que entra e sai (A, B, A): no arco extra de Jesu, Joy
-     of Man's Desiring, no "grave para agudo", o 79 virava 67 por 52 ms e voltava. A do meio sai e
-     a longa segue inteira;
-   - acorde dedilhado: as cordas entram 5 a 20 ms uma depois da outra, e cada uma tocava sozinha
-     até a próxima — 437 trechos assim no arco 3 de Angel, 749 em Dude Looks Like a Lady. O
-     acorde já se escolhe com folga (ACORDE_JANELA, em best()); o que ainda sobrar, menos de
-     ACORDE_JANELA colado na seguinte, entra nela;
-   - nota curta seguida de silêncio: liga e desliga com poucos ciclos no meio. Se estende no
-     silêncio até NOTA_MINIMA, ou até encostar na seguinte, e o arco não desliga entre as duas.
-   Nota curta colada na seguinte e diferente da anterior fica: é escala rápida, e o arco só troca de
-   frequência. Fundir toda curta com a seguinte, como foi tentado, juntava a escala numa nota só
-   (Carmen perdia 8% dos ataques). */
+/* Trecho curto no arco é estalo. O que sai, nos casos que o dono do projeto ouviu:
+   - a nota antiga que reaparece no respiro: no MIDI que sai do MuseScore cada nota acaba um pouco
+     antes da seguinte, e nesse respiro a nota que soava por baixo aparecia — no arco extra de Jesu,
+     Joy of Man's Desiring, a 64 do clarinete por 52 ms entre a 71 e a 79 das flautas;
+   - o resto de acorde dedilhado: as cordas entram 5 a 20 ms uma depois da outra, e cada uma
+     tocava sozinha até a próxima — 437 trechos assim no arco 3 de Angel, 749 em Dude Looks Like
+     a Lady. O acorde já se escolhe com folga (ACORDE_JANELA, em best()); o que ainda sobrar, menos
+     de ACORDE_JANELA colado na seguinte, entra nela;
+   - a nota nova de menos de ACORDE_JANELA entre duas iguais (A, B, A), que nenhum músico toca.
+   A nota curta seguida de silêncio se estende até NOTA_MINIMA, ou até encostar na seguinte, e o
+   arco não desliga entre as duas.
+   Ataque novo de verdade nunca sai. Já saiu: uma regra que tirava a nota curta que "roubava" o
+   arco de uma longa (A, B, A ou A, B, C) apagava a cavalgada da guitarra abafada por cima do acorde
+   sustentado — o Eye of the Tiger de fã perdia 14% das batidas do arco 6. E fundir toda curta com
+   a seguinte juntava escala rápida numa nota só (Carmen perdia 8% dos ataques); trinado (73, 71,
+   73 a 53 ms) e nota repetida (o tremolo de 51 ms de Jupiter) também ficam. */
 const NOTA_MINIMA = .06, ACORDE_JANELA = .035;
 function curtas(segs){
   const colado = (a, b) => a && b && b.start - a.end < 1e-6;
@@ -805,29 +806,17 @@ function curtas(segs){
     const livre = k + 1 < segs.length ? segs[k + 1].start : duration;
     s.end = Math.max(s.end, Math.min(s.start + NOTA_MINIMA, livre));
   });
-  /* a nota de baixo que aparece no respiro entre duas da melodia: no MIDI que sai do MuseScore cada
-     nota acaba um pouco antes da seguinte, e nesse respiro a nota antiga, que soava por baixo,
-     aparecia — em Jesu, Joy of Man's Desiring, a 64 do clarinete por 52 ms entre a 71 e a 79 das
-     flautas. A de cima segue por cima dela */
+  /* a nota antiga que reaparece no respiro, por menos de NOTA_MINIMA: a de antes segue por cima */
   for (let k = 1; k < segs.length; k++){
     const a = segs[k - 1], s = segs[k];
     if (s.antiga && s.n !== a.n && s.end - s.start < NOTA_MINIMA && colado(a, s)){ a.end = s.end; segs.splice(k--, 1); }
   }
+  /* A, B, A com B nova e minúscula no MIDI */
   for (let k = 1; k < segs.length - 1; k++){
     const a = segs[k - 1], s = segs[k], b = segs[k + 1];
-    if (s.end - s.start >= NOTA_MINIMA || s.n === a.n || s.n === b.n || !colado(a, s) || !colado(s, b)) continue;
-    /* (nota repetida acima: tremolo, 88, 88, 88 a cada 51 ms em Jupiter, é ataque de verdade) */
-    /* A, B, A só quando A é a mesma nota voltando (B roubou o arco e A, que soava por baixo,
-       reaparece) ou B era minúscula no MIDI: 73, 71, 73 a 53 ms é trinado (Carmen), e fica */
-    if (a.n === b.n){
-      if ((s.roubou && b.antiga) || s.d0 < ACORDE_JANELA){ a.end = b.end; segs.splice(k, 2); k = Math.max(0, k - 2); }
+    if (a.n === b.n && s.n !== a.n && s.d0 < ACORDE_JANELA && colado(a, s) && colado(s, b)){
+      a.end = b.end; segs.splice(k, 2); k = Math.max(0, k - 2);
     }
-    /* A, B, C com C roubando o arco de B, e B ou roubando de A, que ainda soava, ou sendo uma
-       nota antiga, de outra voz, que já soava por baixo e reapareceu quando A acabou: no arco
-       extra de Jesu, Joy of Man's Desiring, a 64 do acompanhamento aparecia por 52 ms entre a 71
-       e a 79 da melodia. A segue até C. Numa escala rápida cada nota é nova e entra quando a
-       anterior termina: ninguém rouba, nenhuma é antiga, e ela fica */
-    else if (b.roubou && (s.roubou || s.antiga)){ a.end = b.start; segs.splice(k--, 1); }
   }
 }
 /* "Repartir". Os arcos com essa opção que recebem a mesma faixa dividem as notas dela como as
@@ -1392,12 +1381,18 @@ function umPorFlyback(n){
     for (const e of evs(i, c)) if (!cob.has(e) && !cob.has(e - 12) && !cob.has(e + 12)) k++;
     return k;
   };
+  /* Entra quem traz 3% dos ataques da música em notas novas, ou quem soa em 5% da música e tem
+     ao menos 30% de ataques novos — o corte é para a faixa dobrada, não para o instrumento de parte
+     pequena: só com os 3%, o synth lead de Never Gonna Give You Up (45 ataques, 8% da música)
+     perdia o arco 6 para mais uma linha da voz. Entre quem entra, ganha quem traz mais. */
+  const tempo = i => tracks[i].uniao.reduce((a, [x, y]) => a + y - x, 0);
   const melhor = (l, c) => {
-    let bi = -1, bv = limiar;
+    let bi = -1, bv = 0;
     l.forEach(i => {
       if (proprio.has(i) || (c === 1 && avgPitch(tracks[i]) >= 55)) return;
       const v = novo(i, c);
-      if (v >= bv){ bv = v; bi = i; }
+      if (v < limiar && !(tempo(i) >= duration * .05 && v >= evs(i, c).size * .3)) return;
+      if (v > bv){ bv = v; bi = i; }
     });
     return bi;
   };
