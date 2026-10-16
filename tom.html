@@ -133,10 +133,6 @@ input[type=number]{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:
 .saida .linha{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:12px;font-size:13px;color:var(--dim)}
 .saida .linha select{width:auto}
 .saida .linha label{display:flex;align-items:center;gap:6px}
-.fbs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:4px}
-.fbs button{display:flex;flex-direction:column;align-items:center;padding:6px 2px;font-size:15px;font-weight:500;line-height:1.2}
-.fbs button small{font-size:11px;font-weight:400;color:var(--dim);font-family:"IBM Plex Mono",monospace}
-.fbs button[aria-pressed=true]{background:var(--panel);border-color:var(--ch1)}
 .soEsp{display:none}
 /* modo ESP: um canal só, a saída do ESP e os controles à esquerda, o pulso do GPIO à direita */
 body.esp .soEsp{display:block}
@@ -185,7 +181,6 @@ body.esp .boxes{grid-template-columns:repeat(2,1fr)}
     <div id="espBloco" class="hide">
       <div class="linha">
         <label>Placa <select id="placa" aria-label="Placa"><option value="esp32">ESP32</option><option value="s3">ESP32-S3</option></select></label>
-        <label><span id="gpioRot">Saída 1</span> <select id="gpio" aria-label="GPIO da saída escolhida"></select></label>
       </div>
       <div class="linha">
         <select id="baud" aria-label="Velocidade da serial"></select>
@@ -227,8 +222,8 @@ body.esp .boxes{grid-template-columns:repeat(2,1fr)}
     <section class="ch a">
       <h2><span id="t0">Canal esquerdo</span><button class="onoff soAudio" id="on0" aria-pressed="true">ligado</button></h2>
       <div class="ctl soEsp">
-        <label>Saída do ESP</label>
-        <div class="fbs" id="fbs" role="group" aria-label="Saída do ESP"></div>
+        <label for="gpio">Pino do ESP</label>
+        <select id="gpio" aria-label="GPIO que recebe o tom"></select>
       </div>
       <div class="ctl">
         <div class="row"><label for="f0">Frequência</label><span class="val big" id="fv0">440,00 Hz</span></div>
@@ -388,7 +383,7 @@ const ch = [{ on: true,  f: 440, onda: 'square', ganho: 50, osc: null, gn: null,
 let actx = null, merger = null, tocando = false, travado = false, razaoTravada = 1;
 let varrendo = false, varreVolta = true, varreT0 = 0, wake = null, wakeWanted = false, idle = 2;
 let saida = 'audio', monitor = false;
-let alvo = 0;                                              /* no modo ESP, a saída (0 a 5) que recebe o tom */
+let pino = null;                                           /* no modo ESP, o GPIO que recebe o tom (canal 1 do ESP) */
 /* no modo ESP só o canal esquerdo existe, e o play basta para ele soar */
 const vivo = i => saida === 'esp' ? i === 0 : ch[i].on;
 
@@ -434,7 +429,7 @@ let guardaT = 0;
 function guardar(){
   clearTimeout(guardaT);                                   /* a varredura mexe na frequência a cada quadro: não grava a cada quadro */
   guardaT = setTimeout(() => store.set('tom',
-    { t: travado, s: saida, m: monitor, a: alvo, c: ch.map(c => ({ on: c.on, f: c.f, onda: c.onda, ganho: c.ganho })) }), 400);
+    { t: travado, s: saida, m: monitor, g: pino, c: ch.map(c => ({ on: c.on, f: c.f, onda: c.onda, ganho: c.ganho })) }), 400);
 }
 function mostrar(i){
   const c = ch[i];
@@ -520,16 +515,20 @@ function espCfg(){
   const pinos = Array.isArray(e.pinos) && e.pinos.length === 6 && e.pinos.every(g => PLACAS[placa].pinos.includes(+g)) ? e.pinos.map(Number) : PLACAS[placa].padrao.slice();
   return { placa, pinos, baud: BAUDS.includes(+e.baud) ? +e.baud : 115200 };
 }
-/* placa e pinos escolhidos aqui valem no player, e vice-versa: o resto do que o player guarda fica */
-function salvarEsp(placa, novos){
-  store.set('esp', Object.assign(store.get('esp') || {}, { placa, pinos: novos }));
-  mostrarSaida(); pinos(); enviar(true);
+/* o GPIO do tom: o escolhido aqui, se a placa o tem; senão o do canal 1 do player */
+const pinoTom = () => { const c = espCfg(); return PLACAS[c.placa].pinos.includes(pino) ? pino : c.pinos[0]; };
+/* a placa vale aqui e no player (o resto do que o player guarda fica); trocar a placa volta os pinos
+   dos dois ao padrão dela, como no painel do player */
+function salvarPlaca(placa){
+  store.set('esp', Object.assign(store.get('esp') || {}, { placa, pinos: PLACAS[placa].padrao.slice() }));
+  pino = PLACAS[placa].padrao[0];
+  mostrarSaida(); pinos(); enviar(true); guardar();
 }
 const ser = { port: null, writer: null, enc: new TextEncoder(), timer: 0, ult: 0, fila: 0, enviado: '' };
 function serialWrite(l){ if (ser.writer) ser.writer.write(ser.enc.encode(l + '\n')).catch(() => fechar(true)); }
 const abertoDe = i => Math.round(1000 * Math.asin(Math.min(1, ch[i].ganho / 100)) / Math.PI);
 const abertoAgora = () => tocando ? abertoDe(0) : 0;
-const linhaD = () => 'D ' + alvo + ' ' + abertoAgora() + ' ' + ch[0].f.toFixed(2);
+const linhaD = () => 'D 0 ' + abertoAgora() + ' ' + ch[0].f.toFixed(2);
 /* o "D", no máximo de 40 em 40 ms: a varredura e o arrasto do slider mexem a cada quadro */
 function enviar(ja){
   if (saida !== 'esp' || !ser.writer) return;
@@ -542,9 +541,12 @@ function enviar(ja){
 }
 /* a cada 500 ms, de novo o "D": é o que mantém o arco aberto no ESP */
 function manter(){ if (abertoAgora() > 0) enviar(true); }
+/* Só o canal 1, no pino do tom; os outros cinco ficam livres (-1). Mandar o mapa inteiro do player
+   punha, com a placa no padrão ESP32-S3, os canais 3 e 4 nos GPIO 6 e 7 — num ESP32 comum, pinos da
+   memória flash: o ESP travava e a serial caía poucos segundos depois de o tom começar. */
 function pinos(){
   if (saida !== 'esp' || !ser.writer) return;
-  espCfg().pinos.forEach((g, c) => serialWrite('P ' + c + ' ' + g));
+  for (let c = 0; c < 6; c++) serialWrite('P ' + c + ' ' + (c ? -1 : pinoTom()));
 }
 async function conectar(){
   if (ser.port) return fechar(false);
@@ -574,31 +576,21 @@ function mostrarSaida(){
   $('espBloco').classList.toggle('hide', !esp);
   document.body.classList.toggle('esp', esp);
   $('saidaTxt').textContent = esp
-    ? 'Placa V3.6: o tom vai pelo ' + PLACAS[c.placa].nome + ' para uma saída por vez. Placa e pinos são os mesmos do painel de saída do player. O volume vira a fração aberta do arco.'
+    ? 'Placa V3.6: o tom vai pelo ' + PLACAS[c.placa].nome + ', no pino escolhido junto da frequência. A placa é a mesma do painel de saída do player. O volume vira a fração aberta do arco.'
     : 'Placa V3.5: o tom sai pela saída de áudio (P2), canal esquerdo num flyback e direito no outro, com separação dura.';
   $('t0').textContent = esp ? 'ESP32' : 'Canal esquerdo';
   $('gl0').textContent = esp ? 'Volume' : 'Volume 1';
-  /* o S3 tem timer para 4 canais só (o firmware avisa); as saídas 5 e 6 ficam fora */
-  const usaveis = c.placa === 's3' ? 4 : 6;
-  if (alvo >= usaveis) alvo = 0;
-  [...$('fbs').children].forEach((b, k) => {
-    b.lastChild.textContent = 'GPIO ' + c.pinos[k];
-    b.disabled = k >= usaveis;
-    b.setAttribute('aria-pressed', String(k === alvo));
-  });
-  $('chipA').textContent = esp ? 'saída ' + (alvo + 1) + ' · GPIO ' + c.pinos[alvo] : '1▸';
+  $('chipA').textContent = esp ? 'GPIO ' + pinoTom() : '1▸';
   $('placa').value = c.placa;
   const g = $('gpio');
   if (g.dataset.placa !== c.placa){ g.textContent = ''; PLACAS[c.placa].pinos.forEach(x => g.appendChild(new Option('GPIO ' + x, String(x)))); g.dataset.placa = c.placa; }
-  g.value = String(c.pinos[alvo]);
-  $('gpioRot').textContent = 'Saída ' + (alvo + 1);
+  g.value = String(pinoTom());
   $('monitorTom').checked = monitor;
 }
-function escolherSaida(k){
-  if (k === alvo) return;
-  if (ser.writer) serialWrite('D ' + alvo + ' 0 ' + ch[0].f.toFixed(2));   /* a saída que ficou para trás apaga */
-  alvo = k;
-  enviar(true); mostrarSaida(); guardar();
+/* o firmware, ao mudar o pino do canal, apaga o antigo e o deixa no silêncio */
+function escolherPino(g){
+  pino = g;
+  pinos(); enviar(true); mostrarSaida(); guardar();
 }
 function mudarSaida(m){
   if (m === saida) return;
@@ -660,7 +652,7 @@ function aplicarEstado(e){
   if (!e) return;
   if (e.s === 'esp') saida = 'esp';
   monitor = !!e.m;
-  if (Number.isInteger(e.a) && e.a >= 0 && e.a < 6) alvo = e.a;
+  if (Number.isInteger(e.g)) pino = e.g;
   travado = !!e.t;
   (e.c || []).forEach((d, i) => {
     if (i >= N || !d) return;
@@ -732,18 +724,11 @@ $('trava').addEventListener('click', () => {
 });
 $('play').addEventListener('click', () => tocar(!tocando));
 BAUDS.forEach(b => $('baud').appendChild(new Option(String(b), String(b))));
-$('placa').addEventListener('change', e => salvarEsp(e.target.value, PLACAS[e.target.value].padrao.slice()));
-$('gpio').addEventListener('change', e => { const c = espCfg(); c.pinos[alvo] = +e.target.value; salvarEsp(c.placa, c.pinos); });
+$('placa').addEventListener('change', e => salvarPlaca(e.target.value));
+$('gpio').addEventListener('change', e => escolherPino(+e.target.value));
 $('modoAudio').addEventListener('click', () => mudarSaida('audio'));
 $('modoEsp').addEventListener('click', () => mudarSaida('esp'));
 $('monitorTom').addEventListener('change', e => { monitor = e.target.checked; if (actx) for (let i = 0; i < N; i++) aplicarGanho(i); guardar(); });
-for (let k = 0; k < 6; k++){
-  const b = document.createElement('button');
-  b.type = 'button'; b.dataset.fb = String(k);
-  b.append(String(k + 1), document.createElement('small'));
-  b.addEventListener('click', () => escolherSaida(k));
-  $('fbs').appendChild(b);
-}
 if ('serial' in navigator){
   $('serGo').addEventListener('click', conectar);
   navigator.serial.addEventListener('disconnect', e => { if (e.target === ser.port) fechar(true); });

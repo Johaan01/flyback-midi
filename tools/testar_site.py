@@ -349,19 +349,20 @@ def tom(nav, base):
     # sem nada salvo, os pinos padrão do player: o tom saía no GPIO 18 e a música no 4
     pg.goto(base + 'tom.html'); pg.evaluate('localStorage.clear()'); pg.goto(base + 'tom.html')
     pg.click('#modoEsp'); pg.click('#serGo'); time.sleep(.3)
-    confere(linhas()[1] == 'P 0 4', f'sem painel salvo, o canal 1 vai no mesmo pino padrão do player ({linhas()[1:3]})')
+    confere(linhas()[1:7] == ['P 0 4', 'P 1 -1', 'P 2 -1', 'P 3 -1', 'P 4 -1', 'P 5 -1'],
+            f'sem painel salvo, o pino padrão do player, e os outros canais livres — nada nos GPIO 6 e 7, que num '
+            f'ESP32 comum são da flash ({linhas()[1:4]})')
     pg.select_option('#placa', 'esp32'); time.sleep(.2)
     confere('P 0 18' in linhas()[-8:] and pg.evaluate("JSON.parse(localStorage.getItem('flyback:esp')).placa") == 'esp32',
-            'trocar a placa reenvia os pinos padrão dela e fica salvo para o player')
+            'trocar a placa manda o pino padrão dela e fica salvo para o player')
     pg.select_option('#gpio', '13'); time.sleep(.2)
-    confere('P 0 13' in linhas()[-8:] and pg.inner_text('#fbs [data-fb="0"]').endswith('GPIO 13'),
-            'o GPIO da saída escolhida se troca aqui mesmo')
+    confere('P 0 13' in linhas()[-8:] and pg.inner_text('#chipA') == 'GPIO 13', 'o pino se escolhe junto da frequência')
     pg.click('#serGo'); time.sleep(.2)
     pg.evaluate("localStorage.clear(); localStorage.setItem('flyback:esp', JSON.stringify({placa: 'esp32', pinos: [18, 19, 21, 22, 23, 25]}))")
     pg.goto(base + 'tom.html')
     pg.click('#modoEsp'); pg.click('#serGo'); time.sleep(.3)
-    confere(linhas()[:7] == ['X', 'P 0 18', 'P 1 19', 'P 2 21', 'P 3 22', 'P 4 23', 'P 5 25'],
-            'ao conectar: X e os pinos do painel do player')
+    confere(linhas()[:7] == ['X', 'P 0 18', 'P 1 -1', 'P 2 -1', 'P 3 -1', 'P 4 -1', 'P 5 -1'],
+            'ao conectar: X e o pino do canal 1 do player; os outros livres')
     pg.evaluate("ch[0].ganho = 100; mostrarTudo()")
     pg.click('#play'); time.sleep(1.3)
     d = [x for x in linhas() if x == 'D 0 500 440.00']
@@ -369,12 +370,13 @@ def tom(nav, base):
     confere(pg.evaluate('ch[0].gn.gain.value') == 0 and not pg.is_visible('#w0'),
             'pelo ESP o áudio do computador fica mudo e a forma de onda some: é sempre quadrada')
     caixa = lambda sel: pg.locator(sel).bounding_box()
-    confere(not pg.is_visible('#on1') and not pg.is_visible('#g1') and caixa('#cv')['x'] > caixa('#fbs')['x'] + caixa('#fbs')['width'],
+    confere(not pg.is_visible('#on1') and not pg.is_visible('#g1') and caixa('#cv')['x'] > caixa('#gpio')['x'] + caixa('#gpio')['width'],
             'pelo ESP um canal só: a saída e os controles à esquerda, o osciloscópio à direita')
-    pg.click('#fbs [data-fb="2"]'); time.sleep(.2)
-    confere(linhas()[-2:] == ['D 0 0 440.00', 'D 2 500 440.00'], 'trocar a saída apaga a anterior e acende a nova')
+    pg.select_option('#gpio', '21'); time.sleep(.2)
+    confere(linhas()[-7:-5] == ['P 0 21', 'P 1 -1'] and linhas()[-1] == 'D 0 500 440.00',
+            'trocar o pino muda o canal de GPIO (o firmware apaga o antigo) e o tom segue')
     pg.click('#play'); time.sleep(.3)
-    confere(linhas()[-1] == 'D 2 0 440.00', 'parar manda fração 0')
+    confere(linhas()[-1] == 'D 0 0 440.00', 'parar manda fração 0')
     confere(caixa('#play')['y'] > caixa('#cv')['y'] + caixa('#cv')['height'] and caixa('#g0')['x'] > caixa('#play')['x'],
             'o play e o volume ficam logo abaixo do osciloscópio')
     pg.click('#modoAudio'); time.sleep(.2)

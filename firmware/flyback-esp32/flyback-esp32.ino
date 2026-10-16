@@ -125,8 +125,24 @@ static int donoDoPino(int g, int fora) {
 }
 
 // "P c g": o canal c passa a acionar o GPIO g; g = -1 libera o canal
+// Pinos que não podem virar saída: os da memória flash (e da PSRAM, no S3), os da USB nativa, os da
+// serial que fala com a página, os que só servem de entrada e os que não existem. Ligar o LEDC num
+// pino da flash trava o ESP: o gerador de tom mandava o mapa de pinos do S3 (4, 5, 6, 7, 15, 16) a um
+// ESP32 comum, os canais 3 e 4 caíam nos GPIO 6 e 7, e a serial caía poucos segundos depois.
+static bool pinoProibido(int g) {
+#if CONFIG_IDF_TARGET_ESP32S3
+  return g < 0 || g > 48 || g == 19 || g == 20 || (g >= 22 && g <= 37) || g == 43 || g == 44;
+#else
+  return g < 0 || g > 33 || g == 1 || g == 3 || (g >= 6 && g <= 11) || g == 20 || g == 24 || (g >= 28 && g <= 31);
+#endif
+}
+
 static void fixaPino(int c, int g) {
   if (c < 0 || c > 5) return;
+  if (g >= 0 && pinoProibido(g)) {
+    Serial.printf("canal %d: o GPIO %d não serve (flash, USB, serial, só entrada ou inexistente) — ignorado\n", c + 1, g);
+    return;
+  }
   Canal &k = canal[c];
   if (k.pino == g) return;                     // a página manda o mapa inteiro de novo: nada muda
   if (k.pino >= 0) {
