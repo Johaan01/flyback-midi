@@ -350,6 +350,12 @@ def tom(nav, base):
     pg.goto(base + 'tom.html'); pg.evaluate('localStorage.clear()'); pg.goto(base + 'tom.html')
     pg.click('#modoEsp'); pg.click('#serGo'); time.sleep(.3)
     confere(linhas()[1] == 'P 0 4', f'sem painel salvo, o canal 1 vai no mesmo pino padrão do player ({linhas()[1:3]})')
+    pg.select_option('#placa', 'esp32'); time.sleep(.2)
+    confere('P 0 18' in linhas()[-8:] and pg.evaluate("JSON.parse(localStorage.getItem('flyback:esp')).placa") == 'esp32',
+            'trocar a placa reenvia os pinos padrão dela e fica salvo para o player')
+    pg.select_option('#gpio', '13'); time.sleep(.2)
+    confere('P 0 13' in linhas()[-8:] and pg.inner_text('#fbs [data-fb="0"]').endswith('GPIO 13'),
+            'o GPIO da saída escolhida se troca aqui mesmo')
     pg.click('#serGo'); time.sleep(.2)
     pg.evaluate("localStorage.clear(); localStorage.setItem('flyback:esp', JSON.stringify({placa: 'esp32', pinos: [18, 19, 21, 22, 23, 25]}))")
     pg.goto(base + 'tom.html')
