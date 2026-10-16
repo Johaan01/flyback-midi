@@ -11,6 +11,7 @@
 */
 #include <Arduino.h>
 #include "driver/ledc.h"
+#include "esp_system.h"
 
 // ------------------------------------------------------------------ ajuste para o seu circuito
 
@@ -191,6 +192,25 @@ static void executa() {
   }
 }
 
+// Por que o ESP reiniciou da última vez. Para separar, quando a serial cai com o arco ligado, queda
+// de tensão (BROWNOUT) e travamento (PANIC, WDT) de uma queda só do USB, em que o ESP nem reinicia
+// e o tempo ligado continua contando: no gerador de tom, com o arco aberto sem parar, a porta caía
+// em poucos segundos, e na música, não.
+static const char *motivoReinicio() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON:   return "energia ligada";
+    case ESP_RST_EXT:       return "pino de reset";
+    case ESP_RST_SW:        return "reinício pelo programa (ou porta serial aberta)";
+    case ESP_RST_PANIC:     return "TRAVAMENTO (panic)";
+    case ESP_RST_INT_WDT:   return "TRAVAMENTO (watchdog de interrupção)";
+    case ESP_RST_TASK_WDT:  return "TRAVAMENTO (watchdog de tarefa)";
+    case ESP_RST_WDT:       return "TRAVAMENTO (watchdog)";
+    case ESP_RST_BROWNOUT:  return "QUEDA DE TENSÃO (brownout)";
+    case ESP_RST_DEEPSLEEP: return "volta do sono";
+    default:                return "outro";
+  }
+}
+
 static void trata(char *s) {
   int c, g; long t; float f;
   switch (s[0]) {
@@ -203,7 +223,8 @@ static void trata(char *s) {
     case '?':                                  // para conferir pelo monitor serial
       Serial.printf("lógica %s · %d canais · pinos", LOGICA_INVERTIDA ? "invertida" : "direta", CANAIS);
       for (int i = 0; i < 6; i++) Serial.printf(" %d", canal[i].pino);
-      Serial.printf(" · eventos perdidos %lu\n", (unsigned long)perdidos);
+      Serial.printf(" · eventos perdidos %lu · ligado há %lu s · último reinício: %s\n", (unsigned long)perdidos,
+                    (unsigned long)(millis() / 1000), motivoReinicio());
       break;
   }
 }
@@ -213,8 +234,8 @@ void setup() {
   for (int i = 0; i < 6; i++) pinoSeguro(PINOS_PADRAO[i]);
   Serial.begin(BAUD);
   for (int i = 0; i < CANAIS; i++) fixaPino(i, PINOS_PADRAO[i]);
-  Serial.printf("flyback-esp32 pronto · lógica %s · %d canais\n",
-                LOGICA_INVERTIDA ? "invertida (ALTO corta o arco)" : "direta (ALTO libera o arco)", CANAIS);
+  Serial.printf("flyback-esp32 pronto · lógica %s · %d canais · reinício: %s\n",
+                LOGICA_INVERTIDA ? "invertida (ALTO corta o arco)" : "direta (ALTO libera o arco)", CANAIS, motivoReinicio());
 }
 
 void loop() {

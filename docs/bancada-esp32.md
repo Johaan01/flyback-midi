@@ -134,6 +134,22 @@ Com a potência ligada, o gerador de tom pelo ESP é o jeito de achar o vale de 
 medir: frequência fixa num canal por vez, varredura, e o volume (a fração aberta) para ver quanto
 o arco perde abaixo de 50%. Anote em Resultados o que ouvir e medir em cada canal.
 
+## Se a serial cair com o arco ligado
+
+Em 16/out a porta caiu poucos segundos depois de o gerador de tom começar, com o arco aberto sem parar;
+tocando música, não. Para saber se o ESP **reiniciou** ou se só o **USB** caiu:
+
+1. Depois da queda, abra o monitor serial e digite `?`. A resposta traz `ligado há N s` e `último
+   reinício: ...`.
+   - `ligado há` grande (não zerou): o ESP nem reiniciou — caiu só a ligação USB. É interferência no
+     cabo: afaste o cabo USB do flyback, use cabo curto com ferrite, e o notebook na bateria.
+   - `QUEDA DE TENSÃO (brownout)`: a alimentação do ESP afundou com o arco. Fonte do ESP separada da
+     do flyback, capacitor junto do ESP, terra em estrela.
+   - `TRAVAMENTO (...)`: erro no firmware — anote em Resultados o que estava tocando.
+   - `energia ligada` ou `pino de reset`: o ESP desligou de verdade (alimentação ou reset por ruído).
+2. Repita com a **potência do flyback desligada** (só o ESP, osciloscópio no pino): se a porta não cai
+   assim, o problema é do circuito de potência, não do site nem do firmware.
+
 ## Resultados
 
 Preencher a cada sessão de bancada (data, o que funcionou, o que não, o que mudou no código).
