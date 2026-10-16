@@ -20,6 +20,7 @@ Arquivos de apoio, fora das páginas:
 | `musicas/` | Acervo. Tudo que estiver aqui aparece no site |
 | `tools/gerar_acervo.py` | Gera `musicas/index.json`, a lista do acervo, juntando `creditos.json` e `pastas.txt`. Só biblioteca padrão |
 | `tools/compor_rock.py` | Compõe os arranjos de `musicas/exemplos` numa notação de texto própria, com configuração pronta para cada um |
+| `tools/emendar_blocos.py` | Acha os blocos de 5 s em que a transcrição congelou (orientação 2) e troca só eles pelos mesmos blocos de uma transcrição de orientação 1 da mesma gravação: a voz fica a da primeira (Back In Black: 86% do canto, contra 61% da de orientação 1). Aplicado em 19 transcritas em out/2026; Total Eclipse of the Heart e Seven Nation Army ficaram com a de orientação 1 inteira, que cobria mais o canto |
 | `tools/juntar_faixas.py` | Acrescenta a um MIDI faixas de outra transcrição da mesma gravação, alinhadas em segundos: para ficar com a voz de uma versão e o baixo e a bateria de outra |
 | `tools/baixar_pdmx.py` | Traz para `musicas/classicos` as obras orquestrais escolhidas à mão do PDMX (partituras do MuseScore em domínio público/CC0), com crédito; a seleção está em `SELECAO` |
 | `tools/baixar_mutopia.py` | Baixa os MIDIs do Mutopia Project para `musicas/classicos`, com crédito e licença de cada um. Não rodar sem querer: traria de volta as 569 peças de piano e solo que saíram |
