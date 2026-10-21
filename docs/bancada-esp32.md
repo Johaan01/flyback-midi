@@ -13,6 +13,11 @@ Ao terminar, anote o resultado em **Resultados**, no fim deste arquivo, e faça 
 ganhou o modo "ESP32 pela serial". Se este repositório foi clonado antes, rode `git pull` antes
 do passo 2.
 
+**Mudou de novo em 16 e 21/out** — o resumo de tudo, com o porquê, está em
+`docs/atualizacoes.md`. No firmware: motivo do último reinício no `?`, pinos da flash recusados e o
+teste pelo botão BOOT, sem computador. No gerador de tom: placa e pino escolhidos na página, e só o
+canal 1 configurado. **Grave o firmware de novo** depois do `git pull`.
+
 ## O teste de agora
 
 - **Placa:** ESP32 comum ("ESP32 Dev Module"; o "S1" de `hardware-decisoes.md`).
@@ -22,11 +27,14 @@ do passo 2.
   cortado. É o `LOGICA_INVERTIDA = false` do firmware, que já vem assim.
 - **Áudio não serve:** a entrada da V3.6 é lógica, e o P2 do computador não a aciona. Tudo passa
   pelo ESP: o player e o gerador de tom.
-- **Pinos:** canal 1 no GPIO 18, canal 2 no GPIO 19 (os padrões do site e do firmware).
+- **Pinos:** o circuito está no **GPIO 4** (canal 1). Os padrões do firmware para o ESP32 comum
+  são 18, 19, 21, 22, 23 e 25; quem manda é a página (`P`), e o GPIO 4 é também o pino do teste
+  pelo botão BOOT.
 - **Firmware:** o v1, que liga e desliga o arco na frequência da nota, mais o `D` do gerador de
   tom: tom contínuo com a fração aberta de cada período (500 ‰ = onda quadrada, o volume
-  máximo), que apaga sozinho 2 s depois do último `D`. O envelope (`docs/envelope-v5.md`) é para
-  a placa V5, que ainda não existe; não faz parte deste teste.
+  máximo), que apaga sozinho 2 s depois do último `D`; e o teste pelo botão BOOT (440 Hz no GPIO
+  4). O envelope (`docs/envelope-v5.md`) é para a placa V5, que ainda não existe; não faz parte
+  deste teste.
 
 Contexto para quem não conhece o projeto: `CLAUDE.md` (seção "Saída serial") e
 `docs/protocolo-serial.md`, que descreve as mensagens e, no fim, o firmware.
@@ -96,8 +104,9 @@ python firmware/testar_serial.py COM5
 
 Esperado:
 
-- `← flyback-esp32 pronto · lógica direta (ALTO libera o arco) · 6 canais`
-- a resposta do `?` com `lógica direta` e os pinos `18 19 21 22 23 25`
+- `← flyback-esp32 pronto · lógica direta (ALTO libera o arco) · 6 canais · reinício: ...`
+- a resposta do `?` com `lógica direta`, os pinos `18 19 21 22 23 25`, `ligado há N s` e
+  `último reinício: ...`
 - no osciloscópio (ou no LED): GPIO 18 e 19 **em BAIXO parados**; onda quadrada de 440 Hz e 50%
   por 1 s em cada um, um de cada vez; depois a escala no 18; depois 220 Hz no 18 por uns 3 s
   (o `D` renovado) e, sem renovar, **BAIXO de novo em até 2 s** — é o desligamento automático do
@@ -118,12 +127,13 @@ protocolo funcionam digitadas: `R`, `N 0 0 440.00`, `F 0 2000`, `X`, `?`.
 3. "testar" em cada canal: um lá de 0,6 s.
 4. Abrir uma música e tocar. Com 2 flybacks a serial manda só os canais 1 e 2.
 5. Desconectar no player (só uma página usa a porta por vez) e abrir o **gerador de tom**
-   (https://johaan01.github.io/flyback-midi/tom.html). Em "Saída", **ESP32 pela serial** →
-   **Conectar ESP32**. Ele usa os pinos do painel do player.
-6. Pelo ESP o gerador tem um canal só. Saída 1, ▶: tom contínuo no GPIO 18, na frequência do
-   slider; o osciloscópio à direita desenha o pulso que sai no pino. O volume vira a fração
-   aberta ("aberto 50%" no volume máximo; menos volume, pulso mais estreito). Escolher a saída 2
-   move o tom para o GPIO 19 e apaga o 18. Fechar a aba com o tom tocando: o ESP apaga em 2 s.
+   (https://johaan01.github.io/flyback-midi/tom.html; Ctrl+F5 se acabou de sair versão nova). Em
+   "Saída", **ESP32 pela serial**, **Placa ESP32** (a mesma do player) → **Conectar ESP32**.
+6. Pelo ESP o gerador tem um canal só, o canal 1 do ESP, no **Pino do ESP** escolhido junto da
+   frequência (GPIO 4). ▶: tom contínuo no pino, na frequência do slider; o osciloscópio à direita
+   desenha o pulso. O volume vira a fração aberta ("aberto 50%" no volume máximo; menos volume,
+   pulso mais estreito). Trocar o pino move o tom e apaga o anterior. Fechar a aba com o tom
+   tocando: o ESP apaga em 2 s.
 
 ## 8. Com os flybacks
 
@@ -133,6 +143,17 @@ música → parar → desligar a potência → só então tirar o USB.
 Com a potência ligada, o gerador de tom pelo ESP é o jeito de achar o vale de cada flyback e
 medir: frequência fixa num canal por vez, varredura, e o volume (a fração aberta) para ver quanto
 o arco perde abaixo de 50%. Anote em Resultados o que ouvir e medir em cada canal.
+
+## Teste sem computador (botão BOOT)
+
+Com o firmware de 21/out, o botão **BOOT** da placa liga um tom de **440 Hz** em onda quadrada (50%,
+o máximo do arco) no **GPIO 4**; apertar de novo desliga, e ele desliga sozinho em **2 min**. Serve
+para medir o circuito (tensões, correntes, o vale de cada flyback) longe da página e da interferência
+no cabo USB — o ESP pode ficar só na fonte. Um flyback por vez: troque o fio de NOTA de placa no
+GPIO 4. Pino, frequência e tempo são `TESTE_PINO`, `TESTE_HZ` e `TESTE_MAX_MS`, no topo do sketch.
+
+Com a serial aberta, o ESP avisa `teste: 440 Hz no GPIO 4...` e `teste: desligado`. Se a página
+mandar algo durante o teste, ela assume: o tom para quando ela mandar silêncio ou tomar o canal.
 
 ## Se a serial cair com o arco ligado
 
@@ -149,6 +170,12 @@ tocando música, não. Para saber se o ESP **reiniciou** ou se só o **USB** cai
    - `energia ligada` ou `pino de reset`: o ESP desligou de verdade (alimentação ou reset por ruído).
 2. Repita com a **potência do flyback desligada** (só o ESP, osciloscópio no pino): se a porta não cai
    assim, o problema é do circuito de potência, não do site nem do firmware.
+
+Uma causa era do site e já saiu (21/out): o gerador de tom mandava o mapa de pinos inteiro, e com a
+placa no padrão ESP32-S3 os canais 3 e 4 iam para os GPIO 6 e 7, que num ESP32 comum são da flash —
+o ESP travava. Depois disso a porta ainda cai às vezes; a conclusão da bancada é interferência do
+flyback no cabo USB (o ambiente de teste não tem isolamento). Para medir sem depender da serial,
+use o teste pelo botão BOOT.
 
 ## Resultados
 

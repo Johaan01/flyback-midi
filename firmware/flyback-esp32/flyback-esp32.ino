@@ -1,8 +1,9 @@
 /*
   flyback-esp32 — o firmware dos flybacks para o site flyback-midi.
 
-  Recebe pela serial o protocolo de docs/protocolo-serial.md (P, R, N, F, X) e toca cada canal
-  como onda quadrada na frequência da nota, num GPIO que interrompe o oscilador do flyback.
+  Recebe pela serial o protocolo de docs/protocolo-serial.md (P, R, N, F, X, D e ?) e toca cada
+  canal como onda quadrada na frequência da nota, num GPIO que interrompe o oscilador do flyback.
+  Sem computador, o botão BOOT liga e desliga um tom de teste de 440 Hz no GPIO 4 (ver TESTE_*).
 
   Testado com: ESP32 comum ("ESP32 Dev Module" no Arduino). Compila também para o ESP32-S3,
   mas lá só os canais 1 a 4 tocam — ver CANAIS abaixo.
@@ -42,6 +43,15 @@ const uint32_t NOTA_MAXIMA_MS = 20000;
 // "D c d f", o tom contínuo do gerador de tom: dura isto e cada "D" novo renova. Se a página parar
 // de repetir (aba travada, cabo solto), o arco apaga sozinho.
 const uint32_t DIRETO_MS = 2000;
+
+// Teste sem computador: o botão BOOT da placa liga e desliga um tom de TESTE_HZ, em onda quadrada
+// (o máximo do arco), no GPIO TESTE_PINO, por até TESTE_MAX_MS. Para medir o circuito longe da página
+// — e da interferência do flyback no cabo USB, que derruba a serial. Um flyback por vez: troque o fio
+// de NOTA de placa no pino de teste.
+const int TESTE_BOTAO = 0;           // BOOT, no ESP32 comum e no S3
+const int TESTE_PINO = 4;
+const float TESTE_HZ = 440.0;
+const uint32_t TESTE_MAX_MS = 120000;
 
 // ------------------------------------------------------------------ geração do tom (LEDC)
 // Cada canal tem um timer só dele, para cada um ter a sua frequência. O ESP32 comum tem 4
@@ -124,7 +134,6 @@ static int donoDoPino(int g, int fora) {
   return -1;
 }
 
-// "P c g": o canal c passa a acionar o GPIO g; g = -1 libera o canal
 // Pinos que não podem virar saída: os da memória flash (e da PSRAM, no S3), os da USB nativa, os da
 // serial que fala com a página, os que só servem de entrada e os que não existem. Ligar o LEDC num
 // pino da flash trava o ESP: o gerador de tom mandava o mapa de pinos do S3 (4, 5, 6, 7, 15, 16) a um
@@ -137,6 +146,7 @@ static bool pinoProibido(int g) {
 #endif
 }
 
+// "P c g": o canal c passa a acionar o GPIO g; g = -1 libera o canal
 static void fixaPino(int c, int g) {
   if (c < 0 || c > 5) return;
   if (g >= 0 && pinoProibido(g)) {
@@ -227,8 +237,11 @@ static const char *motivoReinicio() {
   }
 }
 
+static bool paginaFalou = false;     // a página mandou algo durante o teste: ela manda nos pinos agora
+
 static void trata(char *s) {
   int c, g; long t; float f;
+  if (s[0] && s[0] != '?') paginaFalou = true;
   switch (s[0]) {
     case 'P': if (sscanf(s + 1, "%d %d", &c, &g) == 2) fixaPino(c, g); break;
     case 'R': t0 = millis(); for (int i = 0; i < 6; i++) canal[i].n = 0; break;
@@ -245,9 +258,62 @@ static void trata(char *s) {
   }
 }
 
+// ------------------------------------------------------------------ teste pelo botão BOOT
+// O canal que já está no pino de teste toca nele; se nenhum está, o canal 1 vai para lá durante o
+// teste e volta ao pino de antes no fim. Acaba no segundo aperto, no fim de TESTE_MAX_MS ou quando a
+// página toma o canal (X, R, N, F, D). Se a página mandou qualquer coisa durante o teste, o pino não
+// volta: o mapa agora é o dela.
+static int testeCanal = -1;
+static int testeAntes = -2;          // -2: o canal já estava no pino de teste, nada a devolver
+
+static void testeDesliga() {
+  int c = testeCanal;
+  testeCanal = -1;
+  silencia(c);
+  if (testeAntes != -2 && !paginaFalou) fixaPino(c, testeAntes);
+  Serial.println("teste: desligado");
+}
+
+static void testeLiga() {
+  int c = donoDoPino(TESTE_PINO, -1);
+  testeAntes = -2;
+  paginaFalou = false;
+  if (c < 0) {
+    c = 0;
+    testeAntes = canal[0].pino;
+    fixaPino(0, TESTE_PINO);
+  }
+  if (canal[c].pino != TESTE_PINO) {
+    Serial.printf("teste: o GPIO %d não pôde virar saída\n", TESTE_PINO);
+    return;
+  }
+  tomDireto(c, 500, TESTE_HZ);
+  canal[c].diretoAte = canal[c].desde + TESTE_MAX_MS;
+  testeCanal = c;
+  Serial.printf("teste: %.0f Hz no GPIO %d por até %lu s — BOOT de novo desliga\n", TESTE_HZ, TESTE_PINO,
+                (unsigned long)(TESTE_MAX_MS / 1000));
+}
+
+static void testeBotao() {
+  static int antes = HIGH;           // solto: o pull-up segura em ALTO
+  static uint32_t mudou = 0;
+  int agora = digitalRead(TESTE_BOTAO);
+  if (agora != antes && millis() - mudou > 50) {     // 50 ms: o repique do botão
+    mudou = millis();
+    antes = agora;
+    if (agora == LOW) {
+      if (testeCanal >= 0) testeDesliga(); else testeLiga();
+    }
+  }
+  if (testeCanal >= 0 && !canal[testeCanal].direto) testeDesliga();   // acabou o tempo, ou a página assumiu
+}
+
 void setup() {
-  // primeiro de tudo, antes até da serial: os pinos no silêncio, arco cortado
+  // primeiro de tudo, antes até da serial: os pinos no silêncio, arco cortado — o de teste também,
+  // que no ESP32 comum não é padrão de canal nenhum e ficaria solto até a página mandar o mapa
   for (int i = 0; i < 6; i++) pinoSeguro(PINOS_PADRAO[i]);
+  if (!pinoProibido(TESTE_PINO)) pinoSeguro(TESTE_PINO);
+  pinMode(TESTE_BOTAO, INPUT_PULLUP);
   Serial.begin(BAUD);
   for (int i = 0; i < CANAIS; i++) fixaPino(i, PINOS_PADRAO[i]);
   Serial.printf("flyback-esp32 pronto · lógica %s · %d canais · reinício: %s\n",
@@ -263,4 +329,5 @@ void loop() {
     else if (ch != '\r' && tam < (int)sizeof(linha) - 1) linha[tam++] = ch;
   }
   executa();
+  testeBotao();
 }

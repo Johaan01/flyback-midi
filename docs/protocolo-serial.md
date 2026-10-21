@@ -132,14 +132,26 @@ Dev Module" (o ESP32 comum, o "S1" de `hardware-decisoes.md`). Só usa o que vem
   anulam, e GPIO em ALTO libera o arco. Na V3.5 antiga (um NPN direto no pino 4) é `true`. Fica no
   firmware, e não na página, porque o silêncio tem de estar certo também sem a página: no boot,
   com o navegador fechado, com a aba travada. Na nota, a polaridade não muda nada (50% é 50%).
-- **Tom contínuo** (`D`): o gerador de tom (`tom.html`), no modo "ESP32 pela serial", manda um
-  `D` a cada 500 ms para a saída escolhida, uma por vez; o volume da página vira a fração aberta d, e o volume do
-  arco segue sen(π·d), máximo em 50%.
+- **Tom contínuo** (`D`): o gerador de tom (`tom.html`), no modo "ESP32 pela serial", põe só o
+  canal 1 no pino escolhido (`P 0 g`, e `P c -1` nos outros) e manda um `D 0` a cada 500 ms; o
+  volume da página vira a fração aberta d, e o volume do arco segue sen(π·d), máximo em 50%.
+- **Pinos proibidos**: `P` para pino da memória flash (GPIO 6 a 11 no ESP32 comum; 26 a 37 no S3),
+  da USB nativa (19 e 20 no S3), da serial (1 e 3; 43 e 44 no S3), só de entrada (34 a 39) ou
+  inexistente é ignorado, com aviso na serial. Ligar o LEDC num pino da flash trava o ESP: foi o
+  que derrubou a serial em 16/out, quando o gerador de tom mandava o mapa do S3 (com 6 e 7) a um
+  ESP32 comum.
+- **Teste sem computador**: o botão BOOT (GPIO 0) liga e desliga 440 Hz em onda quadrada no GPIO
+  4, por até 2 min (`TESTE_PINO`, `TESTE_HZ`, `TESTE_MAX_MS` no topo do sketch). Se a página
+  manda algo durante o teste, o mapa passa a ser o dela.
 - **Pinos padrão** iguais aos da página (18, 19, 21, 22, 23, 25 no ESP32), parados no silêncio
-  antes até de a serial abrir: se o mapa se perder no boot, o firmware já está no lugar.
+  antes até de a serial abrir, e o de teste (4) também: se o mapa se perder no boot, o firmware já
+  está no lugar.
 - **Nota presa**: passou de 20 s sem nenhum evento novo no canal, silencia — é o caso de o
   navegador travar no meio de uma nota e o `F` nunca chegar.
-- `?` pelo monitor serial responde a lógica, os pinos e os eventos perdidos.
+- `?` pelo monitor serial responde a lógica, os pinos, os eventos perdidos, há quanto tempo o ESP
+  está ligado e o motivo do último reinício (queda de tensão, travamento, energia ligada...) — o
+  boot também diz o motivo. É o que separa, quando a serial cai com o arco ligado, a queda só do
+  USB (o tempo ligado não zera) de um reinício do ESP.
 
 **Na V3.6 o lado seguro é o natural:** ESP desligado, em boot ou com o cabo solto deixa o LED do
 6N136 apagado, e o arco cortado. **Na V3.5 antiga é o contrário:** a falta de sinal libera o arco: enquanto o ESP
