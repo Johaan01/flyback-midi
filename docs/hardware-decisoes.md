@@ -402,7 +402,7 @@ Registradas para que quem ler não repita:
 | O MUR860 não teria serventia | Ele rouba a condução do diodo de corpo (lento, com recuperação reversa) e provavelmente grampeia o primeiro vale em zero |
 | Com 300 nF e oscilação de 175 kHz, o primário teria ~3 µH | Era suposição. A bancada de 21/out dá **8 a 12 µH** (seção 9.3); os ~3 µH batem com a dispersão, não com o primário |
 | O banco leu 66 nF na placa: os capacitores seriam de 22 nF | Cada capacitor do lote mede ~100 nF fora da placa: o banco é de 300 nF. Na placa, o MUR860 e o primário em paralelo enganam o capacímetro |
-| Na V3.6, 150 nF no dreno no lugar de 300 nF | O valor vinha de um primário suposto de 20 µH. Com 8 a 10 µH, 150 nF sobe o dreno ~50 V e quase não dá arco a mais: ficam os 300 nF (seção 9.4) |
+| Na V3.6, 150 nF no dreno no lugar de 300 nF | O valor vinha de um primário suposto de 20 µH. Com 8 a 10 µH, 150 nF sobe o dreno de 35 a 60 V e quase não dá arco a mais: ficam os 300 nF (seção 9.4) |
 
 ---
 
@@ -517,14 +517,13 @@ Leituras que **não** valem:
 
 ### 9.4 Decisões
 
-**Capacitor de dreno: 300 nF, também na V3.6.** A V3.6 tinha 150 nF (100 nF + 47 nF), escolhidos quando se supunha um primário de 20 µH. Com 8 a 10 µH, no vale, 150 nF dá ~10 % mais arco, mas o dreno sobe ~50 V:
+**Capacitor de dreno: 300 nF, também na V3.6** (`sim_mais_potencia.py`, parte B, com 200, 300 e 400 nF):
 
-| | 150 nF | 300 nF |
-|---|---|---|
-| Dreno, 8 µH | 231 V | 173 V |
-| Dreno, 10 µH | 206 V | 157 V |
+- **200 nF dá menos arco no mesmo dreno.** Com 8 µH: 343 W com o dreno a 230 V (18 µs), contra 395 W a 228 V com 300 nF (22 µs).
+- **400 nF empata com 300 nF.** O mesmo pulso dá dreno mais baixo e arco menor; o mesmo arco pede pulso mais longo, com um pouco mais de corrente.
+- **150 nF**, o valor que a V3.6 tinha, foi escolhido quando se supunha um primário de 20 µH. Com 8 a 10 µH, no pulso de hoje, ele sobe o dreno de 35 a 60 V por ~10 % a mais de arco.
 
-Somada a diferença entre o modelo e a placa, os 150 nF põem o dreno em cima dos 250 V do IRFP264N. Alongar o pulso com 300 nF dá mais arco pelo mesmo dreno.
+Na placa final: 3 × 100 nF MKP e uma quarta posição vazia (C11), para os 400 nF se algum flyback encostar no limite antes do pulso desejado.
 
 **Para mais arco, alongar o pulso no vale; não subir a frequência** (`sim_mais_potencia.py`, IRFP264N, 300 nF).
 
@@ -535,22 +534,26 @@ Subir a frequência com o pulso fixo em 15,68 µs:
 
 O núcleo não passa de 0,14 T: subir a frequência não carrega mais o núcleo.
 
-Alongando o pulso, com a frequência reajustada no vale (arco aceso o tempo todo; na música a média é menor):
+Alongando o pulso, com 300 nF e a frequência reajustada no vale. O vale aqui é o fim do grampo do MUR860: a frequência de mais arco entre as que ligam com o dreno abaixo de 10 V. Mais acima, o MOSFET liga ainda no grampo, com a corrente voltando ao banco, e o arco cai até 25 %. O arco fica aceso o tempo todo; na música a média é menor.
 
-| Pulso | Vale | 8 µH: arco / MOSFET / dreno | 10 µH: arco / MOSFET / dreno |
-|---|---|---|---|
-| 15,7 µs | 42 kHz | 193 W / 17 W / 173 V | 159 W / 11 W / 157 V |
-| 18 µs | 40 a 41 kHz | 223 W / 20 W / 181 V | 220 W / 17 W / 173 V |
-| 20 µs | 39 kHz | 287 W / 29 W / 198 V | 295 W / 28 W / 190 V |
-| 22 µs | 36 kHz | 373 W / 47 W / 222 V | 394 W / 47 W / 217 V |
-| 24 µs | 33 kHz | 446 W / 67 W / 244 V | — |
+| Pulso | 8 µH: vale, arco / MOSFET / dreno | 10 µH: vale, arco / MOSFET / dreno |
+|---|---|---|
+| 15,7 µs | 40 kHz, 251 W / 24 W / 189 V | 39 kHz, 216 W / 17 W / 173 V |
+| 18 µs | 38 kHz, 309 W / 34 W / 204 V | 39 kHz, 238 W / 20 W / 178 V |
+| 20 µs | 37 kHz, 345 W / 40 W / 214 V | 39 kHz, 295 W / 28 W / 190 V |
+| 22 µs | 35 kHz, 395 W / 52 W / 228 V | 36 kHz, 394 W / 47 W / 217 V |
+| 24 µs | 33 kHz, 446 W / 67 W / 244 V | 34 kHz, 451 W / 62 W / 234 V |
 
-- **O limite é o dreno do IRFP264N.** Com os 20 a 40 V que o modelo fica abaixo da placa, os 250 V chegam por volta de 20 a 22 µs. Na bobina de realimentação de 3 espiras, 250 V no dreno aparecem como **−68 V**: dá para acompanhar no osciloscópio.
-- **O flyback esquenta mais rápido que o arco cresce.** De 15,7 para 22 µs:
-  - o arco sobe ×1,9 a ×2,5;
-  - o cobre do primário, ×2,6 a ×3,5 (estimativa por I_pico² × D);
-  - o núcleo, ×2 a ×2,9 (estimativa por f^1,3 × B^2,5).
+- **O limite é o dreno do IRFP264N.** O modelo fica abaixo da placa: 20 V com o ajuste de 8 µH e 38 V com o de 10 µH (no ponto medido, 189 e 173 V contra os 211 V da bancada). Corrigido, 20 µs dá ~230 V e 22 µs, ~250 V. Na bobina de realimentação de 3 espiras, 230 V aparecem como −62 V e 250 V como **−68 V**: dá para acompanhar no osciloscópio.
+- **O flyback esquenta mais rápido que o arco cresce.** De 15,7 para 20 µs:
+  - o arco sobe ×1,37;
+  - o cobre do primário (I_rms²), ×1,5 a ×1,6;
+  - o núcleo, ×1,5 a ×1,6 (estimativa por f^1,3 × B^2,5).
+
+  Para 22 µs: arco ×1,6 a ×1,8, cobre ×2,0 a ×2,4, núcleo ×1,9 a ×2,2.
 - **Saturar não dá mais arco.** Passado o joelho, a energia guardada para de crescer e a corrente a mais vai para o MOSFET. O ponto bom é logo abaixo do joelho, e o núcleo ainda está longe dele.
+
+**Ponto de trabalho: ~20 µs no vale, de 37 a 39 kHz.** Dá +37 % de arco, com o dreno a ~230 V e o MOSFET a 28–40 W com o arco aceso direto (17–24 W hoje, com o MOSFET a ~40 °C na bancada). O flyback esquenta ~1,5 vez o de hoje. Quanto disso o flyback aguenta numa música longa só a bancada diz (9.5, item 4).
 
 **Espiras: ficam 10** (`sim_espiras36.py`). Para o mesmo arco, o cobre do primário e o núcleo ficam a ±15 % entre 6 e 12 espiras: trocar espiras não resolve o aquecimento. Menos espiras alcançam mais arco, com mais corrente no MOSFET. Foi simulado com o núcleo suposto de 20 µH; falta refazer com o L medido.
 
@@ -569,12 +572,9 @@ Alongando o pulso, com a frequência reajustada no vale (arco aceso o tempo todo
 | Bloco | Valores | Faixa |
 |---|---|---|
 | U12, frequência | R14 4k7 + PR4 10k multivoltas + R13 1k, C21 4n7 | 18 a 45 kHz |
-| U13, largura | R15 3k3 + PR5 10k multivoltas, C24 1 nF | 3,7 a 14,7 µs |
+| U13, largura | R15 3k3 + PR5 10k multivoltas, C24 1 nF em paralelo com C28 470 pF | 5,3 a 21,5 µs (calculado) |
 
-O ponto da bancada (15,68 µs) já passa do topo do U13. Para os pulsos da tabela acima:
-
-- R15 de 4k7: 5,2 a 16,2 µs;
-- C24 de 1 nF + 470 pF em paralelo, com R15 de 3k3: ~5,3 a 21,5 µs.
+Só com o C24 a faixa era de 3,7 a 14,7 µs (simulada), abaixo até do ponto da bancada (15,68 µs). Com o C28, o topo vai a 21,5 µs, perto de onde o dreno chega aos 250 V: o teto em hardware fica logo acima do ponto de trabalho. Com 390 pF no C28, o teto fica em 20,3 µs. Os 20 µs ficam com o PR5 em ~9k.
 
 A entrada da V3.6 é 6N136 + BC547 no RESET do U13, com lógica direta: GPIO alto libera o arco. O BC547 basta, porque quem limita a velocidade é o 6N136.
 
@@ -585,5 +585,5 @@ A entrada da V3.6 é 6N136 + BC547 no RESET do U13, com lógica direta: GPIO alt
    - sem fundo achatado e com o MOSFET frio: a energia vai para o próprio flyback (isolamento, diodos internos, corona). É candidata ao aquecimento nas músicas longas.
 2. **Distância dos eletrodos no ponto de 4,9 A.** O Franzoli recomenda no máximo 50 mm, pelo isolamento.
 3. **Período da oscilação com 300 nF e com 200 nF** (T₁ e T₂). L = (T₁² − T₂²) / (4π² × 100 nF), descontada a capacitância em paralelo com o banco. Perto de 3 µH, a oscilação rápida é a dispersão (9.3); perto de 8 a 12 µH, é o primário inteiro.
-4. **Escada de potência.** Alongar o pulso de 1 em 1 µs e reajustar o vale a cada passo; a frequência cai, de ~42 para 40, 39 e 36 kHz. Em cada passo, tocar 30 a 60 s, medir a temperatura do flyback e do MOSFET e olhar o fundo do mergulho na bobina.
+4. **Escada de potência.** Alongar o pulso de 1 em 1 µs e reajustar o vale a cada passo; a frequência cai alguns kHz (de ~40 para ~37 kHz em 20 µs). Em cada passo, tocar 30 a 60 s, medir a temperatura do flyback e do MOSFET e olhar o fundo do mergulho na bobina.
 5. **Refazer espiras e potência com o L medido**, e pôr no modelo a capacitância do secundário se o teste 3 apontar para ela.
