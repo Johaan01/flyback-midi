@@ -579,7 +579,7 @@ andamento na janela, e "abrir" tocando o MIDI do servidor.
 
 ## Contexto de hardware
 
-`docs/hardware-decisoes.md` tem o registro completo das decisões do driver de flyback, incluindo por que a modulação é analógica, por que cada canal é monofônico, e as medições de bancada. A seção 3.16 importa para o firmware da saída serial.
+`docs/hardware-decisoes.md` tem o registro completo das decisões do driver de flyback, incluindo por que a modulação é analógica, por que cada canal é monofônico, e as medições de bancada. A seção 3.16 importa para o firmware da saída serial. A seção 9 tem a bancada de 21/out/2026 e as decisões da V3.6 que saíram das simulações (`FlybachSimulations/`, fora deste repositório): IRFP264N, 300 nF no dreno, primário de 8 a 12 µH, mais arco alongando o pulso no vale. O que ela contradiz nas seções antigas está marcado nelas como atualização.
 
 ## Restrições de manutenção
 

@@ -1,8 +1,8 @@
 # Flyback Musical — Registro de Decisões Técnicas
 
 **Projeto:** FBMD / LMD — Lightning Modulated Driver
-**Revisões cobertas:** V3 → V3.5 → V4 (em definição)
-**Data do registro:** setembro de 2026
+**Revisões cobertas:** V3 → V3.5 → V3.6 → V4 (em definição)
+**Data do registro:** setembro de 2026; bancada de 21/out/2026 e simulações da V3.6 na seção 9
 
 ---
 
@@ -35,6 +35,8 @@ Um único NE555 gerando frequência com duty fixo. Interrupção feita aterrando
 | Roteamento | `FOut → FIn`, `MusicOut → pino 4 do U13`, `OUTPUT → placa de potência` |
 
 **Placa de potência:** 24 V, banco de 4× 470 µF, primário externo de 10 espiras, IRFP260N, MUR860 em antiparalelo do dreno ao terra, zener 15 V no gate, R13 22 Ω com 1N4148 em paralelo (ligamento amortecido, desligamento rápido), totem pole BC337/BC327 alimentado em 12 V, e banco de 3× 100 nF MKP entre dreno e terra.
+
+**Atualização (21/out/2026):** a placa medida tem **IRFP264N** (250 V) no lugar do IRFP260N, e o zener de gate não existe nas versões novas. Ver a seção 9.
 
 **Problemas identificados:**
 
@@ -183,11 +185,15 @@ O de 100 V grampeia perto de 162 V, resultando em 186 V no dreno com 14 V de mar
 
 **Malha RCD:** só faz sentido em conjunto com o TVS, para tirar dele a dissipação contínua. Sozinha, com energia de dispersão pequena, adiciona perda em vez de tirar.
 
+**Atualização (21/out/2026):** no ponto medido o dreno chega a ~211 V em todo ciclo (seção 9.2). Um TVS de 100 V ou de 130 V (1.5KE130A: ruptura de 124 a 137 V) entre dreno e terra conduziria a cada pulso, e não só no caso ruim. A V3.6 ficou sem TVS.
+
 ### 3.10 MOSFET
 
 **Decisão:** manter IRFP260N por ora.
 
 O IRFP4227 tem Q_g de 70 nC contra 236 nC e R_DS(on) de 24 mΩ contra 40 mΩ. Em análise inicial isso valia ~2 W. Porém o ponto de operação real tem corrente alta, regime em que R_DS(on) pesa mais que Q_g. Decisão adiada até haver medida de corrente de entrada.
+
+**Atualização (21/out/2026):** a placa passou ao **IRFP264N** (250 V, 60 mΩ), para aguentar os picos de ~220 V do flyback sem avalanche. A corrente de entrada está medida na seção 9.2.
 
 ### 3.11 Comparador vs ADC no detector de fase
 
@@ -344,6 +350,8 @@ Tensão de dreno durante a desmagnetização: ~72 V, não 186 V. O IRFP260N de 2
 
 A última é a mais importante. Se a frequência ótima se deslocar pouco quando o gap muda, o caminho do Franzoli (sintonia manual + OCP) é suficiente e a malha não se paga. Se se deslocar muito, a malha se justifica.
 
+**21/out/2026:** a capacitância (300 nF, medida fora da placa), a corrente de entrada e o grampo do primeiro vale estão medidos na seção 9. Falta o deslocamento da frequência ótima com o arco.
+
 ---
 
 ## 5. A referência: Franzoli Electronics
@@ -359,6 +367,9 @@ A V3 partiu do Easy-Flyback. A especificação publicada do Easy-Flyback I inclu
 - Corrente de primário até 16 A RMS, 28 A de pico em operação, 60 A de pico na partida
 - Tensão de pico no primário até 180 V em operação, 240 V na partida (avalanche em ação)
 - Eficiência relatada em torno de 95% depois de sintonizado (revisão B, modo CW)
+- Eletrodos a no máximo 50 mm, para não danificar o isolamento do flyback
+
+A página não fala em capacitância efetiva diferente da nominal. Pelo dono do projeto, o banco de entrada do Franzoli começou com 2× 2200 µF e passou a 4× 470 µF, o mesmo desta placa (isso não está na página).
 
 A placa mais recente (Cool Flyback) controla dois canais e traz, por canal, blocos rotulados **OCP** (sobrecorrente) e **Xsense** (sensor de corrente), além de conectores **OTP** (sobretemperatura) e **FAN**. Os conectores de saída têm pinos `+24V` e `FBK`, aparentemente os dois fios do primário, o que sugere **ausência de realimentação** — a sintonia é manual e o tanque LC, sendo capacitor de filme e primário de espiras fixas, não deriva.
 
@@ -389,6 +400,9 @@ Registradas para que quem ler não repita:
 | Um S3 não teria timers para seis canais | Tem. Dois grupos × três timers = seis. A objeção real era ruído, não contagem |
 | Os 300 nF seriam "impossíveis" pela frequência medida | O argumento supunha indutância de centenas de µH. Com núcleo entreferrado e 10 espiras, ~3 µH é plausível e os 300 nF cabem |
 | O MUR860 não teria serventia | Ele rouba a condução do diodo de corpo (lento, com recuperação reversa) e provavelmente grampeia o primeiro vale em zero |
+| Com 300 nF e oscilação de 175 kHz, o primário teria ~3 µH | Era suposição. A bancada de 21/out dá **8 a 12 µH** (seção 9.3); os ~3 µH batem com a dispersão, não com o primário |
+| O banco leu 66 nF na placa: os capacitores seriam de 22 nF | Cada capacitor do lote mede ~100 nF fora da placa: o banco é de 300 nF. Na placa, o MUR860 e o primário em paralelo enganam o capacímetro |
+| Na V3.6, 150 nF no dreno no lugar de 300 nF | O valor vinha de um primário suposto de 20 µH. Com 8 a 10 µH, 150 nF sobe o dreno ~50 V e quase não dá arco a mais: ficam os 300 nF (seção 9.4) |
 
 ---
 
@@ -450,4 +464,126 @@ Um único S3 tem timers para os seis, mas concentra seis cabos de realimentaçã
 1. **Aterramento da bobina auxiliar** — referenciada ao terra lógico (poupa o optoacoplador e 50 ns, mas aceita ruído de modo comum pela capacitância entre enrolamentos) ou detector de fase na placa de potência com retorno por 6N137. Nota: o atraso do optoacoplador é constante e se cancela na medição de intervalo entre duas bordas do mesmo caminho, o que torna a opção isolada quase gratuita.
 2. **Caminho A ou B**, decidido pela medida de deslocamento da frequência ótima.
 3. **Manter ou eliminar o NE555 monoestável** — eliminá-lo simplifica, mas transfere o teto de largura do hardware para o firmware e torna o OCP estrutural.
-4. **Trocar o IRFP260N**, decidido pela medida de corrente de entrada.
+4. **Trocar o IRFP260N** — feito: a placa usa o IRFP264N (seção 9).
+
+---
+
+## 9. Bancada de 21/out/2026 e simulações da V3.6
+
+Medidas do dono do projeto num flyback de 10 espiras, e o que as simulações em ngspice tiraram delas. As simulações ficam em `FlybachSimulations/`, fora deste repositório; o script de cada resultado vai entre parênteses.
+
+### 9.1 A placa medida
+
+| Item | Valor |
+|---|---|
+| Base | Easy-Flyback I do Franzoli (seção 5), com totem pole, MUR860 e IRFP264N |
+| MOSFET | **IRFP264N**, 250 V |
+| Capacitor de dreno | 3× 100 nF MKP = **300 nF** |
+| Banco de entrada | 4× 470 µF; fonte em 24,03 V |
+| Primário | 10 espiras, externo |
+| Bobina de realimentação | 3 espiras |
+| Núcleo | 1,2 × 1,7 cm, tratado nas simulações como a seção da perna (2,04 cm²) |
+
+### 9.2 Medidas
+
+| Grandeza | Valor |
+|---|---|
+| Gate | 15,68 µs ligado, 9,55 µs desligado, 39,69 kHz: o ponto de arco mais eficiente achado pela bobina |
+| Bobina de realimentação, pulso ligado | +7 V |
+| Logo depois de desligar | mergulho em V de ~3,5 µs até −56 V |
+| Em seguida | ~5 µs de volta ao nível do pulso ligado: o MUR860 conduz e a energia volta ao banco (o grampo previsto em 4.5) |
+| Logo antes de religar | mergulho pequeno, ~−16 V |
+| Dreno, de pico | 24 + 56 × 10/3 ≈ **211 V**, calculado pela bobina |
+| Fonte, nota de 100 Hz a 50 %, arco longo sem apagar | 4,9 A médios (4,8 a 5,1); ~9,3 A (~223 W) durante a rajada |
+| Fonte, em repouso | 0,25 A |
+| Fonte, arco apagado | **9,2 A**; com o arco curto, bem menos que 4,9 A |
+
+Leituras que **não** valem:
+
+- **Indutância pelo multímetro:** 0,005 mH é o menor passo do aparelho (o seguinte é 0,010). Não há resolução para µH.
+- **Capacitância do banco na placa:** 66 nF, e depois uma leitura oscilando entre nF e µF, mesmo sem o MOSFET. O MUR860 e o primário (com o banco de 470 µF atrás) ficam em paralelo e enganam o capacímetro. Fora da placa, cada capacitor do lote mede ~100 nF.
+
+### 9.3 O que o modelo tira disso
+
+- **Primário: 8 a 12 µH.** O ajuste da forma de onda com os 300 nF dá 8 a 10 µH, com ~3 µH de dispersão (`sim_ajuste_dispersao.py`). A energia por pulso, (V·t)²·f / 2L = 223 W, dá até 12,6 µH. Substitui os ~3 µH da seção 4.4, que eram suposição.
+- **A oscilação rápida de 4.3 bate com a dispersão.** 2π√(3 µH × 300 nF) = 6,0 µs, perto dos 5,7 µs medidos; com o primário inteiro seriam 10 a 12 µs. É hipótese: o teste de 9.5 decide.
+- **O que o modelo ainda erra:**
+  - o mergulho sai com 5 a 6 µs (medido: 3,5);
+  - o dreno fica 20 a 40 V abaixo do real;
+  - o arco apagado puxa 0,5 A (medido: 9,2 A).
+
+  Falta física. A candidata mais provável é a capacitância do secundário refletida no primário. Os números abaixo são tendência, não valor exato.
+- **O núcleo está longe do joelho:** 0,13 a 0,18 T de pico no ponto medido, contra 0,30 a 0,35 T para saturar a ferrite.
+
+### 9.4 Decisões
+
+**Capacitor de dreno: 300 nF, também na V3.6.** A V3.6 tinha 150 nF (100 nF + 47 nF), escolhidos quando se supunha um primário de 20 µH. Com 8 a 10 µH, no vale, 150 nF dá ~10 % mais arco, mas o dreno sobe ~50 V:
+
+| | 150 nF | 300 nF |
+|---|---|---|
+| Dreno, 8 µH | 231 V | 173 V |
+| Dreno, 10 µH | 206 V | 157 V |
+
+Somada a diferença entre o modelo e a placa, os 150 nF põem o dreno em cima dos 250 V do IRFP264N. Alongar o pulso com 300 nF dá mais arco pelo mesmo dreno.
+
+**Para mais arco, alongar o pulso no vale; não subir a frequência** (`sim_mais_potencia.py`, IRFP264N, 300 nF).
+
+Subir a frequência com o pulso fixo em 15,68 µs:
+
+1. Primeiro o MOSFET liga com a energia ainda voltando ao banco, e o arco cai (8 µH: de 254 W em 39,7 kHz para 87 W em 45,7 kHz).
+2. Depois o MOSFET sai do vale e os 300 nF descarregam nele: 104 a 110 W de perda em 51,7 kHz.
+
+O núcleo não passa de 0,14 T: subir a frequência não carrega mais o núcleo.
+
+Alongando o pulso, com a frequência reajustada no vale (arco aceso o tempo todo; na música a média é menor):
+
+| Pulso | Vale | 8 µH: arco / MOSFET / dreno | 10 µH: arco / MOSFET / dreno |
+|---|---|---|---|
+| 15,7 µs | 42 kHz | 193 W / 17 W / 173 V | 159 W / 11 W / 157 V |
+| 18 µs | 40 a 41 kHz | 223 W / 20 W / 181 V | 220 W / 17 W / 173 V |
+| 20 µs | 39 kHz | 287 W / 29 W / 198 V | 295 W / 28 W / 190 V |
+| 22 µs | 36 kHz | 373 W / 47 W / 222 V | 394 W / 47 W / 217 V |
+| 24 µs | 33 kHz | 446 W / 67 W / 244 V | — |
+
+- **O limite é o dreno do IRFP264N.** Com os 20 a 40 V que o modelo fica abaixo da placa, os 250 V chegam por volta de 20 a 22 µs. Na bobina de realimentação de 3 espiras, 250 V no dreno aparecem como **−68 V**: dá para acompanhar no osciloscópio.
+- **O flyback esquenta mais rápido que o arco cresce.** De 15,7 para 22 µs:
+  - o arco sobe ×1,9 a ×2,5;
+  - o cobre do primário, ×2,6 a ×3,5 (estimativa por I_pico² × D);
+  - o núcleo, ×2 a ×2,9 (estimativa por f^1,3 × B^2,5).
+- **Saturar não dá mais arco.** Passado o joelho, a energia guardada para de crescer e a corrente a mais vai para o MOSFET. O ponto bom é logo abaixo do joelho, e o núcleo ainda está longe dele.
+
+**Espiras: ficam 10** (`sim_espiras36.py`). Para o mesmo arco, o cobre do primário e o núcleo ficam a ±15 % entre 6 e 12 espiras: trocar espiras não resolve o aquecimento. Menos espiras alcançam mais arco, com mais corrente no MOSFET. Foi simulado com o núcleo suposto de 20 µH; falta refazer com o L medido.
+
+**Gate: 10 Ω em paralelo com o 1N4148** (`sim_gate.py`):
+
+- 0, 10 e 22 Ω dão a mesma perda no MOSFET no vale.
+- Com 0 Ω, o Vgs vai a 14,5 V e o BC337 a ~1,2 A de pico.
+- O toque no desligamento (até 1,9 V) não depende do resistor, porque passa pelo diodo. O que pesa é o laço do gate: 150 nH dão −4 a −6 V. Por isso o MOSFET fica perto do totem pole.
+
+**Envelope no firmware, não no pino 5** (`sim_envelope.py`). Pelo pino 5 do U13 o volume não é monotônico, o vale sai do lugar e, em volume baixo, o MOSFET esquenta mais. O firmware muda a fração aberta da nota, e o volume segue sen(π·D), que é o que o gerador de tom já faz.
+
+**Sem TVS na V3.6.** Ver a atualização em 3.9.
+
+**Temporização da V3.6** (`v36_ajuste.py`, `sim_v36.py`):
+
+| Bloco | Valores | Faixa |
+|---|---|---|
+| U12, frequência | R14 4k7 + PR4 10k multivoltas + R13 1k, C21 4n7 | 18 a 45 kHz |
+| U13, largura | R15 3k3 + PR5 10k multivoltas, C24 1 nF | 3,7 a 14,7 µs |
+
+O ponto da bancada (15,68 µs) já passa do topo do U13. Para os pulsos da tabela acima:
+
+- R15 de 4k7: 5,2 a 16,2 µs;
+- C24 de 1 nF + 470 pF em paralelo, com R15 de 3k3: ~5,3 a 21,5 µs.
+
+A entrada da V3.6 é 6N136 + BC547 no RESET do U13, com lógica direta: GPIO alto libera o arco. O BC547 basta, porque quem limita a velocidade é o 6N136.
+
+### 9.5 Pendências
+
+1. **Para onde vão os 9,2 A do arco apagado.** Fazer corridas de ~10 s olhando a bobina de realimentação:
+   - fundo achatado perto de −68 V ou além: é avalanche, e a energia vai para o MOSFET, que esquenta rápido;
+   - sem fundo achatado e com o MOSFET frio: a energia vai para o próprio flyback (isolamento, diodos internos, corona). É candidata ao aquecimento nas músicas longas.
+2. **Distância dos eletrodos no ponto de 4,9 A.** O Franzoli recomenda no máximo 50 mm, pelo isolamento.
+3. **Período da oscilação com 300 nF e com 200 nF** (T₁ e T₂). L = (T₁² − T₂²) / (4π² × 100 nF), descontada a capacitância em paralelo com o banco. Perto de 3 µH, a oscilação rápida é a dispersão (9.3); perto de 8 a 12 µH, é o primário inteiro.
+4. **Escada de potência.** Alongar o pulso de 1 em 1 µs e reajustar o vale a cada passo; a frequência cai, de ~42 para 40, 39 e 36 kHz. Em cada passo, tocar 30 a 60 s, medir a temperatura do flyback e do MOSFET e olhar o fundo do mergulho na bobina.
+5. **Refazer espiras e potência com o L medido**, e pôr no modelo a capacitância do secundário se o teste 3 apontar para ela.
